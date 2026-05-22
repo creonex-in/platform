@@ -1,13 +1,4 @@
-// ─── End-to-End (E2E) Tests ───────────────────────────────────────────────────
-// E2E tests spin up the full NestJS application (just like production) and
-// send real HTTP requests against it using Supertest.
-//
-// Unlike unit tests, E2E tests exercise the entire request pipeline:
-// middleware → guards → controllers → services → (mocked) database.
-// This catches wiring mistakes that unit tests miss.
-//
-// Run: npm run test:e2e
-
+// End-to-end tests — boots the full NestJS app and sends real HTTP requests via Supertest.
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -17,19 +8,16 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
-  // Before each test, create and initialize a full NestJS app instance.
-  // Note: this imports AppModule — so real database connections and guards
-  // are active. For a production test suite, you'd mock the DATABASE provider.
+  // Creates and initializes a full app instance before each test.
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    await app.init(); // boots the app (runs onModuleInit hooks, etc.)
+    await app.init();
   });
 
-  // Verify the root health-check route is reachable and returns the greeting.
   it('/ (GET)', () => {
     return request(app.getHttpServer())
       .get('/')
@@ -37,7 +25,7 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  // After each test, shut the app down cleanly to free ports and DB connections.
+  // Shuts the app down cleanly to free ports and DB connections.
   afterEach(async () => {
     await app.close();
   });
