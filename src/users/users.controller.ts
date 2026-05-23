@@ -1,3 +1,4 @@
+// Handles HTTP requests under the /users route group.
 import {
   Controller,
   Get,
@@ -13,6 +14,7 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // Returns the profile of the currently authenticated user.
   @Get('me')
   @UseGuards(ClerkAuthGuard)
   async getMe(@GetClerkUserId() clerkUserId: string): Promise<User> {
