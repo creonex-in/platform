@@ -93,10 +93,4 @@ export class UsersService {
     return this.repo.updateLearnerStep1(userId, data)
   }
 
-  async updateLearnerStep2(
-    userId: string,
-    data: { niches: string[]; budgetRange?: string },
-  ): Promise<LearnerProfile> {
-    return this.repo.updateLearnerStep2(userId, data)
-  }
 }

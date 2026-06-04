@@ -62,7 +62,6 @@ export class WebhooksController {
 
         if (!primaryEmail) break
 
-        // Read intent set by frontend during Clerk signup
         const intent = data.unsafe_metadata?.intent as
           | 'creator'
           | 'learner'
@@ -92,14 +91,15 @@ export class WebhooksController {
           onboardingStep: 1,
         })
 
-        // Step 3 — Create profile records immediately
-        // So onboarding endpoints always have a record to update
         const user = await this.usersService.getByClerkId(data.id)
         if (user) {
+          // Step 3 — Always create learner profile
+          await this.usersService.createLearnerProfile(user.id)
+
+          // Step 4 — Create creator profile only if creator intent
           if (roles.includes('creator')) {
             await this.usersService.createCreatorProfile(user.id)
           }
-          await this.usersService.createLearnerProfile(user.id)
         }
 
         break
@@ -114,7 +114,7 @@ export class WebhooksController {
 
         if (!primaryEmail) break
 
-        // Only sync identity fields — never touch roles here
+        // Sync identity fields only — never touch roles here
         await this.usersService.upsertFromClerk({
           clerkId: data.id,
           email: primaryEmail,

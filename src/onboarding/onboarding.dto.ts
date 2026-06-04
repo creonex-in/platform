@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsArray,
   IsIn,
+  IsUrl,
   Min,
   Max,
   MaxLength,
@@ -14,9 +15,38 @@ import {
 } from 'class-validator'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
+const VALID_NICHES = [
+  'cat_mba_prep',
+  'coding_dsa',
+  'personal_finance',
+  'fitness_nutrition',
+  'design_creative',
+  'language_learning',
+  'digital_marketing',
+  'music_arts',
+  'upsc_govt_exams',
+  'mental_wellness',
+  'photography',
+  'science_research',
+  'real_estate',
+  'writing_content',
+  'ai_data_science',
+  'gaming_esports',
+  'cooking_food',
+  'interview_prep',
+  'ayurveda_yoga',
+  'startup_product',
+] as const
+
 // ── Learner ─────────────────────────────────────────────
 
 export class LearnerStep1Dto {
+  @ApiProperty({ example: 'Priya Sharma', minLength: 2, maxLength: 60 })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(60)
+  fullName: string
+
   @ApiProperty({
     enum: ['cat_prep', 'job_switch', 'skill_upgrade', 'freelancing', 'investing', 'fitness', 'other'],
     example: 'skill_upgrade',
@@ -28,37 +58,6 @@ export class LearnerStep1Dto {
   goalType: string
 }
 
-export class LearnerStep2Dto {
-  @ApiProperty({
-    type: [String],
-    enum: ['dsa_coding', 'cat_prep', 'personal_finance', 'ui_ux_design', 'system_design', 'fitness', 'content_creation', 'product_management', 'data_science', 'other'],
-    example: ['dsa_coding', 'system_design'],
-    minItems: 1,
-    maxItems: 3,
-  })
-  @IsArray()
-  @ArrayMinSize(1)
-  @ArrayMaxSize(3)
-  @IsEnum([
-    'dsa_coding', 'cat_prep', 'personal_finance',
-    'ui_ux_design', 'system_design', 'fitness',
-    'content_creation', 'product_management',
-    'data_science', 'other',
-  ], { each: true })
-  niches: string[]
-
-  @ApiPropertyOptional({
-    enum: ['under_500', '500_1000', '1000_2000', 'above_2000', 'flexible'],
-    example: '1000_2000',
-  })
-  @IsOptional()
-  @IsEnum([
-    'under_500', '500_1000', '1000_2000',
-    'above_2000', 'flexible',
-  ])
-  budgetRange?: string
-}
-
 // ── Creator ──────────────────────────────────────────────
 
 export class CreatorStep1Dto {
@@ -68,16 +67,8 @@ export class CreatorStep1Dto {
   @MaxLength(60)
   fullName: string
 
-  @ApiProperty({
-    enum: ['dsa_coding', 'cat_prep', 'personal_finance', 'ui_ux_design', 'system_design', 'fitness', 'content_creation', 'product_management', 'data_science', 'other'],
-    example: 'dsa_coding',
-  })
-  @IsEnum([
-    'dsa_coding', 'cat_prep', 'personal_finance',
-    'ui_ux_design', 'system_design', 'fitness',
-    'content_creation', 'product_management',
-    'data_science', 'other',
-  ])
+  @ApiProperty({ enum: VALID_NICHES, example: 'coding_dsa' })
+  @IsEnum(VALID_NICHES)
   primaryNiche: string
 
   @ApiProperty({ example: 3, minimum: 1, maximum: 20 })
@@ -88,22 +79,33 @@ export class CreatorStep1Dto {
 }
 
 export class CreatorStep2Dto {
-  @ApiProperty({ example: 'I help students crack DSA interviews at FAANG.', minLength: 20, maxLength: 150 })
+  @ApiProperty({
+    example: 'I help students crack DSA interviews at FAANG.',
+    minLength: 20,
+    maxLength: 150,
+  })
   @IsString()
   @MinLength(20)
   @MaxLength(150)
   bio: string
 
-  @ApiProperty({ type: [String], example: ['LeetCode', 'System Design', 'Java'], minItems: 1, maxItems: 5 })
+  @ApiProperty({
+    type: [String],
+    example: ['LeetCode', 'System Design', 'Java'],
+    minItems: 1,
+    maxItems: 5,
+  })
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(5)
   @IsString({ each: true })
+  @MinLength(1, { each: true })
+  @MaxLength(30, { each: true })
   tags: string[]
 
-  @ApiPropertyOptional({ example: 'https://res.cloudinary.com/...' })
+  @ApiPropertyOptional({ example: 'https://res.cloudinary.com/example/photo.jpg' })
   @IsOptional()
-  @IsString()
+  @IsUrl()
   photoUrl?: string
 }
 

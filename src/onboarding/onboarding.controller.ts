@@ -12,7 +12,6 @@ import { GetAuth } from '../auth/get-auth.decorator'
 import { OnboardingService } from './onboarding.service'
 import {
   LearnerStep1Dto,
-  LearnerStep2Dto,
   CreatorStep1Dto,
   CreatorStep2Dto,
   CreatorStep3Dto,
@@ -27,7 +26,7 @@ export class OnboardingController {
 
   // ── Learner ──────────────────────────────────────────
 
-  @ApiOperation({ summary: 'Save learner goal type (step 1)' })
+  @ApiOperation({ summary: 'Save learner name + goal (completes onboarding)' })
   @Post('learner/step-1')
   @HttpCode(200)
   @Roles('learner')
@@ -36,21 +35,6 @@ export class OnboardingController {
     @Body() dto: LearnerStep1Dto,
   ) {
     return this.onboardingService.saveLearnerStep1(
-      auth!.userId,
-      auth!.clerkUserId,
-      dto,
-    )
-  }
-
-  @ApiOperation({ summary: 'Save learner niches + budget (step 2 — completes onboarding)' })
-  @Post('learner/step-2')
-  @HttpCode(200)
-  @Roles('learner')
-  async learnerStep2(
-    @GetAuth() auth: Express.Request['auth'],
-    @Body() dto: LearnerStep2Dto,
-  ) {
-    return this.onboardingService.saveLearnerStep2(
       auth!.userId,
       auth!.clerkUserId,
       dto,

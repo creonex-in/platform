@@ -8,7 +8,6 @@ import {
   integer,
   pgEnum,
   decimal,
-  primaryKey,
   index,
 } from 'drizzle-orm/pg-core'
 
@@ -29,24 +28,26 @@ export const goalTypeEnum = pgEnum('goal_type', [
 ])
 
 export const nicheEnum = pgEnum('niche', [
-  'dsa_coding',
-  'cat_prep',
+  'cat_mba_prep',
+  'coding_dsa',
   'personal_finance',
-  'ui_ux_design',
-  'system_design',
-  'fitness',
-  'content_creation',
-  'product_management',
-  'data_science',
-  'other',
-])
-
-export const budgetRangeEnum = pgEnum('budget_range', [
-  'under_500',
-  '500_1000',
-  '1000_2000',
-  'above_2000',
-  'flexible',
+  'fitness_nutrition',
+  'design_creative',
+  'language_learning',
+  'digital_marketing',
+  'music_arts',
+  'upsc_govt_exams',
+  'mental_wellness',
+  'photography',
+  'science_research',
+  'real_estate',
+  'writing_content',
+  'ai_data_science',
+  'gaming_esports',
+  'cooking_food',
+  'interview_prep',
+  'ayurveda_yoga',
+  'startup_product',
 ])
 
 export const offerTypeEnum = pgEnum('offer_type', [
@@ -97,8 +98,6 @@ export const users = pgTable('users', {
     .default(false)
     .notNull(),
 
-  // Tracks which step they are on during onboarding
-  // Learner: 1 or 2 | Creator: 1, 2, or 3
   onboardingStep: integer('onboarding_step').default(1).notNull(),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -116,18 +115,14 @@ export const learnerProfiles = pgTable('learner_profiles', {
     .unique()
     .references(() => users.id, { onDelete: 'cascade' }),
 
-  // Step 1 data
   goalType: goalTypeEnum('goal_type'),
 
-  // Step 2 data
-  // Stored as array of niche enum values
+  // Populated from booking history — NOT set during onboarding
   interestedNiches: jsonb('interested_niches')
     .$type<string[]>()
     .default([])
     .notNull(),
-  budgetRange: budgetRangeEnum('budget_range'),
 
-  // Onboarding tracking
   onboardingStatus: onboardingStatusEnum('onboarding_status')
     .default('not_started')
     .notNull(),
@@ -148,23 +143,19 @@ export const creatorProfiles = pgTable('creator_profiles', {
     .unique()
     .references(() => users.id, { onDelete: 'cascade' }),
 
-  // Public profile identity
-  username: text('username').unique(), // creonex.in/username
+  username: text('username').unique(),
   displayName: text('display_name'),
   bio: text('bio'),
   profilePhotoUrl: text('profile_photo_url'),
   coverBannerUrl: text('cover_banner_url'),
 
-  // Expertise
   primaryNiche: nicheEnum('primary_niche'),
   experienceYears: integer('experience_years'),
 
-  // Discovery & quality
   qualityScore: decimal('quality_score', { precision: 6, scale: 4 })
     .default('0')
     .notNull(),
   qualityTier: text('quality_tier').default('new').notNull(),
-  // new | rising | established | expert | elite
 
   smoothedRating: decimal('smoothed_rating', { precision: 4, scale: 2 })
     .default('0')
@@ -173,16 +164,13 @@ export const creatorProfiles = pgTable('creator_profiles', {
   totalSessions: integer('total_sessions').default(0).notNull(),
   responseTimeHrs: decimal('response_time_hrs', { precision: 6, scale: 2 }),
 
-  // Boost
   inDiscoveryBoost: boolean('in_discovery_boost').default(false).notNull(),
   boostEndDate: timestamp('boost_end_date'),
 
-  // Status
   isLive: boolean('is_live').default(false).notNull(),
   isVerified: boolean('is_verified').default(false).notNull(),
   kycStatus: kycStatusEnum('kyc_status').default('not_started').notNull(),
 
-  // Social links — jsonb since optional and extensible
   socialLinks: jsonb('social_links')
     .$type<{
       youtube?: string
@@ -198,7 +186,6 @@ export const creatorProfiles = pgTable('creator_profiles', {
     .default(['English'])
     .notNull(),
 
-  // Onboarding tracking
   onboardingStatus: onboardingStatusEnum('onboarding_status')
     .default('not_started')
     .notNull(),
@@ -214,7 +201,7 @@ export const creatorProfiles = pgTable('creator_profiles', {
   }))
 
 // ============================================================
-// CREATOR TAGS — separate table for Tier 1 filtering/search
+// CREATOR TAGS
 // ============================================================
 
 export const creatorTags = pgTable('creator_tags', {
@@ -222,7 +209,7 @@ export const creatorTags = pgTable('creator_tags', {
   creatorProfileId: uuid('creator_profile_id')
     .notNull()
     .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
-  tag: text('tag').notNull(), // e.g. "Figma", "LeetCode", "Quant"
+  tag: text('tag').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 },
   (t) => ({
@@ -243,21 +230,17 @@ export const offerings = pgTable('offerings', {
   type: offerTypeEnum('type').notNull(),
   title: text('title').notNull(),
   description: text('description'),
-  price: integer('price').notNull(), // in paise (multiply rupees × 100)
+  price: integer('price').notNull(), // stored in paise (rupees × 100)
   currency: text('currency').default('INR').notNull(),
 
-  // Session-specific
   durationMinutes: integer('duration_minutes'),
 
-  // Workshop/Group-specific
   scheduledAt: timestamp('scheduled_at'),
   seatsTotal: integer('seats_total'),
   seatsRemaining: integer('seats_remaining'),
 
-  // Status
   status: offerStatusEnum('status').default('draft').notNull(),
 
-  // Analytics
   totalBookings: integer('total_bookings').default(0).notNull(),
   totalRevenuePaise: integer('total_revenue_paise').default(0).notNull(),
 

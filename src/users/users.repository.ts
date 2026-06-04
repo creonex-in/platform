@@ -295,24 +295,4 @@ export class UsersRepository {
     return result[0]
   }
 
-  async updateLearnerStep2(
-    userId: string,
-    data: {
-      niches: string[]
-      budgetRange?: string
-    },
-  ): Promise<LearnerProfile> {
-    const result = await this.db
-      .update(learnerProfiles)
-      .set({
-        interestedNiches: data.niches,
-        budgetRange: data.budgetRange as any,
-        onboardingStatus: 'complete',
-        currentStep: 2,
-        updatedAt: new Date(),
-      })
-      .where(eq(learnerProfiles.userId, userId))
-      .returning()
-    return result[0]
-  }
 }
