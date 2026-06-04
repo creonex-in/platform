@@ -1,3 +1,10 @@
+export interface ClerkPublicMetadata {
+  roles: ('learner' | 'creator')[]
+  onboarding_complete: boolean
+  onboarding_step: number
+  intent?: 'creator' | 'learner'
+}
+
 export interface ClerkEmailAddress {
   id: string;
   email_address: string;
@@ -10,6 +17,8 @@ export interface ClerkUserData {
   first_name: string | null;
   last_name: string | null;
   image_url: string;
+  public_metadata?: ClerkPublicMetadata;
+  unsafe_metadata?: Record<string, unknown>;
 }
 
 export interface ClerkDeletedData {

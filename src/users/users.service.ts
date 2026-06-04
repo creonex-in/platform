@@ -1,23 +1,102 @@
-import { Injectable } from '@nestjs/common';
-import { UpsertUserData, User, UsersRepository } from './users.repository';
+import { Injectable } from '@nestjs/common'
+import {
+  UpsertUserData,
+  User,
+  CreatorProfile,
+  LearnerProfile,
+  UsersRepository,
+} from './users.repository'
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(private readonly repo: UsersRepository) { }
 
   async getByClerkId(clerkId: string): Promise<User | null> {
-    return this.usersRepository.findByClerkId(clerkId);
+    return this.repo.findByClerkId(clerkId)
   }
 
   async getById(id: string): Promise<User | null> {
-    return this.usersRepository.findById(id);
+    return this.repo.findById(id)
   }
 
   async upsertFromClerk(data: UpsertUserData): Promise<User> {
-    return this.usersRepository.upsertFromClerk(data);
+    return this.repo.upsertFromClerk(data)
   }
 
   async deleteByClerkId(clerkId: string): Promise<void> {
-    return this.usersRepository.deleteByClerkId(clerkId);
+    return this.repo.deleteByClerkId(clerkId)
+  }
+
+  async updateRoles(
+    userId: string,
+    roles: ('learner' | 'creator')[],
+  ): Promise<User> {
+    return this.repo.updateRoles(userId, roles)
+  }
+
+  async setOnboardingComplete(userId: string): Promise<User> {
+    return this.repo.setOnboardingComplete(userId)
+  }
+
+  async updateOnboardingStep(userId: string, step: number): Promise<User> {
+    return this.repo.updateOnboardingStep(userId, step)
+  }
+
+  // Creator profile methods
+  async createCreatorProfile(userId: string): Promise<CreatorProfile> {
+    return this.repo.createCreatorProfile(userId)
+  }
+
+  async getCreatorProfile(userId: string): Promise<CreatorProfile | null> {
+    return this.repo.findCreatorProfile(userId)
+  }
+
+  async updateCreatorStep1(
+    userId: string,
+    data: { displayName: string; primaryNiche: string; experienceYears: number },
+  ): Promise<CreatorProfile> {
+    return this.repo.updateCreatorStep1(userId, data)
+  }
+
+  async updateCreatorStep2(
+    userId: string,
+    data: { bio: string; photoUrl?: string; tags: string[] },
+  ): Promise<CreatorProfile> {
+    return this.repo.updateCreatorStep2(userId, data)
+  }
+
+  async updateCreatorStep3GoLive(
+    userId: string,
+    data: {
+      offerType: string
+      title: string
+      price: number
+      durationMinutes?: number
+    },
+  ): Promise<{ profile: CreatorProfile; offeringId: string }> {
+    return this.repo.updateCreatorStep3GoLive(userId, data)
+  }
+
+  // Learner profile methods
+  async createLearnerProfile(userId: string): Promise<LearnerProfile> {
+    return this.repo.createLearnerProfile(userId)
+  }
+
+  async getLearnerProfile(userId: string): Promise<LearnerProfile | null> {
+    return this.repo.findLearnerProfile(userId)
+  }
+
+  async updateLearnerStep1(
+    userId: string,
+    data: { goalType: string },
+  ): Promise<LearnerProfile> {
+    return this.repo.updateLearnerStep1(userId, data)
+  }
+
+  async updateLearnerStep2(
+    userId: string,
+    data: { niches: string[]; budgetRange?: string },
+  ): Promise<LearnerProfile> {
+    return this.repo.updateLearnerStep2(userId, data)
   }
 }

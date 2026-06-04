@@ -1,23 +1,57 @@
 import {
   Controller,
   Get,
-  NotFoundException,
   UseGuards,
-} from '@nestjs/common';
-import { ClerkAuthGuard } from '../auth/clerk.guard';
-import { GetClerkUserId } from '../auth/get-auth.decorator';
-import { User } from './users.repository';
-import { UsersService } from './users.service';
+} from '@nestjs/common'
+import { ClerkAuthGuard } from '../auth/clerk.guard'
+import { Roles } from '../auth/roles.decorator'
+import { GetAuth } from '../auth/get-auth.decorator'
+import { UsersService } from './users.service'
 
-@Controller('users')
+@Controller('api/v1/users')
+@UseGuards(ClerkAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  /**
+   * GET /api/v1/users/me
+   * Called by Next.js on every protected page load
+   * Returns identity + routing data from JWT (already on req.auth)
+   * No extra DB query needed — guard already fetched the user
+   */
   @Get('me')
-  @UseGuards(ClerkAuthGuard)
-  async getMe(@GetClerkUserId() clerkUserId: string): Promise<User> {
-    const user = await this.usersService.getByClerkId(clerkUserId);
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+  async getMe(@GetAuth() auth: Express.Request['auth']) {
+    return {
+      userId: auth!.userId,
+      clerkUserId: auth!.clerkUserId,
+      roles: auth!.roles,
+      onboardingComplete: auth!.onboardingComplete,
+      onboardingStep: auth!.onboardingStep,
+    }
+  }
+
+
+  /**
+   * GET /api/v1/users/me/creator-profile
+   * Returns the creator profile for the logged in creator
+   * Used by creator dashboard and settings
+   */
+  @Get('me/creator-profile')
+  @Roles('creator')
+  async getMyCreatorProfile(@GetAuth() auth: Express.Request['auth']) {
+    const profile = await this.usersService.getCreatorProfile(auth!.userId)
+    return profile
+  }
+
+  /**
+   * GET /api/v1/users/me/learner-profile
+   * Returns the learner profile for the logged in user
+   * Used by learner dashboard and recommendations
+   */
+  @Get('me/learner-profile')
+  @Roles('learner')
+  async getMyLearnerProfile(@GetAuth() auth: Express.Request['auth']) {
+    const profile = await this.usersService.getLearnerProfile(auth!.userId)
+    return profile
   }
 }
