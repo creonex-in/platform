@@ -3,11 +3,14 @@ import {
   Get,
   UseGuards,
 } from '@nestjs/common'
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import { ClerkAuthGuard } from '../auth/clerk.guard'
 import { Roles } from '../auth/roles.decorator'
 import { GetAuth } from '../auth/get-auth.decorator'
 import { UsersService } from './users.service'
 
+@ApiTags('Users')
+@ApiBearerAuth()
 @Controller('api/v1/users')
 @UseGuards(ClerkAuthGuard)
 export class UsersController {
@@ -19,6 +22,7 @@ export class UsersController {
    * Returns identity + routing data from JWT (already on req.auth)
    * No extra DB query needed — guard already fetched the user
    */
+  @ApiOperation({ summary: 'Get current user identity + onboarding state' })
   @Get('me')
   async getMe(@GetAuth() auth: Express.Request['auth']) {
     return {
@@ -36,6 +40,7 @@ export class UsersController {
    * Returns the creator profile for the logged in creator
    * Used by creator dashboard and settings
    */
+  @ApiOperation({ summary: 'Get creator profile (creator role required)' })
   @Get('me/creator-profile')
   @Roles('creator')
   async getMyCreatorProfile(@GetAuth() auth: Express.Request['auth']) {
@@ -48,6 +53,7 @@ export class UsersController {
    * Returns the learner profile for the logged in user
    * Used by learner dashboard and recommendations
    */
+  @ApiOperation({ summary: 'Get learner profile (learner role required)' })
   @Get('me/learner-profile')
   @Roles('learner')
   async getMyLearnerProfile(@GetAuth() auth: Express.Request['auth']) {
