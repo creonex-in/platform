@@ -8,6 +8,34 @@
       "when": 1779459054811,
       "tag": "0000_confused_puck",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780499325892,
+      "tag": "0001_tan_the_fallen",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780508804438,
+      "tag": "0002_modern_punisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780559108502,
+      "tag": "0003_blushing_smiling_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780599007419,
+      "tag": "0004_nebulous_eddie_brock",
+      "breakpoints": true
     }
   ]
 }

@@ -1,12 +1,15 @@
-// TypeScript types for the JSON payloads Clerk sends to our webhook endpoint.
+export interface ClerkPublicMetadata {
+  roles: ('learner' | 'creator')[]
+  onboarding_complete: boolean
+  onboarding_step: number
+  intent?: 'creator' | 'learner'
+}
 
-// A single email address entry on a Clerk user account.
 export interface ClerkEmailAddress {
   id: string;
   email_address: string;
 }
 
-// User data included in user.created and user.updated webhook events.
 export interface ClerkUserData {
   id: string;
   email_addresses: ClerkEmailAddress[];
@@ -14,16 +17,15 @@ export interface ClerkUserData {
   first_name: string | null;
   last_name: string | null;
   image_url: string;
+  public_metadata?: ClerkPublicMetadata;
+  unsafe_metadata?: Record<string, unknown>;
 }
 
-// Minimal payload sent by Clerk on user.deleted events.
 export interface ClerkDeletedData {
   id: string;
   deleted: boolean;
 }
 
-// Discriminated union of all supported Clerk webhook event types.
-// The `type` field lets TypeScript narrow the correct `data` shape inside a switch statement.
 export type ClerkWebhookEvent =
   | { type: 'user.created'; data: ClerkUserData }
   | { type: 'user.updated'; data: ClerkUserData }
