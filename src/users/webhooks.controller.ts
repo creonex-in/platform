@@ -75,7 +75,6 @@ export class WebhooksController {
           publicMetadata: {
             roles,
             onboarding_complete: false,
-            onboarding_step: 1,
           },
         })
 
@@ -88,7 +87,6 @@ export class WebhooksController {
           imageUrl: data.image_url,
           roles,
           onboardingComplete: false,
-          onboardingStep: 1,
         })
 
         const user = await this.usersService.getByClerkId(data.id)

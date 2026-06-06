@@ -1,0 +1,11 @@
+-- Neon Postgres supports full ACID transactions including multi-statement transactions.
+-- Drizzle ORM's db.transaction() maps directly to BEGIN / COMMIT / ROLLBACK.
+-- All transaction fixes in onboarding.service.ts and users.repository.ts are valid
+-- and will execute correctly against Neon's connection pooling (use pool mode: session
+-- or direct connection for transaction support — NOT pool mode: transaction).
+-- Verify your DATABASE_URL uses ?pgbouncer=false or direct connection string for
+-- transaction compatibility with Neon.
+--
+-- NOTE: This project now connects via drizzle-orm/neon-serverless (WebSocket Pool),
+-- which DOES support interactive transactions. The previous drizzle-orm/neon-http
+-- driver did NOT — db.transaction() throws on it. See src/database/database.module.ts.

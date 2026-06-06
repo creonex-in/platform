@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq } from 'drizzle-orm'
-import { NeonHttpDatabase } from 'drizzle-orm/neon-http'
+import { and, eq } from 'drizzle-orm'
+import { NeonDatabase } from 'drizzle-orm/neon-serverless'
 import {
   users,
   creatorProfiles,
@@ -8,7 +8,7 @@ import {
 } from '../database/schema'
 import * as schema from '../database/schema'
 
-type DB = NeonHttpDatabase<typeof schema>
+type DB = NeonDatabase<typeof schema>
 
 export type User = typeof users.$inferSelect
 export type CreatorProfile = typeof creatorProfiles.$inferSelect
@@ -22,7 +22,6 @@ export interface UpsertUserData {
   imageUrl?: string | null
   roles?: ('learner' | 'creator')[]
   onboardingComplete?: boolean
-  onboardingStep?: number
 }
 
 @Injectable()
@@ -60,7 +59,6 @@ export class UsersRepository {
         imageUrl: data.imageUrl,
         roles: data.roles ?? ['learner'],
         onboardingComplete: data.onboardingComplete ?? false,
-        onboardingStep: data.onboardingStep ?? 1,
       })
       .onConflictDoUpdate({
         target: users.clerkId,
@@ -78,34 +76,10 @@ export class UsersRepository {
     return result[0]
   }
 
-  async updateRoles(
-    userId: string,
-    roles: ('learner' | 'creator')[],
-  ): Promise<User> {
-    const result = await this.db
-      .update(users)
-      .set({ roles, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning()
-    return result[0]
-  }
-
   async setOnboardingComplete(userId: string): Promise<User> {
     const result = await this.db
       .update(users)
       .set({ onboardingComplete: true, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning()
-    return result[0]
-  }
-
-  async updateOnboardingStep(
-    userId: string,
-    step: number,
-  ): Promise<User> {
-    const result = await this.db
-      .update(users)
-      .set({ onboardingStep: step, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning()
     return result[0]
@@ -181,35 +155,39 @@ export class UsersRepository {
       tags: string[]
     },
   ): Promise<CreatorProfile> {
-    // Update profile
-    const result = await this.db
-      .update(creatorProfiles)
-      .set({
-        bio: data.bio,
-        profilePhotoUrl: data.photoUrl,
-        currentStep: 3,
-        updatedAt: new Date(),
-      })
-      .where(eq(creatorProfiles.userId, userId))
-      .returning()
+    // All writes atomic — profile update + tag delete + tag insert succeed
+    // together or roll back together.
+    return this.db.transaction(async (tx) => {
+      // Update profile
+      const result = await tx
+        .update(creatorProfiles)
+        .set({
+          bio: data.bio,
+          profilePhotoUrl: data.photoUrl,
+          currentStep: 3,
+          updatedAt: new Date(),
+        })
+        .where(eq(creatorProfiles.userId, userId))
+        .returning()
 
-    const profile = result[0]
+      const profile = result[0]
 
-    // Replace tags — delete existing, insert new
-    await this.db
-      .delete(schema.creatorTags)
-      .where(eq(schema.creatorTags.creatorProfileId, profile.id))
+      // Replace tags — delete existing, insert new
+      await tx
+        .delete(schema.creatorTags)
+        .where(eq(schema.creatorTags.creatorProfileId, profile.id))
 
-    if (data.tags.length > 0) {
-      await this.db.insert(schema.creatorTags).values(
-        data.tags.map((tag) => ({
-          creatorProfileId: profile.id,
-          tag,
-        })),
-      )
-    }
+      if (data.tags.length > 0) {
+        await tx.insert(schema.creatorTags).values(
+          data.tags.map((tag) => ({
+            creatorProfileId: profile.id,
+            tag,
+          })),
+        )
+      }
 
-    return profile
+      return profile
+    })
   }
 
   async updateCreatorStep3GoLive(
@@ -221,36 +199,64 @@ export class UsersRepository {
       durationMinutes?: number
     },
   ): Promise<{ profile: CreatorProfile; offeringId: string }> {
-    // Mark profile as live
-    const profileResult = await this.db
-      .update(creatorProfiles)
-      .set({
-        isLive: true,
-        inDiscoveryBoost: true,
-        boostEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-        onboardingStatus: 'complete',
-        currentStep: 3,
-        updatedAt: new Date(),
-      })
-      .where(eq(creatorProfiles.userId, userId))
-      .returning()
+    // Idempotency guard — if this creator is already complete and live with a
+    // live offering, return the existing data instead of inserting a duplicate.
+    // Safe to call multiple times (e.g. retry after a failed Clerk write).
+    const existing = await this.findCreatorProfile(userId)
+    if (
+      existing &&
+      existing.onboardingStatus === 'complete' &&
+      existing.isLive
+    ) {
+      const liveOffering = await this.db
+        .select()
+        .from(schema.offerings)
+        .where(
+          and(
+            eq(schema.offerings.creatorProfileId, existing.id),
+            eq(schema.offerings.status, 'live'),
+          ),
+        )
+        .limit(1)
+      if (liveOffering[0]) {
+        return { profile: existing, offeringId: liveOffering[0].id }
+      }
+    }
 
-    const profile = profileResult[0]
+    // Both writes atomic — go-live + first offering succeed together or roll
+    // back together. No half-live profile with nothing to sell.
+    return this.db.transaction(async (tx) => {
+      // Mark profile as live
+      const profileResult = await tx
+        .update(creatorProfiles)
+        .set({
+          isLive: true,
+          inDiscoveryBoost: true,
+          boostEndDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+          onboardingStatus: 'complete',
+          currentStep: 3,
+          updatedAt: new Date(),
+        })
+        .where(eq(creatorProfiles.userId, userId))
+        .returning()
 
-    // Create first offering
-    const offeringResult = await this.db
-      .insert(schema.offerings)
-      .values({
-        creatorProfileId: profile.id,
-        type: data.offerType as any,
-        title: data.title,
-        price: data.price * 100, // rupees to paise
-        durationMinutes: data.durationMinutes,
-        status: 'live',
-      })
-      .returning()
+      const profile = profileResult[0]
 
-    return { profile, offeringId: offeringResult[0].id }
+      // Create first offering
+      const offeringResult = await tx
+        .insert(schema.offerings)
+        .values({
+          creatorProfileId: profile.id,
+          type: data.offerType as any,
+          title: data.title,
+          price: data.price * 100, // rupees to paise
+          durationMinutes: data.durationMinutes,
+          status: 'live',
+        })
+        .returning()
+
+      return { profile, offeringId: offeringResult[0].id }
+    })
   }
 
   // ── Learner Profiles ───────────────────────────────────
@@ -291,6 +297,25 @@ export class UsersRepository {
         updatedAt: new Date(),
       })
       .where(eq(learnerProfiles.userId, userId))
+      .returning()
+    return result[0]
+  }
+
+  // ── Users — identity ───────────────────────────────────
+
+  async updateUserDisplayName(
+    userId: string,
+    firstName: string,
+    lastName?: string,
+  ): Promise<User> {
+    const result = await this.db
+      .update(users)
+      .set({
+        firstName,
+        lastName: lastName ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
       .returning()
     return result[0]
   }

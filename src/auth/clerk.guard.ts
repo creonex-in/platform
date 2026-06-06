@@ -38,15 +38,26 @@ export class ClerkAuthGuard implements CanActivate {
       const payload = await verifyToken(token, { jwtKey })
 
       // 3. Read roles from JWT claims — Clerk is authority, zero extra DB query
-      // Field name depends on JWT template: default Clerk template uses 'metadata',
-      // custom templates may use 'publicMetadata'
+      // Cover all three common Clerk JWT template naming conventions.
       const raw = payload as Record<string, unknown>
-      const metadata = (raw.metadata ?? raw.publicMetadata) as
-        Partial<ClerkPublicMetadata> | undefined
+      const metadata = (raw.public_metadata ??
+        raw.publicMetadata ??
+        raw.metadata) as Partial<ClerkPublicMetadata> | undefined
 
-      const roles = metadata?.roles ?? ['learner']
-      const onboardingComplete = metadata?.onboarding_complete ?? false
-      const onboardingStep = metadata?.onboarding_step ?? 1
+      // Roles must be present and an array — never silently downgrade a creator
+      // to learner because of a misnamed JWT claim. Log keys (not values — PII)
+      // and fail hard so the misconfiguration is visible.
+      if (!metadata || !Array.isArray(metadata.roles)) {
+        console.error(
+          'JWT roles claim missing or malformed. Payload keys:',
+          Object.keys(raw),
+        )
+        throw new UnauthorizedException('JWT roles claim missing or malformed')
+      }
+
+      const roles = metadata.roles
+      const onboardingComplete = metadata.onboarding_complete ?? false
+      const onboardingStep = metadata.onboarding_step ?? 1
 
       // 4. One DB query — only to resolve internal userId for business queries
       const user = await this.usersService.getByClerkId(payload.sub)
@@ -73,7 +84,10 @@ export class ClerkAuthGuard implements CanActivate {
       if (!hasRole) throw new Error('insufficient role')
 
       return true
-    } catch {
+    } catch (err) {
+      // Preserve specific auth errors (e.g. malformed roles claim); otherwise
+      // collapse to a generic 401.
+      if (err instanceof UnauthorizedException) throw err
       throw new UnauthorizedException('Unauthorized')
     }
   }

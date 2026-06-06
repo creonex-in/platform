@@ -80,6 +80,7 @@ export const onboardingStatusEnum = pgEnum('onboarding_status', [
 // ============================================================
 // USERS — identity layer, mirrors Clerk
 // ============================================================
+// Migration required: DROP COLUMN onboarding_step from users table
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -97,8 +98,6 @@ export const users = pgTable('users', {
   onboardingComplete: boolean('onboarding_complete')
     .default(false)
     .notNull(),
-
-  onboardingStep: integer('onboarding_step').default(1).notNull(),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

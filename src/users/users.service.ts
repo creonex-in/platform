@@ -27,19 +27,16 @@ export class UsersService {
     return this.repo.deleteByClerkId(clerkId)
   }
 
-  async updateRoles(
-    userId: string,
-    roles: ('learner' | 'creator')[],
-  ): Promise<User> {
-    return this.repo.updateRoles(userId, roles)
-  }
-
   async setOnboardingComplete(userId: string): Promise<User> {
     return this.repo.setOnboardingComplete(userId)
   }
 
-  async updateOnboardingStep(userId: string, step: number): Promise<User> {
-    return this.repo.updateOnboardingStep(userId, step)
+  async updateUserDisplayName(
+    userId: string,
+    firstName: string,
+    lastName?: string,
+  ): Promise<User> {
+    return this.repo.updateUserDisplayName(userId, firstName, lastName)
   }
 
   // Creator profile methods

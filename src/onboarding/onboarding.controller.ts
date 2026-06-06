@@ -22,7 +22,7 @@ import {
 @Controller('api/v1/onboarding')
 @UseGuards(ClerkAuthGuard)
 export class OnboardingController {
-  constructor(private readonly onboardingService: OnboardingService) {}
+  constructor(private readonly onboardingService: OnboardingService) { }
 
   // ── Learner ──────────────────────────────────────────
 
