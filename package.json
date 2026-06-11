@@ -1,0 +1,21 @@
+{
+  "name": "creonex-platform",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "db:generate": "turbo db:generate",
+    "db:migrate": "turbo db:migrate"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "prettier": "^3.5.3"
+  },
+  "packageManager": "pnpm@10.34.2",
+  "engines": {
+    "node": ">=20"
+  }
+}

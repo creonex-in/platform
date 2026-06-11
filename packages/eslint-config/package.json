@@ -1,0 +1,13 @@
+{
+  "name": "@creonex/eslint-config",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "@eslint/js": "^9.28.0",
+    "typescript-eslint": "^8.34.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.28.0"
+  }
+}

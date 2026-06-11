@@ -1,0 +1,23 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build outputs
+dist
+.next
+build
+
+# env
+.env
+.env.local
+.env.*.local
+
+# turbo
+.turbo
+
+# drizzle
+drizzle/
+
+# misc
+*.tsbuildinfo
+.DS_Store

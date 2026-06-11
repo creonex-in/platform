@@ -1,0 +1,13 @@
+{
+  "extends": "../../packages/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "paths": {
+      "@creonex/types": ["../../packages/types/src/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

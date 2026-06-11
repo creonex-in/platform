@@ -1,0 +1,17 @@
+{
+  "name": "@creonex/types",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "devDependencies": {
+    "@creonex/typescript-config": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}
