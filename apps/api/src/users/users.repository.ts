@@ -109,41 +109,70 @@ export class UsersRepository {
     userId: string,
     data: { bio: string; tags: string[]; photoUrl?: string },
   ) {
-    await this.db.transaction(async (tx) => {
-      await tx
-        .update(creatorProfiles)
-        .set({
-          bio: data.bio,
-          profilePhotoUrl: data.photoUrl ?? null,
-          onboardingStatus: 'in_progress',
-          currentStep: 3,
-          updatedAt: new Date(),
-        })
-        .where(eq(creatorProfiles.userId, userId))
+    // neon-http driver has no transaction support — sequential queries.
+    // Tag replace (delete + insert) is retry-safe if a step fails mid-way.
+    await this.db
+      .update(creatorProfiles)
+      .set({
+        bio: data.bio,
+        profilePhotoUrl: data.photoUrl ?? null,
+        onboardingStatus: 'in_progress',
+        currentStep: 3,
+        updatedAt: new Date(),
+      })
+      .where(eq(creatorProfiles.userId, userId))
 
-      const profile = await tx
-        .select({ id: creatorProfiles.id })
-        .from(creatorProfiles)
-        .where(eq(creatorProfiles.userId, userId))
-        .limit(1)
-        .then((r) => r[0])
+    const profile = await this.db
+      .select({ id: creatorProfiles.id })
+      .from(creatorProfiles)
+      .where(eq(creatorProfiles.userId, userId))
+      .limit(1)
+      .then((r) => r[0])
 
-      if (!profile) return
+    if (!profile) return
 
-      await tx
-        .delete(creatorTags)
-        .where(eq(creatorTags.creatorProfileId, profile.id))
+    await this.db
+      .delete(creatorTags)
+      .where(eq(creatorTags.creatorProfileId, profile.id))
 
-      if (data.tags.length > 0) {
-        await tx.insert(creatorTags).values(
-          data.tags.map((tag) => ({
-            id: generateId(),
-            creatorProfileId: profile.id,
-            tag,
-          })),
-        )
-      }
-    })
+    if (data.tags.length > 0) {
+      await this.db.insert(creatorTags).values(
+        data.tags.map((tag) => ({
+          id: generateId(),
+          creatorProfileId: profile.id,
+          tag,
+        })),
+      )
+    }
+  }
+
+  async updateCreatorQuestions(
+    userId: string,
+    data: {
+      displayName: string
+      nicheCategory: string
+      credentialType: string
+      audienceType: string
+      primaryPlatform: string
+      creatorGoal: string
+      socialLinks?: { instagram?: string; youtube?: string; linkedin?: string; twitter?: string; website?: string }
+    },
+  ) {
+    await this.db
+      .update(creatorProfiles)
+      .set({
+        displayName: data.displayName,
+        nicheCategory: data.nicheCategory,
+        credentialType: data.credentialType,
+        audienceType: data.audienceType,
+        primaryPlatform: data.primaryPlatform,
+        creatorGoal: data.creatorGoal,
+        ...(data.socialLinks ? { socialLinks: data.socialLinks } : {}),
+        onboardingStatus: 'in_progress',
+        currentStep: 2,
+        updatedAt: new Date(),
+      })
+      .where(eq(creatorProfiles.userId, userId))
   }
 
   async updateCreatorStep3GoLive(
@@ -153,59 +182,67 @@ export class UsersRepository {
       title: string
       price: number
       durationMinutes?: number
+      seatsTotal?: number
     },
   ) {
-    return await this.db.transaction(async (tx) => {
-      const profile = await tx
-        .select()
-        .from(creatorProfiles)
-        .where(eq(creatorProfiles.userId, userId))
-        .limit(1)
-        .then((r) => r[0])
+    // neon-http driver has no transaction support — sequential queries
+    // ordered for retry-safety: offering inserted before profile flips live,
+    // and existing offering is reused so a retry never duplicates it.
+    const profile = await this.db
+      .select()
+      .from(creatorProfiles)
+      .where(eq(creatorProfiles.userId, userId))
+      .limit(1)
+      .then((r) => r[0])
 
-      if (!profile) throw new Error('Creator profile not found')
+    if (!profile) throw new Error('Creator profile not found')
 
-      // Idempotent — if already live return existing offering
-      if (profile.isLive) {
-        const existingOffer = await tx
-          .select({ id: offerings.id })
-          .from(offerings)
-          .where(eq(offerings.creatorProfileId, profile.id))
-          .limit(1)
-          .then((r) => r[0])
-        return { profile, offeringId: existingOffer?.id }
-      }
+    const existingOffer = await this.db
+      .select({ id: offerings.id })
+      .from(offerings)
+      .where(eq(offerings.creatorProfileId, profile.id))
+      .limit(1)
+      .then((r) => r[0])
 
-      const username = await generateUsername(profile.displayName ?? '', tx)
-      const boostEnd = new Date()
-      boostEnd.setDate(boostEnd.getDate() + 14)
+    // Idempotent — if already live return existing offering
+    if (profile.isLive) {
+      return { profile, offeringId: existingOffer?.id }
+    }
 
-      await tx
-        .update(creatorProfiles)
-        .set({
-          username,
-          isLive: true,
-          inDiscoveryBoost: true,
-          boostEndDate: boostEnd,
-          onboardingStatus: 'complete',
-          currentStep: 4,
-          updatedAt: new Date(),
-        })
-        .where(eq(creatorProfiles.userId, userId))
-
-      const offeringId = generateId()
-      await tx.insert(offerings).values({
+    let offeringId = existingOffer?.id
+    if (!offeringId) {
+      offeringId = generateId()
+      await this.db.insert(offerings).values({
         id: offeringId,
         creatorProfileId: profile.id,
         type: data.offerType as typeof offerings.$inferInsert['type'],
         title: data.title,
         price: data.price * 100, // INR → paise
         durationMinutes: data.durationMinutes,
+        seatsTotal: data.seatsTotal,
+        seatsRemaining: data.seatsTotal,
         status: 'live',
       })
+    }
 
-      return { profile: { ...profile, username }, offeringId }
-    })
+    const username = await generateUsername(profile.displayName ?? '', this.db)
+    const boostEnd = new Date()
+    boostEnd.setDate(boostEnd.getDate() + 14)
+
+    await this.db
+      .update(creatorProfiles)
+      .set({
+        username,
+        isLive: true,
+        inDiscoveryBoost: true,
+        boostEndDate: boostEnd,
+        onboardingStatus: 'complete',
+        currentStep: 4,
+        updatedAt: new Date(),
+      })
+      .where(eq(creatorProfiles.userId, userId))
+
+    return { profile: { ...profile, username }, offeringId }
   }
 
   async updateUserName(userId: string, firstName: string, lastName?: string) {

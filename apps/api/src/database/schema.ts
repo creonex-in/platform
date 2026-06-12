@@ -208,6 +208,12 @@ export const creatorProfiles = pgTable(
       .default('not_started')
       .notNull(),
     currentStep: integer('current_step').default(1).notNull(),
+    // Creator discovery answers (onboarding questions)
+    nicheCategory: text('niche_category'),
+    credentialType: text('credential_type'),
+    audienceType: text('audience_type'),
+    primaryPlatform: text('primary_platform'),
+    creatorGoal: text('creator_goal'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

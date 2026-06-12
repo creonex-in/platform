@@ -19,9 +19,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "randomuser.me" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
-  allowedDevOrigins: ['10.252.240.172s'],
+  allowedDevOrigins: ['10.252.240.172'],
 };
 
 export default nextConfig;

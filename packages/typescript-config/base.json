@@ -11,7 +11,9 @@
     "preserveWatchOutput": true,
     "skipLibCheck": true,
     "strict": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "exclude": ["node_modules"]
 }

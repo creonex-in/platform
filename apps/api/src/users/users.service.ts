@@ -48,7 +48,7 @@ export class UsersService {
   async addCreatorRole(userId: string, currentRole: string) {
     const roles = parseRoles(currentRole)
     if (roles.includes('creator')) {
-      return { success: true, alreadyCreator: true, roles, redirectTo: '/creator/dashboard' }
+      return { success: true, alreadyCreator: true, roles, redirectTo: '/dashboard' }
     }
     const newRole = [...roles, 'creator'].join(',') as string
     await this.repo.updateUserRole(userId, newRole)

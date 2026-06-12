@@ -33,14 +33,12 @@ export function UserMenu(): React.ReactElement | null {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background hover:opacity-90 transition-opacity overflow-hidden">
-          {image ? (
-            <Image src={image} alt={name ?? ''} width={32} height={32} className="object-cover" />
-          ) : (
-            initials
-          )}
-        </button>
+      <DropdownMenuTrigger className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground ring-2 ring-background hover:opacity-90 transition-opacity overflow-hidden">
+        {image ? (
+          <Image src={image} alt={name ?? ''} width={32} height={32} className="object-cover" />
+        ) : (
+          initials
+        )}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-52">

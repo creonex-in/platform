@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -8,10 +6,6 @@ export default async function OnboardingLayout({
 }: {
   children: React.ReactNode
 }): Promise<React.ReactElement> {
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('better-auth.session_token')
-  if (!sessionCookie) redirect('/sign-in')
-
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
       <header className="flex h-16 shrink-0 items-center border-b border-border/60 bg-background/80 px-5 backdrop-blur-sm sm:px-8">

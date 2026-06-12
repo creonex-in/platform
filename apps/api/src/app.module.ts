@@ -35,7 +35,7 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
             }),
           ],
           session: {
-            cookieCache: { enabled: true, maxAge: 60 * 5 },
+            cookieCache: { enabled: false },
           },
         }),
       })) as any,

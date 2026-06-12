@@ -71,8 +71,10 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
+        {/* debounce keeps recharts from redrawing every frame while the sidebar width animates */}
         <RechartsPrimitive.ResponsiveContainer
           initialDimension={initialDimension}
+          debounce={150}
         >
           {children}
         </RechartsPrimitive.ResponsiveContainer>

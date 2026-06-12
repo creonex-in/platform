@@ -53,14 +53,9 @@ export default async function proxy(request: NextRequest) {
   const isCreator = roles.includes('creator')
   const isLearner = roles.includes('learner')
 
-  // ── Onboarding ────────────────────────────────────────────────────────────
-  if (isOnboardingPath(pathname)) {
-    if (pathname.startsWith('/onboarding/creator') && !isCreator)
-      return NextResponse.redirect(new URL('/learner/dashboard', request.url))
-    if (pathname.startsWith('/onboarding/learner') && !isLearner)
-      return NextResponse.redirect(new URL('/sign-in', request.url))
-    return NextResponse.next()
-  }
+  // ── Onboarding — session existence already checked above ─────────────────
+  // Role enforcement happens at NestJS API level; proxy only guards session presence
+  if (isOnboardingPath(pathname)) return NextResponse.next()
 
   // ── Creator routes ────────────────────────────────────────────────────────
   if (isCreatorPath(pathname)) {

@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { UsersRepository } from '../users/users.repository'
-import type { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto } from './onboarding.dto'
+import type { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorQuestionsDto } from './onboarding.dto'
 
 @Injectable()
 export class OnboardingService {
@@ -69,14 +69,37 @@ export class OnboardingService {
       title: dto.title,
       price: dto.price,
       durationMinutes: dto.durationMinutes,
+      seatsTotal: dto.seatsTotal,
     })
 
     return {
       success: true,
       username: result.profile.username,
-      profileUrl: `/creator/${result.profile.username}`,
+      profileUrl: `/c/${result.profile.username}`,
       offeringId: result.offeringId,
-      redirectTo: '/creator/dashboard',
+      redirectTo: '/dashboard',
     }
+  }
+
+  async saveCreatorQuestions(userId: string, dto: CreatorQuestionsDto) {
+    const [firstName, ...rest] = dto.fullName.trim().split(' ')
+    await this.repo.updateUserName(userId, firstName!, rest.join(' ') || undefined)
+
+    let profile = await this.repo.getCreatorProfile(userId)
+    if (!profile) {
+      profile = await this.repo.createCreatorProfile(userId)
+    }
+
+    await this.repo.updateCreatorQuestions(userId, {
+      displayName: dto.fullName,
+      nicheCategory: dto.nicheCategory,
+      credentialType: dto.credentialType,
+      audienceType: dto.audienceType,
+      primaryPlatform: dto.primaryPlatform,
+      creatorGoal: dto.creatorGoal,
+      socialLinks: dto.socialLinks,
+    })
+
+    return { success: true, nextStep: 2 }
   }
 }

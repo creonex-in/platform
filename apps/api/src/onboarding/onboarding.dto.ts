@@ -3,8 +3,10 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
+  IsObject,
   IsArray,
   IsUrl,
+  IsIn,
   MinLength,
   MaxLength,
   Min,
@@ -120,7 +122,7 @@ export class CreatorStep3Dto {
   @ApiProperty()
   @IsString()
   @MinLength(5)
-  @MaxLength(60)
+  @MaxLength(80)
   title!: string
 
   @ApiProperty({ minimum: 99, description: 'Price in INR' })
@@ -132,4 +134,70 @@ export class CreatorStep3Dto {
   @IsOptional()
   @IsEnum(DURATION_OPTIONS)
   durationMinutes?: 30 | 45 | 60 | 90
+
+  @ApiPropertyOptional({ minimum: 2, maximum: 100, description: 'Max seats for group sessions' })
+  @IsOptional()
+  @IsNumber()
+  @Min(2)
+  @Max(100)
+  seatsTotal?: number
+}
+
+const NICHE_CATEGORIES = [
+  'exam_prep', 'professional_skills', 'health_wellness', 'creative_skills', 'undecided',
+] as const
+
+const CREDENTIAL_TYPES = [
+  'verified_result', 'professional_exp', 'personal_transformation', 'community_teaching', 'deep_expertise',
+] as const
+
+const AUDIENCE_TYPES = [
+  'exam_aspirants', 'working_professionals', 'health_lifestyle', 'aspiring_creatives', 'undefined_audience',
+] as const
+
+const PLATFORMS = [
+  'instagram', 'whatsapp', 'telegram', 'youtube', 'multi_platform',
+] as const
+
+const CREATOR_GOALS = [
+  'full_income', 'validate_grow', 'side_income', 'build_foundation', 'exploring',
+] as const
+
+export class CreatorQuestionsDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(60)
+  fullName!: string
+
+  @ApiProperty({ enum: NICHE_CATEGORIES })
+  @IsIn([...NICHE_CATEGORIES])
+  nicheCategory!: string
+
+  @ApiProperty({ enum: CREDENTIAL_TYPES })
+  @IsIn([...CREDENTIAL_TYPES])
+  credentialType!: string
+
+  @ApiProperty({ enum: AUDIENCE_TYPES })
+  @IsIn([...AUDIENCE_TYPES])
+  audienceType!: string
+
+  @ApiProperty({ enum: PLATFORMS })
+  @IsIn([...PLATFORMS])
+  primaryPlatform!: string
+
+  @ApiProperty({ enum: CREATOR_GOALS })
+  @IsIn([...CREATOR_GOALS])
+  creatorGoal!: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsObject()
+  socialLinks?: {
+    instagram?: string
+    youtube?: string
+    linkedin?: string
+    twitter?: string
+    website?: string
+  }
 }

@@ -9,6 +9,7 @@ import {
   CreatorStep1Dto,
   CreatorStep2Dto,
   CreatorStep3Dto,
+  CreatorQuestionsDto,
 } from './onboarding.dto'
 
 @ApiTags('Onboarding')
@@ -60,5 +61,16 @@ export class OnboardingController {
     @Body() dto: CreatorStep3Dto,
   ) {
     return this.onboardingService.saveCreatorStep3(session.user.id, dto)
+  }
+
+  @Post('creator/questions')
+  @Roles('creator')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Save creator discovery questions — step 1 wizard' })
+  creatorQuestions(
+    @Session() session: UserSession,
+    @Body() dto: CreatorQuestionsDto,
+  ) {
+    return this.onboardingService.saveCreatorQuestions(session.user.id, dto)
   }
 }

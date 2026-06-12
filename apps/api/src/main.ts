@@ -13,13 +13,9 @@ async function bootstrap() {
   const expressApp = app.getHttpAdapter().getInstance()
   const authService = app.get<AuthService>(AuthService)
 
-  // Mount Better Auth before body parsers
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  expressApp.all(/^\/api\/auth\/.*/, toNodeHandler(authService.instance.handler))
-
-  // Re-enable body parser after Better Auth
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   expressApp.use(require('express').json())
+  expressApp.all(/^\/api\/auth\/.*/, toNodeHandler(authService.instance.handler))
 
   app.use(cookieParser())
 

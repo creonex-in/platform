@@ -10,6 +10,8 @@ export function CreatorDashboardButton(): React.ReactElement | null {
 
   if (!session?.user?.role) return null
 
+  console.log(session);
+
   const roles = parseRoles(session.user.role)
   if (!roles.includes('creator')) return null
 

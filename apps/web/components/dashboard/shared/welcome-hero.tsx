@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 interface HeroStat {
   label: string
@@ -8,6 +8,7 @@ interface HeroStat {
 interface WelcomeHeroProps {
   name: string
   initials: string
+  image?: string | null
   subtitle: string
   stats?: HeroStat[]
   action?: React.ReactNode
@@ -21,6 +22,7 @@ function getGreeting(): string {
 export function WelcomeHero({
   name,
   initials,
+  image,
   subtitle,
   stats,
   action,
@@ -33,6 +35,7 @@ export function WelcomeHero({
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Avatar className="size-12 sm:size-14">
+            {image && <AvatarImage src={image} alt={name} />}
             <AvatarFallback className="bg-secondary text-base font-semibold text-foreground">
               {initials}
             </AvatarFallback>

@@ -1,6 +1,30 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { serverAuthClient } from '@/lib/auth-server-client'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+
+function onboardingStepUrl(currentStep: number, base: string): string {
+  const stepMap: Record<number, string> = {
+    1: '/onboarding/creator/step-1',
+    2: '/onboarding/creator/step-2',
+    3: '/onboarding/creator/step-3',
+  }
+  return new URL(stepMap[currentStep] ?? '/onboarding/creator/step-1', base).toString()
+}
+
+async function getCreatorProfile(cookieHeader: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/users/me/creator-profile`, {
+      headers: { Cookie: cookieHeader },
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    return res.json() as Promise<{ isLive: boolean; currentStep: number }>
+  } catch {
+    return null
+  }
+}
+
 export async function GET(request: NextRequest) {
   const intent = request.nextUrl.searchParams.get('intent')
   const sessionCookie = request.cookies.get('better-auth.session_token')
@@ -25,29 +49,43 @@ export async function GET(request: NextRequest) {
   const roles = ((session.user as { role?: string }).role ?? '').split(',').filter(Boolean)
   const isCreator = roles.includes('creator')
 
-  // New user with creator intent — assign role then send to onboarding
-  if (intent === 'creator' && !isCreator) {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'}/api/v1/users/me/add-creator-role`,
-        {
+  // ── Creator intent: assign role if needed, then route ────────────────────
+  if (intent === 'creator') {
+    if (!isCreator) {
+      try {
+        const res = await fetch(`${API_URL}/api/v1/users/me/add-creator-role`, {
           method: 'POST',
           headers: { Cookie: cookieHeader },
-        },
-      )
-      if (res.ok) {
-        return NextResponse.redirect(new URL('/onboarding/creator/step-1', request.url))
+        })
+        if (res.ok) {
+          return NextResponse.redirect(new URL('/onboarding/creator/step-1', request.url))
+        }
+      } catch {
+        // fall through to role-based routing
       }
-    } catch {
-      // fall through to role-based routing on API error
+      return NextResponse.redirect(new URL('/onboarding/creator/step-1', request.url))
     }
+
+    // Already a creator — check onboarding status
+    const profile = await getCreatorProfile(cookieHeader)
+    if (!profile || !profile.isLive) {
+      return NextResponse.redirect(
+        new URL(onboardingStepUrl(profile?.currentStep ?? 1, request.url), request.url),
+      )
+    }
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Returning creator or just-assigned creator
-  if (isCreator || intent === 'creator') {
-    return NextResponse.redirect(new URL(isCreator ? '/dashboard' : '/onboarding/creator/step-1', request.url))
+  // ── No intent (sign-in via Google) — route by actual role ────────────────
+  if (isCreator) {
+    const profile = await getCreatorProfile(cookieHeader)
+    if (!profile || !profile.isLive) {
+      return NextResponse.redirect(
+        new URL(onboardingStepUrl(profile?.currentStep ?? 1, request.url), request.url),
+      )
+    }
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Everyone else — learner dashboard
   return NextResponse.redirect(new URL('/learner/dashboard', request.url))
 }

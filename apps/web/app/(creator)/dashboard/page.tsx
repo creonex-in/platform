@@ -11,12 +11,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 import { creatorMetrics } from '@/data/mock-earnings'
 import { mockBookings } from '@/data/mock-bookings'
-import { formatCurrency, cn } from '@/lib/utils'
+import { formatCurrency, cn, getInitials } from '@/lib/utils'
+import { getCreatorContext } from '@/dal/users.dal'
 import Link from 'next/link'
 
 export const metadata = { title: 'Dashboard — Creonex' }
 
-export default function CreatorDashboardPage(): React.ReactElement {
+export default async function CreatorDashboardPage(): Promise<React.ReactElement> {
+  const { user, profile } = await getCreatorContext()
+  const displayName = profile?.displayName ?? user?.name ?? 'Creator'
+  const avatarImage = profile?.profilePhotoUrl ?? user?.image ?? null
+
   const upcomingBookings = mockBookings.filter(
     (b) => b.status === 'upcoming' || b.status === 'confirmed'
   )
@@ -25,12 +30,13 @@ export default function CreatorDashboardPage(): React.ReactElement {
     <>
       <DashboardTopbar
         title="Dashboard"
-        action={<ProfileLinkButton username="meerav" />}
+        action={profile?.username ? <ProfileLinkButton username={profile.username} /> : undefined}
       />
       <div className="space-y-8 p-4 sm:p-6 lg:p-8">
         <WelcomeHero
-          name="Meera Venkatesh"
-          initials="MV"
+          name={displayName}
+          initials={getInitials(displayName)}
+          image={avatarImage}
           subtitle="Here's how your creator business is doing today."
           stats={[
             { label: 'This month', value: formatCurrency(creatorMetrics.earningsThisMonth) },
@@ -43,13 +49,17 @@ export default function CreatorDashboardPage(): React.ReactElement {
                 <FontAwesomeIcon icon={faPlus} className="mr-1 size-4" />
                 New offer
               </Link>
-              <Link
-                href="/creator/dashboard"
-                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-              >
-                <FontAwesomeIcon icon={faShareNodes} className="mr-1 size-3.5" />
-                Share page
-              </Link>
+              {profile?.username && (
+                <Link
+                  href={`/c/${profile.username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                >
+                  <FontAwesomeIcon icon={faShareNodes} className="mr-1 size-3.5" />
+                  Share page
+                </Link>
+              )}
             </>
           }
         />

@@ -206,7 +206,22 @@ export function AppSidebar({
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border p-2 gap-1">
-          <div className="flex items-center gap-2.5 rounded-md px-1.5 py-1">
+          {role === 'creator' && (
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Learner Mode"
+                  className="h-10 gap-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-primary/10 hover:from-blue-500/20 hover:to-primary/20 text-foreground font-medium border border-border/50 shadow-sm transition-all"
+                  render={<Link href="/learner/dashboard" />}
+                >
+                  <FontAwesomeIcon icon={faGraduationCap} className="size-4 text-blue-500" />
+                  <span>Switch to Learner</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          )}
+
+          <div className="flex items-center gap-2.5 rounded-md px-1.5 py-2 mt-1">
             <Avatar className="size-8 shrink-0">
               <AvatarFallback className="bg-muted text-xs font-medium">
                 {userInitials}

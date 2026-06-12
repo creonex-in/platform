@@ -9,7 +9,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "tsx --env-file=.env migrate.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "type-check": "tsc --noEmit"
   },
@@ -42,6 +42,7 @@
     "@types/node": "^22.15.21",
     "@types/ws": "^8.5.14",
     "cross-env": "^10.1.0",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

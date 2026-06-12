@@ -19,7 +19,7 @@ interface ProfileLinkButtonProps {
 
 export function ProfileLinkButton({ username }: ProfileLinkButtonProps): React.ReactElement {
   const [copied, setCopied] = useState(false)
-  const path = `/creator/${username}`
+  const path = `/c/${username}`
 
   function copy(): void {
     const url = typeof window !== 'undefined' ? `${window.location.origin}${path}` : path
@@ -39,7 +39,7 @@ export function ProfileLinkButton({ username }: ProfileLinkButtonProps): React.R
       >
         <FontAwesomeIcon icon={faLink} className="size-3.5 shrink-0 text-primary" />
         <span className="truncate font-medium">
-          creonex.in/{username}
+          creonex.in/c/{username}
         </span>
         <FontAwesomeIcon
           icon={faArrowUpRightFromSquare}
