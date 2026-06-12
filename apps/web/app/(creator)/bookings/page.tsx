@@ -18,7 +18,7 @@ const statusTabs: { value: string; label: string; statuses: BookingStatus[] }[] 
 ]
 
 const categories = [
-  { label: '1:1 Calls', value: '1:1' },
+  { label: '1:1 Calls', value: 'one_on_one' },
   { label: 'Workshops', value: 'workshop' },
   { label: 'Group', value: 'group' },
   { label: 'Products', value: 'digital' },

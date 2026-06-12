@@ -8,7 +8,7 @@ import type { OfferFormValues } from './index'
 import { formatCurrency } from '@/lib/utils'
 
 const typeConfig: Record<OfferType, { label: string; icon: typeof faPhone }> = {
-  '1:1': { label: '1:1 Session', icon: faPhone },
+  one_on_one: { label: '1:1 Session', icon: faPhone },
   workshop: { label: 'Workshop', icon: faCalendarDays },
   group: { label: 'Group Call', icon: faUsers },
   digital: { label: 'Digital', icon: faFileLines },

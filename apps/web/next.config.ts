@@ -22,7 +22,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
-  allowedDevOrigins: ['10.252.240.172'],
 };
 
 export default nextConfig;

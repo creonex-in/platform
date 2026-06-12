@@ -2,6 +2,7 @@
   "extends": "@creonex/typescript-config/base.json",
   "compilerOptions": {
     "module": "ESNext",
+    "rootDir": "src",
     "outDir": "dist"
   },
   "include": ["src"]

@@ -1,41 +1,47 @@
-export type GoalType =
-  | 'cat_prep'
-  | 'job_switch'
-  | 'skill_upgrade'
-  | 'freelancing'
-  | 'investing'
-  | 'fitness'
-  | 'other'
+// ── Enums (runtime arrays — derive types from these, not the other way) ───────
 
-export type Niche =
-  | 'cat_mba_prep'
-  | 'coding_dsa'
-  | 'personal_finance'
-  | 'fitness_nutrition'
-  | 'design_creative'
-  | 'language_learning'
-  | 'digital_marketing'
-  | 'music_arts'
-  | 'upsc_govt_exams'
-  | 'mental_wellness'
-  | 'photography'
-  | 'science_research'
-  | 'real_estate'
-  | 'writing_content'
-  | 'ai_data_science'
-  | 'gaming_esports'
-  | 'cooking_food'
-  | 'interview_prep'
-  | 'ayurveda_yoga'
-  | 'startup_product'
+export const NICHES = [
+  'cat_mba_prep', 'coding_dsa', 'personal_finance', 'fitness_nutrition',
+  'design_creative', 'language_learning', 'digital_marketing', 'music_arts',
+  'upsc_govt_exams', 'mental_wellness', 'photography', 'science_research',
+  'real_estate', 'writing_content', 'ai_data_science', 'gaming_esports',
+  'cooking_food', 'interview_prep', 'ayurveda_yoga', 'startup_product',
+] as const
 
-export type OfferType = 'one_on_one' | 'workshop' | 'group' | 'digital'
+export const GOAL_TYPES = [
+  'cat_prep', 'job_switch', 'skill_upgrade',
+  'freelancing', 'investing', 'fitness', 'other',
+] as const
 
-export type OfferStatus = 'draft' | 'live' | 'paused' | 'archived'
+export const OFFER_TYPES = [
+  'one_on_one', 'workshop', 'group', 'digital',
+] as const
 
-export type KycStatus = 'not_started' | 'pending' | 'verified' | 'failed'
+export const OFFER_STATUSES = [
+  'draft', 'live', 'paused', 'archived',
+] as const
 
-export type OnboardingStatus = 'not_started' | 'in_progress' | 'complete'
+export const KYC_STATUSES = [
+  'not_started', 'pending', 'verified', 'failed',
+] as const
+
+export const ONBOARDING_STATUSES = [
+  'not_started', 'in_progress', 'complete',
+] as const
+
+export const DURATION_OPTIONS = [30, 45, 60, 90] as const
+
+// ── Types derived from arrays ─────────────────────────────────────────────────
+
+export type Niche = typeof NICHES[number]
+export type GoalType = typeof GOAL_TYPES[number]
+export type OfferType = typeof OFFER_TYPES[number]
+export type OfferStatus = typeof OFFER_STATUSES[number]
+export type KycStatus = typeof KYC_STATUSES[number]
+export type OnboardingStatus = typeof ONBOARDING_STATUSES[number]
+export type DurationOption = typeof DURATION_OPTIONS[number]
+
+// ── Step request shapes ───────────────────────────────────────────────────────
 
 export interface LearnerStep1Request {
   fullName: string
@@ -58,11 +64,11 @@ export interface CreatorStep3Request {
   offerType: OfferType
   title: string
   price: number
-  durationMinutes?: 30 | 45 | 60 | 90
+  durationMinutes?: DurationOption
 }
 
-export interface OnboardingStepResponse {
-  success: boolean
-  nextStep?: number
-  redirectTo?: string
-}
+// Aliases — web app uses "Data" suffix
+export type LearnerStep1Data = LearnerStep1Request
+export type CreatorStep1Data = CreatorStep1Request
+export type CreatorStep2Data = CreatorStep2Request
+export type CreatorStep3Data = CreatorStep3Request

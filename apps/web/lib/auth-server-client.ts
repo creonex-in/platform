@@ -7,4 +7,4 @@ export const serverAuthClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000',
   basePath: '/api/auth',
   plugins: [adminClient()],
-})
+});

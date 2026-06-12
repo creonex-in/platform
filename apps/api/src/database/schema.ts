@@ -9,6 +9,14 @@ import {
   decimal,
   index,
 } from 'drizzle-orm/pg-core'
+import {
+  NICHES,
+  GOAL_TYPES,
+  OFFER_TYPES,
+  OFFER_STATUSES,
+  KYC_STATUSES,
+  ONBOARDING_STATUSES,
+} from '@creonex/types'
 
 // ============================================================
 // BETTER AUTH TABLES
@@ -26,7 +34,7 @@ export const user = pgTable('user', {
   banReason: text('ban_reason'),
   banExpires: timestamp('ban_expires'),
   createdAt: timestamp('created_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
+  updatedAt: timestamp('updated_at').notNull().$onUpdateFn(() => new Date()),
 })
 
 export const session = pgTable('session', {
@@ -58,7 +66,7 @@ export const account = pgTable('account', {
   scope: text('scope'),
   password: text('password'),
   createdAt: timestamp('created_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
+  updatedAt: timestamp('updated_at').notNull().$onUpdateFn(() => new Date()),
 })
 
 export const verification = pgTable('verification', {
@@ -74,65 +82,12 @@ export const verification = pgTable('verification', {
 // ENUMS
 // ============================================================
 
-export const goalTypeEnum = pgEnum('goal_type', [
-  'cat_prep',
-  'job_switch',
-  'skill_upgrade',
-  'freelancing',
-  'investing',
-  'fitness',
-  'other',
-])
-
-export const nicheEnum = pgEnum('niche', [
-  'cat_mba_prep',
-  'coding_dsa',
-  'personal_finance',
-  'fitness_nutrition',
-  'design_creative',
-  'language_learning',
-  'digital_marketing',
-  'music_arts',
-  'upsc_govt_exams',
-  'mental_wellness',
-  'photography',
-  'science_research',
-  'real_estate',
-  'writing_content',
-  'ai_data_science',
-  'gaming_esports',
-  'cooking_food',
-  'interview_prep',
-  'ayurveda_yoga',
-  'startup_product',
-])
-
-export const offerTypeEnum = pgEnum('offer_type', [
-  'one_on_one',
-  'workshop',
-  'group',
-  'digital',
-])
-
-export const offerStatusEnum = pgEnum('offer_status', [
-  'draft',
-  'live',
-  'paused',
-  'archived',
-])
-
-export const kycStatusEnum = pgEnum('kyc_status', [
-  'not_started',
-  'pending',
-  'verified',
-  'failed',
-])
-
-export const onboardingStatusEnum = pgEnum('onboarding_status', [
-  'not_started',
-  'in_progress',
-  'complete',
-])
+export const goalTypeEnum = pgEnum('goal_type', [...GOAL_TYPES] as [string, ...string[]])
+export const nicheEnum = pgEnum('niche', [...NICHES] as [string, ...string[]])
+export const offerTypeEnum = pgEnum('offer_type', [...OFFER_TYPES] as [string, ...string[]])
+export const offerStatusEnum = pgEnum('offer_status', [...OFFER_STATUSES] as [string, ...string[]])
+export const kycStatusEnum = pgEnum('kyc_status', [...KYC_STATUSES] as [string, ...string[]])
+export const onboardingStatusEnum = pgEnum('onboarding_status', [...ONBOARDING_STATUSES] as [string, ...string[]])
 
 // ============================================================
 // LEARNER PROFILES
@@ -154,7 +109,7 @@ export const learnerProfiles = pgTable('learner_profiles', {
     .notNull(),
   currentStep: integer('current_step').default(1).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
 })
 
 // ============================================================
@@ -215,7 +170,7 @@ export const creatorProfiles = pgTable(
     primaryPlatform: text('primary_platform'),
     creatorGoal: text('creator_goal'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
   },
   (t) => ({
     qualityIdx: index('idx_creator_profiles_quality').on(t.qualityScore.desc()),
@@ -265,7 +220,7 @@ export const offerings = pgTable(
     totalRevenuePaise: integer('total_revenue_paise').default(0).notNull(),
     thumbnailUrl: text('thumbnail_url'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
   },
   (t) => ({
     creatorIdx: index('idx_offerings_creator').on(t.creatorProfileId),

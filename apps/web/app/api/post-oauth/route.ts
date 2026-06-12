@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { serverAuthClient } from '@/lib/auth-server-client'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+import { userService } from '@/services/user.service'
 
 function onboardingStepUrl(currentStep: number, base: string): string {
   const stepMap: Record<number, string> = {
@@ -12,17 +11,16 @@ function onboardingStepUrl(currentStep: number, base: string): string {
   return new URL(stepMap[currentStep] ?? '/onboarding/creator/step-1', base).toString()
 }
 
-async function getCreatorProfile(cookieHeader: string) {
+async function routeExistingCreator(cookieHeader: string, request: NextRequest): Promise<NextResponse> {
   try {
-    const res = await fetch(`${API_URL}/api/v1/users/me/creator-profile`, {
-      headers: { Cookie: cookieHeader },
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    return res.json() as Promise<{ isLive: boolean; currentStep: number }>
+    const profile = await userService.getCreatorProfile(cookieHeader)
+    if (!profile.isLive) {
+      return NextResponse.redirect(new URL(onboardingStepUrl(profile.currentStep, request.url), request.url))
+    }
   } catch {
-    return null
+    return NextResponse.redirect(new URL('/onboarding/creator/step-1', request.url))
   }
+  return NextResponse.redirect(new URL('/dashboard', request.url))
 }
 
 export async function GET(request: NextRequest) {
@@ -49,42 +47,22 @@ export async function GET(request: NextRequest) {
   const roles = ((session.user as { role?: string }).role ?? '').split(',').filter(Boolean)
   const isCreator = roles.includes('creator')
 
-  // ── Creator intent: assign role if needed, then route ────────────────────
   if (intent === 'creator') {
     if (!isCreator) {
       try {
-        const res = await fetch(`${API_URL}/api/v1/users/me/add-creator-role`, {
-          method: 'POST',
-          headers: { Cookie: cookieHeader },
-        })
-        if (res.ok) {
-          return NextResponse.redirect(new URL('/onboarding/creator/step-1', request.url))
-        }
+        await userService
+          .addCreatorRole(cookieHeader)
       } catch {
-        // fall through to role-based routing
+        return NextResponse.redirect(new URL('/sign-up/creator?error=1', request.url))
       }
       return NextResponse.redirect(new URL('/onboarding/creator/step-1', request.url))
     }
-
-    // Already a creator — check onboarding status
-    const profile = await getCreatorProfile(cookieHeader)
-    if (!profile || !profile.isLive) {
-      return NextResponse.redirect(
-        new URL(onboardingStepUrl(profile?.currentStep ?? 1, request.url), request.url),
-      )
-    }
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return routeExistingCreator(cookieHeader, request)
   }
 
-  // ── No intent (sign-in via Google) — route by actual role ────────────────
+  // No intent (plain Google sign-in) — route by role
   if (isCreator) {
-    const profile = await getCreatorProfile(cookieHeader)
-    if (!profile || !profile.isLive) {
-      return NextResponse.redirect(
-        new URL(onboardingStepUrl(profile?.currentStep ?? 1, request.url), request.url),
-      )
-    }
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return routeExistingCreator(cookieHeader, request)
   }
 
   return NextResponse.redirect(new URL('/learner/dashboard', request.url))

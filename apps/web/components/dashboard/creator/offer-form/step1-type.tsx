@@ -7,7 +7,7 @@ import type { OfferType } from '@/types/offer'
 import { cn } from '@/lib/utils'
 
 const offerTypes: { type: OfferType; label: string; description: string; icon: typeof faPhone }[] = [
-  { type: '1:1', label: '1:1 Session', description: 'One-on-one video call with a learner', icon: faPhone },
+  { type: 'one_on_one', label: '1:1 Session', description: 'One-on-one video call with a learner', icon: faPhone },
   { type: 'workshop', label: 'Workshop', description: 'Live group session with multiple attendees', icon: faCalendarDays },
   { type: 'group', label: 'Group Call', description: 'Small group mentorship session', icon: faUsers },
   { type: 'digital', label: 'Digital Product', description: 'Template, guide, or downloadable resource', icon: faFileLines },

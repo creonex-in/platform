@@ -7,11 +7,11 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { Booking, BookingStatus } from '@/types/booking'
-import type { OfferType } from '@/types/offer'
+import type { OfferDisplayType } from '@/types/offer'
 import { formatCurrency, cn } from '@/lib/utils'
 
-const offerTypeIcon: Record<OfferType, IconDefinition> = {
-  '1:1': faPhone,
+const offerTypeIcon: Record<OfferDisplayType, IconDefinition> = {
+  one_on_one: faPhone,
   workshop: faCalendarDays,
   group: faUsers,
   digital: faFileLines,

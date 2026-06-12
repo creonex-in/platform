@@ -6,7 +6,7 @@ const isPublicPath = (pathname: string) =>
   pathname === '/creators' ||
   pathname.startsWith('/top-creators') ||
   pathname.startsWith('/sign-in') ||
-  pathname.startsWith('/sign-up') || // covers /sign-up, /sign-up/learner, /sign-up/creator
+  pathname.startsWith('/sign-up') ||
   pathname.startsWith('/api/')
 
 const isCreatorPath = (pathname: string) =>
@@ -18,6 +18,12 @@ const isLearnerPath = (pathname: string) => pathname.startsWith('/learner')
 
 const isOnboardingPath = (pathname: string) => pathname.startsWith('/onboarding')
 
+function toSignIn(request: NextRequest) {
+  const url = new URL('/sign-in', request.url)
+  url.searchParams.set('redirect_url', request.nextUrl.pathname)
+  return NextResponse.redirect(url)
+}
+
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -28,12 +34,7 @@ export default async function proxy(request: NextRequest) {
   }
 
   const sessionCookie = request.cookies.get('better-auth.session_token')
-
-  if (!sessionCookie) {
-    const signInUrl = new URL('/sign-in', request.url)
-    signInUrl.searchParams.set('redirect_url', request.nextUrl.pathname)
-    return NextResponse.redirect(signInUrl)
-  }
+  if (!sessionCookie) return toSignIn(request)
 
   let role = 'learner'
 
@@ -44,28 +45,26 @@ export default async function proxy(request: NextRequest) {
         cache: 'no-store' as RequestCache,
       },
     })
-    if (session?.user?.role) role = session.user.role
+    if (!session?.user) return toSignIn(request)
+    if (session.user.role) role = session.user.role
   } catch {
-    return NextResponse.next()
+    // Session fetch failed — treat as unauthenticated
+    return toSignIn(request)
   }
 
   const roles = role.split(',')
   const isCreator = roles.includes('creator')
   const isLearner = roles.includes('learner')
 
-  // ── Onboarding — session existence already checked above ─────────────────
-  // Role enforcement happens at NestJS API level; proxy only guards session presence
   if (isOnboardingPath(pathname)) return NextResponse.next()
 
-  // ── Creator routes ────────────────────────────────────────────────────────
   if (isCreatorPath(pathname)) {
     if (!isCreator) return NextResponse.redirect(new URL('/learner/dashboard', request.url))
     return NextResponse.next()
   }
 
-  // ── Learner routes ────────────────────────────────────────────────────────
   if (isLearnerPath(pathname)) {
-    if (!isLearner) return NextResponse.redirect(new URL('/sign-in', request.url))
+    if (!isLearner) return toSignIn(request)
     return NextResponse.next()
   }
 

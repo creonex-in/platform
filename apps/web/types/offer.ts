@@ -1,9 +1,17 @@
-export type OfferType = '1:1' | 'workshop' | 'group' | 'digital' | 'community' | 'coaching_plan'
-export type OfferStatus = 'live' | 'draft' | 'scheduled' | 'ended'
+import type { OfferType as ApiOfferType, OfferStatus as ApiOfferStatus } from '@creonex/types'
+
+// Canonical backend types re-exported for convenience
+export type { ApiOfferType as OfferType }
+
+// UI-only offer status (extends backend statuses with scheduled/ended for display)
+export type OfferStatus = ApiOfferStatus | 'scheduled' | 'ended'
+
+// UI-only extended offer type (includes future types not yet in backend)
+export type OfferDisplayType = ApiOfferType | 'community' | 'coaching_plan'
 
 export interface Offer {
   id: string
-  type: OfferType
+  type: OfferDisplayType
   title: string
   description: string
   price: number

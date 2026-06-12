@@ -1,7 +1,3 @@
-// API client — cookie-based auth (better-auth session_token)
-// All requests (client + server) use NEXT_PUBLIC_API_URL → direct to NestJS
-// Server components pass cookieHeader manually; browser sends cookie automatically via credentials: 'include'
-
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -29,10 +25,6 @@ export function isServerError(e: unknown): boolean {
   return isApiError(e) && e.status >= 500
 }
 
-export function isRetryable(e: unknown): boolean {
-  return isApiError(e) && e.status >= 500
-}
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -40,7 +32,7 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 interface RequestOptions {
   method?: Method
   body?: unknown
-  cookieHeader?: string // server-side only: forwarded from Next.js request
+  cookieHeader?: string
   next?: { revalidate?: number | false; tags?: string[] }
 }
 

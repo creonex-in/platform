@@ -1,12 +1,7 @@
 'use client'
 import { useMutation } from '@tanstack/react-query'
 import { onboardingService } from '@/services/onboarding.service'
-import type {
-  LearnerStep1Data,
-  CreatorStep1Data,
-  CreatorStep2Data,
-  CreatorStep3Data,
-} from '@/types/api'
+import type { LearnerStep1Data, CreatorStep1Data, CreatorStep2Data, CreatorStep3Data } from '@creonex/types'
 
 export function useSaveLearnerStep1() {
   return useMutation({

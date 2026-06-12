@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 
 const tabs: { value: string; label: string; type?: OfferType }[] = [
   { value: 'all', label: 'All' },
-  { value: '1:1', label: '1:1 Calls', type: '1:1' },
+  { value: 'one_on_one', label: '1:1 Calls', type: 'one_on_one' },
   { value: 'workshop', label: 'Workshops', type: 'workshop' },
   { value: 'group', label: 'Group', type: 'group' },
   { value: 'digital', label: 'Digital', type: 'digital' },

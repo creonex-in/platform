@@ -23,12 +23,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { Offer, OfferType, OfferStatus } from '@/types/offer'
+import type { Offer, OfferDisplayType, OfferStatus } from '@/types/offer'
 import { formatCurrency } from '@/lib/utils'
 import { toast } from 'sonner'
 
-const offerTypeConfig: Record<OfferType, { icon: IconDefinition; label: string }> = {
-  '1:1': { icon: faPhone, label: '1:1 Call' },
+const offerTypeConfig: Record<OfferDisplayType, { icon: IconDefinition; label: string }> = {
+  one_on_one: { icon: faPhone, label: '1:1 Call' },
   workshop: { icon: faCalendarDays, label: 'Workshop' },
   group: { icon: faUsers, label: 'Group' },
   digital: { icon: faFileLines, label: 'Digital' },
@@ -39,6 +39,8 @@ const offerTypeConfig: Record<OfferType, { icon: IconDefinition; label: string }
 const statusConfig: Record<OfferStatus, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
   live: { label: 'Live', variant: 'default' },
   draft: { label: 'Draft', variant: 'outline' },
+  paused: { label: 'Paused', variant: 'secondary' },
+  archived: { label: 'Archived', variant: 'outline' },
   scheduled: { label: 'Scheduled', variant: 'secondary' },
   ended: { label: 'Ended', variant: 'outline' },
 }

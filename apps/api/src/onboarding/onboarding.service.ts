@@ -1,23 +1,31 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
 import { UsersRepository } from '../users/users.repository'
-import type { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorQuestionsDto } from './onboarding.dto'
+import { CreatorProfileRepository } from '../users/creator-profile.repository'
+import { LearnerProfileRepository } from '../users/learner-profile.repository'
+import { OfferingsRepository } from '../users/offerings.repository'
+import type { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto } from './onboarding.dto'
+
+const DISCOVERY_BOOST_DAYS = 14
 
 @Injectable()
 export class OnboardingService {
-  constructor(private readonly repo: UsersRepository) {}
+  constructor(
+    private readonly usersRepo: UsersRepository,
+    private readonly creatorRepo: CreatorProfileRepository,
+    private readonly learnerRepo: LearnerProfileRepository,
+    private readonly offeringsRepo: OfferingsRepository,
+  ) {}
 
   async saveLearnerStep1(userId: string, dto: LearnerStep1Dto) {
     if (dto.fullName) {
       const [firstName, ...rest] = dto.fullName.trim().split(' ')
-      await this.repo.updateUserName(userId, firstName!, rest.join(' ') || undefined)
+      await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
     }
 
-    let profile = await this.repo.getLearnerProfile(userId)
-    if (!profile) {
-      profile = await this.repo.createLearnerProfile(userId)
-    }
+    const existing = await this.learnerRepo.findByUserId(userId)
+    if (!existing) await this.learnerRepo.create(userId)
 
-    await this.repo.updateLearnerStep1(userId, {
+    await this.learnerRepo.updateStep1(userId, {
       goalType: dto.goalType,
       interestedNiches: dto.interestedNiches ?? [],
     })
@@ -27,16 +35,12 @@ export class OnboardingService {
 
   async saveCreatorStep1(userId: string, dto: CreatorStep1Dto) {
     const [firstName, ...rest] = dto.fullName.trim().split(' ')
-    const lastName = rest.join(' ') || undefined
+    await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
 
-    await this.repo.updateUserName(userId, firstName!, lastName)
+    const existing = await this.creatorRepo.findByUserId(userId)
+    if (!existing) await this.creatorRepo.create(userId)
 
-    let profile = await this.repo.getCreatorProfile(userId)
-    if (!profile) {
-      profile = await this.repo.createCreatorProfile(userId)
-    }
-
-    await this.repo.updateCreatorStep1(userId, {
+    await this.creatorRepo.updateStep1(userId, {
       displayName: dto.fullName,
       primaryNiche: dto.primaryNiche,
       experienceYears: dto.experienceYears,
@@ -46,10 +50,10 @@ export class OnboardingService {
   }
 
   async saveCreatorStep2(userId: string, dto: CreatorStep2Dto) {
-    const profile = await this.repo.getCreatorProfile(userId)
+    const profile = await this.creatorRepo.findByUserId(userId)
     if (!profile) throw new BadRequestException('Complete step 1 first')
 
-    await this.repo.updateCreatorStep2(userId, {
+    await this.creatorRepo.updateStep2(userId, {
       bio: dto.bio,
       tags: dto.tags,
       photoUrl: dto.photoUrl,
@@ -59,47 +63,59 @@ export class OnboardingService {
   }
 
   async saveCreatorStep3(userId: string, dto: CreatorStep3Dto) {
-    const profile = await this.repo.getCreatorProfile(userId)
+    const profile = await this.creatorRepo.findByUserId(userId)
     if (!profile) throw new BadRequestException('Complete step 1 first')
-    if ((profile.currentStep ?? 1) < 3)
+    if ((profile.currentStep ?? 1) < 3) {
       throw new BadRequestException('Complete previous steps first')
+    }
 
-    const result = await this.repo.updateCreatorStep3GoLive(userId, {
-      offerType: dto.offerType,
+    // Idempotent: if already live, return existing state
+    if (profile.isLive) {
+      const existingOffer = await this.offeringsRepo.findFirstByCreatorProfileId(profile.id)
+      return {
+        success: true,
+        username: profile.username,
+        profileUrl: `/c/${profile.username}`,
+        offeringId: existingOffer?.id,
+        redirectTo: '/dashboard',
+      }
+    }
+
+    const priceInPaise = dto.price * 100
+    const boostEndDate = new Date()
+    boostEndDate.setDate(boostEndDate.getDate() + DISCOVERY_BOOST_DAYS)
+    const username = await this.generateUsername(profile.displayName ?? '')
+
+    const offeringId = await this.offeringsRepo.create({
+      creatorProfileId: profile.id,
+      type: dto.offerType,
       title: dto.title,
-      price: dto.price,
+      priceInPaise,
       durationMinutes: dto.durationMinutes,
       seatsTotal: dto.seatsTotal,
     })
 
+    await this.creatorRepo.goLive(userId, username, boostEndDate)
+
     return {
       success: true,
-      username: result.profile.username,
-      profileUrl: `/c/${result.profile.username}`,
-      offeringId: result.offeringId,
+      username,
+      profileUrl: `/c/${username}`,
+      offeringId,
       redirectTo: '/dashboard',
     }
   }
 
-  async saveCreatorQuestions(userId: string, dto: CreatorQuestionsDto) {
-    const [firstName, ...rest] = dto.fullName.trim().split(' ')
-    await this.repo.updateUserName(userId, firstName!, rest.join(' ') || undefined)
+  private async generateUsername(displayName: string): Promise<string> {
+    const base = displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'creator'
+    let candidate = base
+    let suffix = 0
 
-    let profile = await this.repo.getCreatorProfile(userId)
-    if (!profile) {
-      profile = await this.repo.createCreatorProfile(userId)
+    while (await this.creatorRepo.isUsernameTaken(candidate)) {
+      suffix++
+      candidate = `${base}${suffix}`
     }
 
-    await this.repo.updateCreatorQuestions(userId, {
-      displayName: dto.fullName,
-      nicheCategory: dto.nicheCategory,
-      credentialType: dto.credentialType,
-      audienceType: dto.audienceType,
-      primaryPlatform: dto.primaryPlatform,
-      creatorGoal: dto.creatorGoal,
-      socialLinks: dto.socialLinks,
-    })
-
-    return { success: true, nextStep: 2 }
+    return candidate
   }
 }

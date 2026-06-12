@@ -1,63 +1,56 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { UsersRepository } from './users.repository'
-import type { UserRole } from '@creonex/types'
-import { parseRoles } from '@creonex/types'
+import { CreatorProfileRepository } from './creator-profile.repository'
+import { LearnerProfileRepository } from './learner-profile.repository'
+import { parseRoles, type UserRole } from '@creonex/types'
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly repo: UsersRepository) {}
+  constructor(
+    private readonly usersRepo: UsersRepository,
+    private readonly creatorRepo: CreatorProfileRepository,
+    private readonly learnerRepo: LearnerProfileRepository,
+  ) {}
 
   async getById(id: string) {
-    const u = await this.repo.findById(id)
+    const u = await this.usersRepo.findById(id)
     if (!u) throw new NotFoundException('User not found')
     return u
   }
 
   async getByEmail(email: string) {
-    return this.repo.findByEmail(email)
-  }
-
-  async getLearnerProfile(userId: string) {
-    const profile = await this.repo.getLearnerProfile(userId)
-    if (!profile) throw new NotFoundException('Learner profile not found')
-    return profile
+    return this.usersRepo.findByEmail(email)
   }
 
   async getCreatorProfile(userId: string) {
-    const profile = await this.repo.getCreatorProfile(userId)
+    const profile = await this.creatorRepo.findByUserId(userId)
     if (!profile) throw new NotFoundException('Creator profile not found')
     return profile
   }
 
-  async ensureLearnerProfile(userId: string) {
-    const existing = await this.repo.getLearnerProfile(userId)
-    if (existing) return existing
-    return this.repo.createLearnerProfile(userId)
-  }
-
-  async ensureCreatorProfile(userId: string) {
-    const existing = await this.repo.getCreatorProfile(userId)
-    if (existing) return existing
-    return this.repo.createCreatorProfile(userId)
-  }
-
-  parseRoles(roleString: string): UserRole[] {
-    return parseRoles(roleString)
+  async getLearnerProfile(userId: string) {
+    const profile = await this.learnerRepo.findByUserId(userId)
+    if (!profile) throw new NotFoundException('Learner profile not found')
+    return profile
   }
 
   async addCreatorRole(userId: string, currentRole: string) {
     const roles = parseRoles(currentRole)
-    if (roles.includes('creator')) {
-      return { success: true, alreadyCreator: true, roles, redirectTo: '/dashboard' }
+    const alreadyCreator = roles.includes('creator')
+
+    if (!alreadyCreator) {
+      const newRole = [...roles, 'creator'].join(',')
+      await this.usersRepo.updateRole(userId, newRole)
     }
-    const newRole = [...roles, 'creator'].join(',') as string
-    await this.repo.updateUserRole(userId, newRole)
-    await this.repo.createCreatorProfile(userId)
+
+    // Always ensure profile exists — idempotent (onConflictDoNothing in repo)
+    await this.creatorRepo.create(userId)
+
     return {
       success: true,
-      alreadyCreator: false,
-      roles: parseRoles(newRole),
-      redirectTo: '/onboarding/creator/step-1',
+      alreadyCreator,
+      roles: alreadyCreator ? roles : ([...roles, 'creator'] as UserRole[]),
+      redirectTo: alreadyCreator ? '/dashboard' : '/onboarding/creator/step-1',
     }
   }
 }

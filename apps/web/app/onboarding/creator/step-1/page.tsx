@@ -38,11 +38,11 @@ const GOAL_VALUES = ['full_income', 'validate_grow', 'side_income', 'build_found
 const schema = z.object({
   displayName: z.string().min(2, 'At least 2 characters').max(60, 'Max 60 characters'),
   socialLinks: z.object({
-    instagram: z.string().min(1, 'Instagram is required').max(200),
-    youtube: z.string().min(1, 'YouTube is required').max(200),
-    linkedin: z.string().min(1, 'LinkedIn is required').max(200),
-    twitter: z.string().min(1, 'Twitter/X is required').max(200),
-    website: z.string().min(1, 'Website is required').max(200),
+    instagram: z.string().max(200).optional(),
+    youtube: z.string().max(200).optional(),
+    linkedin: z.string().max(200).optional(),
+    twitter: z.string().max(200).optional(),
+    website: z.string().max(200).optional(),
   }),
   nicheCategory: z.enum(NICHE_VALUES),
   credentialType: z.enum(CREDENTIAL_VALUES),
@@ -323,7 +323,7 @@ export default function CreatorStep1Page() {
                 <div className="text-center space-y-2">
                   <h1 className="text-2xl font-semibold tracking-tight">Link your social profiles</h1>
                   <p className="text-sm text-muted-foreground">
-                    Required — helps students find and trust you
+                    Optional — helps students find and trust you
                   </p>
                 </div>
                 <div className="space-y-3 max-w-sm mx-auto">

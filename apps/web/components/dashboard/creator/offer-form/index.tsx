@@ -16,7 +16,7 @@ import type { OfferType } from '@/types/offer'
 import { toast } from 'sonner'
 
 const offerSchema = z.object({
-  type: z.enum(['1:1', 'workshop', 'group', 'digital', 'community', 'coaching_plan'] as const),
+  type: z.enum(['one_on_one', 'workshop', 'group', 'digital', 'community', 'coaching_plan'] as const),
   title: z.string().min(5, 'Title must be at least 5 characters'),
   description: z.string().min(20, 'Description must be at least 20 characters'),
   duration: z.number().min(1, 'Duration required'),
