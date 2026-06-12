@@ -15,6 +15,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { creatorStep2Schema, type CreatorStep2Form } from '@/lib/onboarding-schemas'
+import { useSaveCreatorStep2 } from '@/hooks/use-onboarding'
+import { isApiError } from '@/lib/api'
+import type { SocialLinks } from '@creonex/types'
 import {
   validateImageFile,
   uploadToCloudinary,
@@ -48,8 +51,8 @@ const SOCIAL_FIELDS = [
 export default function CreatorStep2Page() {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+  const { mutateAsync, isPending } = useSaveCreatorStep2()
   const [tagInput, setTagInput] = useState('')
-  const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -151,39 +154,26 @@ export default function CreatorStep2Page() {
   }
 
   const onSubmit = async (data: CreatorStep2Form) => {
-    setLoading(true)
     setApiError('')
     try {
       // Strip empty social link strings before sending
       const rawLinks = data.socialLinks ?? {}
-      const socialLinksPayload: Record<string, string> = {}
+      const socialLinks: SocialLinks = {}
       for (const [key, val] of Object.entries(rawLinks)) {
-        if (val && val.trim()) socialLinksPayload[key] = val.trim()
+        if (val && val.trim()) (socialLinks as Record<string, string>)[key] = val.trim()
       }
 
-      const res = await fetch('/api/v1/onboarding/creator/step-2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          bio: data.bio,
-          tags: data.tags,
-          ...(data.photoUrl ? { photoUrl: data.photoUrl } : {}),
-          ...(Object.keys(socialLinksPayload).length > 0 ? { socialLinks: socialLinksPayload } : {}),
-        }),
+      await mutateAsync({
+        bio: data.bio,
+        tags: data.tags,
+        ...(data.photoUrl ? { photoUrl: data.photoUrl } : {}),
+        ...(Object.keys(socialLinks).length > 0 ? { socialLinks } : {}),
       })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { message?: string }
-        setApiError(body.message ?? 'Something went wrong — please try again')
-        return
-      }
       setDeleteToken('')
       try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* non-fatal */ }
       router.push('/onboarding/creator/step-3')
-    } catch {
-      setApiError('Network error — please try again')
-    } finally {
-      setLoading(false)
+    } catch (e) {
+      setApiError(isApiError(e) ? e.message : 'Network error — please try again')
     }
   }
 
@@ -280,16 +270,16 @@ export default function CreatorStep2Page() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="bio">Your bio</Label>
-                <span className={cn('text-xs', bio.length > 150 ? 'text-destructive' : 'text-muted-foreground')}>
-                  {bio.length} / 150
+                <span className={cn('text-xs', bio.length > 2000 ? 'text-destructive' : 'text-muted-foreground')}>
+                  {bio.length} / 2000
                 </span>
               </div>
               <Textarea
                 id="bio"
                 {...register('bio')}
                 placeholder="I help working professionals crack CAT in 90 days with a structured, doubt-first approach..."
-                rows={4}
-                className="resize-none text-sm"
+                rows={6}
+                className="resize-y text-sm"
               />
               {errors.bio ? (
                 <p className="text-xs text-destructive">{errors.bio.message}</p>
@@ -399,8 +389,8 @@ export default function CreatorStep2Page() {
                 Back
               </Button>
 
-              <Button type="submit" size="sm" disabled={loading || uploading}>
-                {loading ? (
+              <Button type="submit" size="sm" disabled={isPending || uploading}>
+                {isPending ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                 ) : (
                   <>

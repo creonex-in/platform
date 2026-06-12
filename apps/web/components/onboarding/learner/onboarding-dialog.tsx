@@ -13,7 +13,8 @@ import {
   faEllipsis,
 } from '@fortawesome/free-solid-svg-icons'
 import { cn } from '@/lib/utils'
-import { api, isUnauthorized } from '@/lib/api'
+import { isApiError } from '@/lib/api'
+import { useSaveLearnerStep1 } from '@/hooks/use-onboarding'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -66,11 +67,11 @@ interface LearnerOnboardingDialogProps {
 
 export function LearnerOnboardingDialog({ defaultOpen = false }: LearnerOnboardingDialogProps): React.ReactElement {
   const router = useRouter()
+  const { mutateAsync, isPending } = useSaveLearnerStep1()
   const [open, setOpen] = useState(defaultOpen)
   const [step, setStep] = useState<1 | 2>(1)
   const [goal, setGoal] = useState<GoalType | null>(null)
   const [niches, setNiches] = useState<Niche[]>([])
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function toggleNiche(niche: Niche) {
@@ -81,19 +82,13 @@ export function LearnerOnboardingDialog({ defaultOpen = false }: LearnerOnboardi
 
   async function handleSubmit() {
     if (!goal) return
-    setLoading(true)
     setError(null)
     try {
-      await api.post('/api/v1/onboarding/learner/step-1', {
-        goalType: goal,
-        interestedNiches: niches,
-      })
+      await mutateAsync({ goalType: goal, interestedNiches: niches })
       setOpen(false)
       router.refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
-    } finally {
-      setLoading(false)
+      setError(isApiError(e) ? e.message : 'Something went wrong. Try again.')
     }
   }
 
@@ -185,7 +180,7 @@ export function LearnerOnboardingDialog({ defaultOpen = false }: LearnerOnboardi
                 type="button"
                 variant="outline"
                 onClick={() => setStep(1)}
-                disabled={loading}
+                disabled={isPending}
                 className="flex-1"
               >
                 Back
@@ -204,10 +199,10 @@ export function LearnerOnboardingDialog({ defaultOpen = false }: LearnerOnboardi
               <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={loading || niches.length === 0}
+                disabled={isPending || niches.length === 0}
                 className="flex-1"
               >
-                {loading ? (
+                {isPending ? (
                   <span className="flex items-center gap-2">
                     <span className="size-3.5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                     Saving…

@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/input-group'
 import { cn } from '@/lib/utils'
 import { creatorStep4Schema, type CreatorStep4Form } from '@/lib/onboarding-schemas'
+import { useSaveCreatorStep4 } from '@/hooks/use-onboarding'
+import { isApiError } from '@/lib/api'
 
 const DURATIONS = [30, 45, 60, 90] as const
 
@@ -30,7 +32,7 @@ const STORAGE_KEY = 'creonex-onboarding-step4'
 
 export default function CreatorStep4Page() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const { mutateAsync, isPending } = useSaveCreatorStep4()
   const [apiError, setApiError] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const [live, setLive] = useState(false)
@@ -81,32 +83,19 @@ export default function CreatorStep4Page() {
   }, [title, price, durationMinutes, hydrated])
 
   const onSubmit = async (data: CreatorStep4Form) => {
-    setLoading(true)
     setApiError('')
     try {
-      const res = await fetch('/api/v1/onboarding/creator/step-4', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          offerType: 'one_on_one',
-          title: data.title.trim(),
-          price: data.price,
-          ...(data.durationMinutes ? { durationMinutes: data.durationMinutes } : {}),
-        }),
+      const res = await mutateAsync({
+        offerType: 'one_on_one',
+        title: data.title.trim(),
+        price: data.price,
+        ...(data.durationMinutes ? { durationMinutes: data.durationMinutes } : {}),
       })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { message?: string }
-        setApiError(body.message ?? 'Something went wrong — please try again')
-        return
-      }
       try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* non-fatal */ }
       setLive(true)
-      setTimeout(() => router.push('/dashboard'), 1600)
-    } catch {
-      setApiError('Network error — please try again')
-    } finally {
-      setLoading(false)
+      setTimeout(() => router.push(res.redirectTo ?? '/dashboard'), 1600)
+    } catch (e) {
+      setApiError(isApiError(e) ? e.message : 'Network error — please try again')
     }
   }
 
@@ -245,10 +234,10 @@ export default function CreatorStep4Page() {
 
             <Button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full h-11 font-semibold text-sm shadow-lg shadow-primary/20 gap-2"
             >
-              {loading ? (
+              {isPending ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
               ) : (
                 <>

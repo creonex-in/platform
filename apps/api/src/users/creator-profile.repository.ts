@@ -28,22 +28,6 @@ export class CreatorProfileRepository {
 
   async updateStep1(
     userId: string,
-    data: { displayName: string; primaryNiche: string; experienceYears: number },
-  ) {
-    await this.db
-      .update(creatorProfiles)
-      .set({
-        displayName: data.displayName,
-        primaryNiche: data.primaryNiche as typeof creatorProfiles.$inferInsert['primaryNiche'],
-        experienceYears: data.experienceYears,
-        onboardingStatus: 'in_progress',
-        currentStep: 2,
-      })
-      .where(eq(creatorProfiles.userId, userId))
-  }
-
-  async updateQuestions(
-    userId: string,
     data: {
       displayName: string
       nicheCategory: string

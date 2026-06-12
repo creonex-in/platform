@@ -4,7 +4,7 @@ import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger'
 import { OnboardingService } from './onboarding.service'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
-import { LearnerStep1Dto, CreatorQuestionsDto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorStep4Dto } from './onboarding.dto'
+import { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorStep4Dto } from './onboarding.dto'
 import type { AppUserSession } from '../auth/types'
 
 @ApiTags('Onboarding')
@@ -22,18 +22,10 @@ export class OnboardingController {
     return this.onboardingService.saveLearnerStep1(session.user.id, dto)
   }
 
-  @Post('creator/questions')
-  @Roles('creator')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Save creator step 1 — discovery questions + name' })
-  creatorQuestions(@Session() session: AppUserSession, @Body() dto: CreatorQuestionsDto) {
-    return this.onboardingService.saveCreatorQuestions(session.user.id, dto)
-  }
-
   @Post('creator/step-1')
   @Roles('creator')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Save creator step 1 — name + niche + experience (legacy)' })
+  @ApiOperation({ summary: 'Save creator step 1 — name + discovery questions' })
   creatorStep1(@Session() session: AppUserSession, @Body() dto: CreatorStep1Dto) {
     return this.onboardingService.saveCreatorStep1(session.user.id, dto)
   }

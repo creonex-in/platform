@@ -22,44 +22,21 @@ import {
   GOAL_TYPES,
   OFFER_TYPES,
   DURATION_OPTIONS,
+  NICHE_CATEGORIES,
+  CREDENTIAL_TYPES,
+  AUDIENCE_TYPES,
+  PLATFORM_TYPES,
+  CREATOR_GOALS,
   type GoalType,
   type Niche,
   type OfferType,
   type DurationOption,
+  type NicheCategory,
+  type CredentialType,
+  type AudienceType,
+  type PlatformType,
+  type CreatorGoal,
 } from '@creonex/types'
-
-export class CreatorQuestionsDto {
-  @ApiProperty()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(60)
-  fullName!: string
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  nicheCategory!: string
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  credentialType!: string
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  audienceType!: string
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  primaryPlatform!: string
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  creatorGoal!: string
-}
 
 export class LearnerStep1Dto {
   @ApiPropertyOptional()
@@ -82,6 +59,7 @@ export class LearnerStep1Dto {
   interestedNiches?: Niche[]
 }
 
+/** Step 1 = creator discovery questions (name + 5 discovery answers) */
 export class CreatorStep1Dto {
   @ApiProperty()
   @IsString()
@@ -89,15 +67,25 @@ export class CreatorStep1Dto {
   @MaxLength(60)
   fullName!: string
 
-  @ApiProperty({ enum: NICHES })
-  @IsEnum(NICHES)
-  primaryNiche!: Niche
+  @ApiProperty({ enum: NICHE_CATEGORIES })
+  @IsEnum(NICHE_CATEGORIES)
+  nicheCategory!: NicheCategory
 
-  @ApiProperty({ minimum: 1, maximum: 20 })
-  @IsNumber()
-  @Min(1)
-  @Max(20)
-  experienceYears!: number
+  @ApiProperty({ enum: CREDENTIAL_TYPES })
+  @IsEnum(CREDENTIAL_TYPES)
+  credentialType!: CredentialType
+
+  @ApiProperty({ enum: AUDIENCE_TYPES })
+  @IsEnum(AUDIENCE_TYPES)
+  audienceType!: AudienceType
+
+  @ApiProperty({ enum: PLATFORM_TYPES })
+  @IsEnum(PLATFORM_TYPES)
+  primaryPlatform!: PlatformType
+
+  @ApiProperty({ enum: CREATOR_GOALS })
+  @IsEnum(CREATOR_GOALS)
+  creatorGoal!: CreatorGoal
 }
 
 export class SocialLinksDto {
@@ -131,7 +119,7 @@ export class CreatorStep2Dto {
   @ApiProperty()
   @IsString()
   @MinLength(20)
-  @MaxLength(150)
+  @MaxLength(2000)
   bio!: string
 
   @ApiProperty({ type: [String] })
@@ -181,9 +169,9 @@ export class CreatorStep4Dto {
   @MaxLength(80)
   title!: string
 
-  @ApiProperty({ minimum: 99, description: 'Price in INR' })
+  @ApiProperty({ minimum: 299, description: 'Price in INR' })
   @IsNumber()
-  @Min(99)
+  @Min(299)
   price!: number
 
   @ApiPropertyOptional({ enum: DURATION_OPTIONS })

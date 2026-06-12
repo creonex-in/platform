@@ -3,7 +3,7 @@ import { UsersRepository } from '../users/users.repository'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
 import { LearnerProfileRepository } from '../users/learner-profile.repository'
 import { OfferingsRepository } from '../users/offerings.repository'
-import type { LearnerStep1Dto, CreatorQuestionsDto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorStep4Dto } from './onboarding.dto'
+import type { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorStep4Dto } from './onboarding.dto'
 
 const DISCOVERY_BOOST_DAYS = 14
 
@@ -33,14 +33,14 @@ export class OnboardingService {
     return { success: true }
   }
 
-  async saveCreatorQuestions(userId: string, dto: CreatorQuestionsDto) {
+  async saveCreatorStep1(userId: string, dto: CreatorStep1Dto) {
     const [firstName, ...rest] = dto.fullName.trim().split(' ')
     await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
 
     const existing = await this.creatorRepo.findByUserId(userId)
     if (!existing) await this.creatorRepo.create(userId)
 
-    await this.creatorRepo.updateQuestions(userId, {
+    await this.creatorRepo.updateStep1(userId, {
       displayName: dto.fullName,
       nicheCategory: dto.nicheCategory,
       credentialType: dto.credentialType,
@@ -52,25 +52,12 @@ export class OnboardingService {
     return { success: true, nextStep: 2 }
   }
 
-  async saveCreatorStep1(userId: string, dto: CreatorStep1Dto) {
-    const [firstName, ...rest] = dto.fullName.trim().split(' ')
-    await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
-
-    const existing = await this.creatorRepo.findByUserId(userId)
-    if (!existing) await this.creatorRepo.create(userId)
-
-    await this.creatorRepo.updateStep1(userId, {
-      displayName: dto.fullName,
-      primaryNiche: dto.primaryNiche,
-      experienceYears: dto.experienceYears,
-    })
-
-    return { success: true, nextStep: 2 }
-  }
-
   async saveCreatorStep2(userId: string, dto: CreatorStep2Dto) {
     const profile = await this.creatorRepo.findByUserId(userId)
     if (!profile) throw new BadRequestException('Complete step 1 first')
+    if ((profile.currentStep ?? 1) < 2) {
+      throw new BadRequestException('Complete previous steps first')
+    }
 
     // Strip empty strings from socialLinks before persisting
     const socialLinks: Record<string, string> = {}

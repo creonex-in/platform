@@ -139,5 +139,6 @@ export interface GoLiveResponse {
   success: boolean
   username: string
   profileUrl: string
-  offeringId: string
+  offeringId?: string
+  redirectTo: string
 }

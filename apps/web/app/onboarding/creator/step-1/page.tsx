@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
@@ -25,25 +24,11 @@ import {
   InputGroup, InputGroupAddon, InputGroupText, InputGroupInput,
 } from '@/components/ui/input-group'
 import { cn } from '@/lib/utils'
+import { creatorStep1Schema, type CreatorStep1Form } from '@/lib/onboarding-schemas'
+import { useSaveCreatorStep1 } from '@/hooks/use-onboarding'
+import { isApiError } from '@/lib/api'
 
-// ── Schema ──────────────────────────────────────────────────────────────────
-
-const NICHE_VALUES = ['exam_prep', 'professional_skills', 'health_wellness', 'creative_skills', 'undecided'] as const
-const CREDENTIAL_VALUES = ['verified_result', 'professional_exp', 'personal_transformation', 'community_teaching', 'deep_expertise'] as const
-const AUDIENCE_VALUES = ['exam_aspirants', 'working_professionals', 'health_lifestyle', 'aspiring_creatives', 'undefined_audience'] as const
-const PLATFORM_VALUES = ['instagram', 'whatsapp', 'telegram', 'youtube', 'multi_platform'] as const
-const GOAL_VALUES = ['full_income', 'validate_grow', 'side_income', 'build_foundation', 'exploring'] as const
-
-const schema = z.object({
-  displayName: z.string().min(2, 'At least 2 characters').max(60, 'Max 60 characters'),
-  nicheCategory: z.enum(NICHE_VALUES),
-  credentialType: z.enum(CREDENTIAL_VALUES),
-  audienceType: z.enum(AUDIENCE_VALUES),
-  primaryPlatform: z.enum(PLATFORM_VALUES),
-  creatorGoal: z.enum(GOAL_VALUES),
-})
-
-type FormValues = z.infer<typeof schema>
+type FormValues = CreatorStep1Form
 
 // ── Static data ──────────────────────────────────────────────────────────────
 
@@ -99,7 +84,7 @@ const QUESTIONS = [
 
 // screen → fields to validate before advancing
 const SCREEN_FIELDS: Record<number, (keyof FormValues)[]> = {
-  0: ['displayName'],
+  0: ['fullName'],
   1: ['nicheCategory'],
   2: ['credentialType'],
   3: ['audienceType'],
@@ -111,22 +96,22 @@ const TOTAL_SCREENS = 6
 const STORAGE_KEY = 'creonex-onboarding-step1'
 const AUTO_ADVANCE_MS = 280
 
-const DEFAULT_VALUES: FormValues = {
-  displayName: '',
-  nicheCategory: undefined as unknown as typeof NICHE_VALUES[number],
-  credentialType: undefined as unknown as typeof CREDENTIAL_VALUES[number],
-  audienceType: undefined as unknown as typeof AUDIENCE_VALUES[number],
-  primaryPlatform: undefined as unknown as typeof PLATFORM_VALUES[number],
-  creatorGoal: undefined as unknown as typeof GOAL_VALUES[number],
-}
+const DEFAULT_VALUES = {
+  fullName: '',
+  nicheCategory: undefined,
+  credentialType: undefined,
+  audienceType: undefined,
+  primaryPlatform: undefined,
+  creatorGoal: undefined,
+} as unknown as FormValues
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CreatorStep1Page() {
   const { data: session } = authClient.useSession()
   const router = useRouter()
+  const { mutateAsync, isPending } = useSaveCreatorStep1()
   const [screen, setScreen] = useState(0)
-  const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -140,7 +125,7 @@ export default function CreatorStep1Page() {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(creatorStep1Schema),
     defaultValues: DEFAULT_VALUES,
   })
 
@@ -169,8 +154,8 @@ export default function CreatorStep1Page() {
 
   // Pre-fill name from session if blank
   useEffect(() => {
-    if (session?.user?.name && !values.displayName) {
-      setValue('displayName', session.user.name)
+    if (session?.user?.name && !values.fullName) {
+      setValue('fullName', session.user.name)
     }
   }, [session?.user?.name]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -180,7 +165,7 @@ export default function CreatorStep1Page() {
   const currentQuestion = screen >= 1 ? QUESTIONS[screen - 1] : null
 
   const handleContinue = async () => {
-    if (loading) return
+    if (isPending) return
     const fields = SCREEN_FIELDS[screen] ?? []
     if (fields.length > 0) {
       const valid = await trigger(fields)
@@ -211,33 +196,20 @@ export default function CreatorStep1Page() {
   }
 
   const onSubmit = async (data: FormValues) => {
-    setLoading(true)
     setApiError('')
     try {
-      const res = await fetch('/api/v1/onboarding/creator/questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          fullName: data.displayName.trim(),
-          nicheCategory: data.nicheCategory,
-          credentialType: data.credentialType,
-          audienceType: data.audienceType,
-          primaryPlatform: data.primaryPlatform,
-          creatorGoal: data.creatorGoal,
-        }),
+      await mutateAsync({
+        fullName: data.fullName.trim(),
+        nicheCategory: data.nicheCategory,
+        credentialType: data.credentialType,
+        audienceType: data.audienceType,
+        primaryPlatform: data.primaryPlatform,
+        creatorGoal: data.creatorGoal,
       })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { message?: string }
-        setApiError(body.message ?? 'Something went wrong — please try again')
-        return
-      }
       try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* non-fatal */ }
       router.push('/onboarding/creator/step-2')
-    } catch {
-      setApiError('Network error — please try again')
-    } finally {
-      setLoading(false)
+    } catch (e) {
+      setApiError(isApiError(e) ? e.message : 'Network error — please try again')
     }
   }
 
@@ -264,7 +236,7 @@ export default function CreatorStep1Page() {
                   <p className="text-sm text-muted-foreground">This becomes your public profile link</p>
                 </div>
                 <div className="max-w-sm mx-auto space-y-1.5">
-                  <Label htmlFor="displayName">Your name or handle</Label>
+                  <Label htmlFor="fullName">Your name or handle</Label>
                   <InputGroup className="h-11">
                     <InputGroupAddon>
                       <InputGroupText className="text-sm text-muted-foreground select-none pr-0">
@@ -272,16 +244,16 @@ export default function CreatorStep1Page() {
                       </InputGroupText>
                     </InputGroupAddon>
                     <InputGroupInput
-                      id="displayName"
-                      {...register('displayName')}
+                      id="fullName"
+                      {...register('fullName')}
                       placeholder="your-name"
                       autoFocus
                       className="text-sm"
                       onKeyDown={(e) => e.key === 'Enter' && void handleContinue()}
                     />
                   </InputGroup>
-                  {errors.displayName && (
-                    <p className="text-xs text-destructive">{errors.displayName.message}</p>
+                  {errors.fullName && (
+                    <p className="text-xs text-destructive">{errors.fullName.message}</p>
                   )}
                 </div>
               </div>
@@ -303,7 +275,7 @@ export default function CreatorStep1Page() {
                         key={opt.value}
                         type="button"
                         onClick={() => selectAndAdvance(currentQuestion.name, opt.value)}
-                        disabled={loading}
+                        disabled={isPending}
                         className={cn(
                           'relative text-left rounded-xl border-2 p-4 transition-all duration-150',
                           'hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5',
@@ -354,9 +326,9 @@ export default function CreatorStep1Page() {
               type="button"
               size="sm"
               onClick={() => void handleContinue()}
-              disabled={loading}
+              disabled={isPending}
             >
-              {loading ? (
+              {isPending ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
               ) : (
                 <>

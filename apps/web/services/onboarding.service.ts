@@ -5,6 +5,7 @@ import type {
   CreatorStep1Data,
   CreatorStep2Data,
   CreatorStep3Data,
+  CreatorStep4Data,
   OnboardingStepResponse,
   GoLiveResponse,
 } from '@creonex/types'
@@ -20,5 +21,8 @@ export const onboardingService = {
     api.post<OnboardingStepResponse>(endpoints.onboarding.creatorStep2, data),
 
   saveCreatorStep3: (data: CreatorStep3Data) =>
-    api.post<GoLiveResponse>(endpoints.onboarding.creatorStep3, data),
+    api.post<OnboardingStepResponse>(endpoints.onboarding.creatorStep3, data),
+
+  saveCreatorStep4: (data: CreatorStep4Data) =>
+    api.post<GoLiveResponse>(endpoints.onboarding.creatorStep4, data),
 }

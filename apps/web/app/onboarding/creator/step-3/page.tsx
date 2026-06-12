@@ -4,31 +4,22 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import ReactCrop, { centerCrop, makeAspectCrop, type Crop, type PixelCrop } from 'react-image-crop'
-import 'react-image-crop/dist/ReactCrop.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faArrowLeft, faArrowRight, faCheck,
-  faCloudArrowUp, faXmark,
+  faArrowLeft, faArrowRight, faImage, faPenToSquare,
 } from '@fortawesome/free-solid-svg-icons'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { creatorStep3Schema, type CreatorStep3Form } from '@/lib/onboarding-schemas'
+import { useSaveCreatorStep3 } from '@/hooks/use-onboarding'
+import { isApiError } from '@/lib/api'
+import { tryDeleteCloudinaryUpload } from '@/lib/cloudinary'
 import {
-  validateBannerFile,
-  uploadToCloudinary,
-  tryDeleteCloudinaryUpload,
-} from '@/lib/cloudinary'
-
-const BANNER_PRESETS = [
-  { id: 'cosmic',   label: 'Cosmic',   value: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' },
-  { id: 'sunrise',  label: 'Sunrise',  value: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)' },
-  { id: 'aurora',   label: 'Aurora',   value: 'linear-gradient(135deg, #0d324d 0%, #7f5a83 50%, #43b89c 100%)' },
-  { id: 'forest',   label: 'Forest',   value: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)' },
-  { id: 'ocean',    label: 'Ocean',    value: 'linear-gradient(135deg, #005c97 0%, #363795 100%)' },
-  { id: 'charcoal', label: 'Charcoal', value: 'linear-gradient(135deg, #232526 0%, #414345 100%)' },
-]
+  BannerPickerDialog,
+  isPresetValue,
+  type BannerSelection,
+} from '@/components/onboarding/creator/banner-picker-dialog'
 
 const LANGUAGES = [
   'English', 'Hindi', 'Tamil', 'Telugu', 'Marathi',
@@ -45,18 +36,10 @@ type Persisted = {
 
 export default function CreatorStep3Page() {
   const router = useRouter()
-  const fileRef = useRef<HTMLInputElement>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
+  const { mutateAsync, isPending } = useSaveCreatorStep3()
 
-  const [activeTab, setActiveTab] = useState<'preset' | 'upload'>('preset')
-  const [cropSrc, setCropSrc] = useState<string | null>(null)
-  const [cropOpen, setCropOpen] = useState(false)
-  const [crop, setCrop] = useState<Crop>()
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
-  const [cropUploading, setCropUploading] = useState(false)
-  const [cropError, setCropError] = useState('')
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [bannerDeleteToken, setBannerDeleteToken] = useState('')
-  const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
   const [hydrated, setHydrated] = useState(false)
 
@@ -73,10 +56,9 @@ export default function CreatorStep3Page() {
 
   const bannerUrl = watch('bannerUrl')
   const languages = watch('languages')
+  const bannerIsUploaded = Boolean(bannerUrl && !isPresetValue(bannerUrl))
 
-  const isPresetBanner = Boolean(bannerUrl && BANNER_PRESETS.some((p) => p.value === bannerUrl))
-  const isUploadedBanner = Boolean(bannerUrl && !isPresetBanner)
-
+  // Restore from sessionStorage
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY)
@@ -89,9 +71,6 @@ export default function CreatorStep3Page() {
             : ['English'],
         })
         if (parsed.bannerDeleteToken) setBannerDeleteToken(parsed.bannerDeleteToken)
-        if (parsed.bannerUrl && !BANNER_PRESETS.some((p) => p.value === parsed.bannerUrl)) {
-          setActiveTab('upload')
-        }
       }
     } catch { /* corrupt */ }
     setHydrated(true)
@@ -99,6 +78,7 @@ export default function CreatorStep3Page() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Persist on change
   useEffect(() => {
     if (!hydrated) return
     try {
@@ -107,112 +87,27 @@ export default function CreatorStep3Page() {
     } catch { /* non-fatal */ }
   }, [bannerUrl, bannerDeleteToken, languages, hydrated])
 
+  // Clean up an abandoned (never-submitted) upload — on real unmount only.
+  // Keyed cleanup would wrongly delete the just-saved banner when the token is
+  // cleared on submit, so we read the latest token from a ref instead.
+  const bannerTokenRef = useRef('')
+  const submittedRef = useRef(false)
+  useEffect(() => { bannerTokenRef.current = bannerDeleteToken }, [bannerDeleteToken])
   useEffect(() => {
     return () => {
-      if (bannerDeleteToken) void tryDeleteCloudinaryUpload(bannerDeleteToken)
-    }
-  }, [bannerDeleteToken])
-
-  async function handleBannerFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-
-    setCropError('')
-    const validationError = await validateBannerFile(file)
-    if (validationError) {
-      setCropError(validationError)
-      return
-    }
-
-    const objectUrl = URL.createObjectURL(file)
-    setCropSrc(objectUrl)
-    setCrop(undefined)
-    setCompletedCrop(undefined)
-    setCropOpen(true)
-  }
-
-  function onCropImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
-    const { naturalWidth: w, naturalHeight: h } = e.currentTarget
-    const initialCrop = centerCrop(
-      makeAspectCrop({ unit: '%', width: 90 }, 3 / 1, w, h),
-      w, h,
-    )
-    setCrop(initialCrop)
-  }
-
-  async function applyCrop() {
-    if (!imgRef.current || !completedCrop || !cropSrc) return
-    const img = imgRef.current
-    const scaleX = img.naturalWidth / img.width
-    const scaleY = img.naturalHeight / img.height
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.floor(completedCrop.width * scaleX)
-    canvas.height = Math.floor(completedCrop.height * scaleY)
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    ctx.drawImage(
-      img,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
-      0, 0,
-      canvas.width, canvas.height,
-    )
-
-    setCropUploading(true)
-    setCropError('')
-    try {
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(
-          (b) => { if (b) resolve(b); else reject(new Error('Canvas empty')) },
-          'image/jpeg', 0.92,
-        )
-      })
-
-      if (bannerDeleteToken && isUploadedBanner) {
-        void tryDeleteCloudinaryUpload(bannerDeleteToken)
+      if (bannerTokenRef.current && !submittedRef.current) {
+        void tryDeleteCloudinaryUpload(bannerTokenRef.current)
       }
-
-      const file = new File([blob], 'banner.jpg', { type: 'image/jpeg' })
-      const result = await uploadToCloudinary(file)
-      setValue('bannerUrl', result.url, { shouldValidate: true })
-      setBannerDeleteToken(result.deleteToken)
-      closeCropModal()
-    } catch (err) {
-      setCropError(err instanceof Error ? err.message : 'Upload failed — try again')
-    } finally {
-      setCropUploading(false)
     }
-  }
+  }, [])
 
-  function closeCropModal() {
-    setCropOpen(false)
-    if (cropSrc) URL.revokeObjectURL(cropSrc)
-    setCropSrc(null)
-    setCrop(undefined)
-    setCompletedCrop(undefined)
-    setCropError('')
-  }
-
-  function selectPreset(gradientValue: string) {
-    if (bannerDeleteToken && isUploadedBanner) {
+  function handleBannerApply(sel: BannerSelection) {
+    // Replacing a previously uploaded banner with something else → clean the old token
+    if (bannerDeleteToken && bannerDeleteToken !== sel.deleteToken) {
       void tryDeleteCloudinaryUpload(bannerDeleteToken)
-      setBannerDeleteToken('')
     }
-    setValue(
-      'bannerUrl',
-      bannerUrl === gradientValue ? undefined : gradientValue,
-      { shouldValidate: true },
-    )
-  }
-
-  function removeUploadedBanner() {
-    if (bannerDeleteToken) void tryDeleteCloudinaryUpload(bannerDeleteToken)
-    setBannerDeleteToken('')
-    setValue('bannerUrl', undefined, { shouldValidate: true })
+    setValue('bannerUrl', sel.bannerUrl, { shouldValidate: true })
+    setBannerDeleteToken(sel.deleteToken ?? '')
   }
 
   function toggleLanguage(lang: string) {
@@ -224,105 +119,40 @@ export default function CreatorStep3Page() {
   }
 
   const onSubmit = async (data: CreatorStep3Form) => {
-    setLoading(true)
     setApiError('')
     try {
-      const res = await fetch('/api/v1/onboarding/creator/step-3', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...(data.bannerUrl ? { bannerUrl: data.bannerUrl } : {}),
-          languages: data.languages,
-        }),
+      await mutateAsync({
+        ...(data.bannerUrl ? { bannerUrl: data.bannerUrl } : {}),
+        languages: data.languages,
       })
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { message?: string }
-        setApiError(body.message ?? 'Something went wrong — please try again')
-        return
-      }
+      submittedRef.current = true
       setBannerDeleteToken('')
       try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* non-fatal */ }
       router.push('/onboarding/creator/step-4')
-    } catch {
-      setApiError('Network error — please try again')
-    } finally {
-      setLoading(false)
+    } catch (e) {
+      setApiError(isApiError(e) ? e.message : 'Network error — please try again')
     }
   }
 
   return (
     <>
-      {/* Crop modal */}
-      {cropOpen && cropSrc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-2xl rounded-2xl bg-card border border-border shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-              <div>
-                <p className="font-semibold text-sm">Crop your banner</p>
-                <p className="text-xs text-muted-foreground">Locked to 3:1 — drag corners to adjust</p>
-              </div>
-              <button
-                type="button"
-                onClick={closeCropModal}
-                disabled={cropUploading}
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted transition-colors disabled:opacity-50"
-              >
-                <FontAwesomeIcon icon={faXmark} className="size-4" />
-              </button>
-            </div>
+      <BannerPickerDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        current={{ bannerUrl, deleteToken: bannerDeleteToken || undefined }}
+        onApply={handleBannerApply}
+      />
 
-            <div className="overflow-auto max-h-[60vh] p-4 bg-muted/40 flex items-center justify-center">
-              <ReactCrop
-                crop={crop}
-                onChange={(c) => setCrop(c)}
-                onComplete={(c) => setCompletedCrop(c)}
-                aspect={3 / 1}
-                minWidth={100}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  ref={imgRef}
-                  src={cropSrc}
-                  alt="Banner crop preview"
-                  onLoad={onCropImageLoad}
-                  className="max-w-full max-h-[50vh] object-contain"
-                />
-              </ReactCrop>
-            </div>
-
-            {cropError && (
-              <p className="px-6 py-2 text-xs text-destructive">{cropError}</p>
-            )}
-
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
-              <Button variant="outline" size="sm" onClick={closeCropModal} disabled={cropUploading}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={applyCrop}
-                disabled={!completedCrop || cropUploading}
-              >
-                {cropUploading ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                ) : 'Apply crop'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/[0.04] overflow-hidden">
-        <div className="w-full h-1 bg-muted">
+      <div className="flex w-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/[0.04]">
+        <div className="h-1 w-full bg-muted">
           <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: '75%' }} />
         </div>
 
         <div className="flex flex-col items-center px-6 py-10 sm:p-12">
           <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <p className="text-xs text-muted-foreground text-center tracking-wide uppercase">Step 3 of 4</p>
+            <p className="text-center text-xs uppercase tracking-wide text-muted-foreground">Step 3 of 4</p>
 
-            <div className="text-center space-y-2">
+            <div className="space-y-2 text-center">
               <h1 className="text-2xl font-semibold tracking-tight">Make your profile stand out</h1>
               <p className="text-sm text-muted-foreground">Pick a banner and the languages you teach in</p>
             </div>
@@ -336,122 +166,45 @@ export default function CreatorStep3Page() {
                   <span className="text-xs text-muted-foreground">Optional</span>
                 </div>
 
-                {/* 3:1 preview strip */}
-                <div className="relative w-full overflow-hidden rounded-xl" style={{ paddingBottom: 'calc(100% / 3)' }}>
-                  <div
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(true)}
+                  className="group relative block w-full overflow-hidden rounded-xl ring-1 ring-border transition-all hover:ring-primary/50"
+                  style={{ paddingBottom: 'calc(100% / 3)' }}
+                  aria-label={bannerUrl ? 'Change banner' : 'Choose a banner'}
+                >
+                  <span
                     className="absolute inset-0 transition-all duration-500"
                     style={
                       bannerUrl
-                        ? isUploadedBanner
+                        ? bannerIsUploaded
                           ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
                           : { background: bannerUrl }
                         : undefined
                     }
                   >
                     {!bannerUrl && (
-                      <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-muted border-2 border-dashed border-border">
-                        <p className="text-xs text-muted-foreground">Banner preview</p>
-                      </div>
+                      <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-border bg-muted">
+                        <FontAwesomeIcon icon={faImage} className="size-5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">Choose a banner</span>
+                      </span>
                     )}
-                    {isUploadedBanner && (
-                      <button
-                        type="button"
-                        onClick={removeUploadedBanner}
-                        className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                        aria-label="Remove banner"
-                      >
-                        <FontAwesomeIcon icon={faXmark} className="size-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+                  </span>
 
-                {/* Tab switcher */}
-                <div className="flex rounded-lg bg-muted p-1 gap-1">
-                  {(['preset', 'upload'] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={cn(
-                        'flex-1 rounded-md py-1.5 text-xs font-medium transition-all',
-                        activeTab === tab
-                          ? 'bg-background shadow-sm text-foreground'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      {tab === 'preset' ? 'Choose a template' : 'Upload your own'}
-                    </button>
-                  ))}
-                </div>
-
-                {activeTab === 'preset' && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {BANNER_PRESETS.map((preset) => {
-                      const selected = bannerUrl === preset.value
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => selectPreset(preset.value)}
-                          aria-label={preset.label}
-                          className={cn(
-                            'relative overflow-hidden rounded-lg transition-all active:scale-95',
-                            selected
-                              ? 'ring-2 ring-primary ring-offset-2'
-                              : 'ring-1 ring-border hover:ring-primary/50',
-                          )}
-                          style={{ paddingBottom: 'calc(100% / 3)' }}
-                        >
-                          <div className="absolute inset-0" style={{ background: preset.value }} />
-                          {selected && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/90 shadow-sm">
-                                <FontAwesomeIcon icon={faCheck} className="size-2.5 text-primary" />
-                              </div>
-                            </div>
-                          )}
-                          <div className="absolute bottom-0 left-0 right-0 px-1.5 py-1 bg-black/30">
-                            <p className="text-[9px] font-medium text-white leading-none">{preset.label}</p>
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {activeTab === 'upload' && (
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => fileRef.current?.click()}
-                      className="w-full flex flex-col items-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-muted/30 px-6 py-8 text-center transition-colors hover:border-primary hover:bg-muted/50 active:scale-[0.99]"
-                    >
-                      <FontAwesomeIcon icon={faCloudArrowUp} className="size-7 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">Click to upload</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">JPEG, PNG, WebP · Max 10 MB · Min 800 px wide</p>
-                      </div>
-                    </button>
-                    {cropError && (
-                      <p className="text-xs text-destructive">{cropError}</p>
-                    )}
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={handleBannerFileSelect}
-                    />
-                  </div>
-                )}
+                  {bannerUrl && (
+                    <span className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors group-hover:bg-black/65">
+                      <FontAwesomeIcon icon={faPenToSquare} className="size-3" />
+                      Change
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Languages */}
               <div className="space-y-3">
                 <Label>
                   Teaching languages{' '}
-                  <span className="text-muted-foreground font-normal">(select all that apply)</span>
+                  <span className="font-normal text-muted-foreground">(select all that apply)</span>
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {LANGUAGES.map((lang) => {
@@ -462,7 +215,7 @@ export default function CreatorStep3Page() {
                         type="button"
                         onClick={() => toggleLanguage(lang)}
                         className={cn(
-                          'px-3.5 py-1.5 rounded-full border text-sm font-medium transition-all active:scale-95',
+                          'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-all active:scale-95',
                           active
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-border bg-background hover:border-primary/50',
@@ -489,17 +242,17 @@ export default function CreatorStep3Page() {
                   size="sm"
                   onClick={() => router.push('/onboarding/creator/step-2')}
                 >
-                  <FontAwesomeIcon icon={faArrowLeft} className="size-4 mr-1" />
+                  <FontAwesomeIcon icon={faArrowLeft} className="mr-1 size-4" />
                   Back
                 </Button>
 
-                <Button type="submit" size="sm" disabled={loading}>
-                  {loading ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                <Button type="submit" size="sm" disabled={isPending}>
+                  {isPending ? (
+                    <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                   ) : (
                     <>
                       Next
-                      <FontAwesomeIcon icon={faArrowRight} className="size-4 ml-1" />
+                      <FontAwesomeIcon icon={faArrowRight} className="ml-1 size-4" />
                     </>
                   )}
                 </Button>
