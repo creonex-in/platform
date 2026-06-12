@@ -227,3 +227,27 @@ export const offerings = pgTable(
     statusIdx: index('idx_offerings_status').on(t.status),
   }),
 )
+
+// ============================================================
+// TESTIMONIALS
+// ============================================================
+
+export const testimonials = pgTable(
+  'testimonials',
+  {
+    id: text('id').primaryKey(),
+    creatorProfileId: text('creator_profile_id')
+      .notNull()
+      .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
+    learnerName: text('learner_name').notNull(),
+    learnerRole: text('learner_role'),
+    content: text('content').notNull(),
+    rating: integer('rating').default(5).notNull(),
+    isPublic: boolean('is_public').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    creatorIdx: index('idx_testimonials_creator').on(t.creatorProfileId),
+    publicIdx: index('idx_testimonials_public').on(t.isPublic),
+  }),
+)

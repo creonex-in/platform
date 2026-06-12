@@ -15,7 +15,7 @@ import {
   faArrowTrendUp, faChartColumn, faIndianRupeeSign, faLayerGroup, faCompass,
 } from '@fortawesome/free-solid-svg-icons'
 import {
-  faInstagram, faYoutube, faLinkedin, faXTwitter,
+  faInstagram, faYoutube,
   faWhatsapp, faTelegram,
 } from '@fortawesome/free-brands-svg-icons'
 import { authClient } from '@/lib/auth-client'
@@ -24,7 +24,6 @@ import { Label } from '@/components/ui/label'
 import {
   InputGroup, InputGroupAddon, InputGroupText, InputGroupInput,
 } from '@/components/ui/input-group'
-import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 // ── Schema ──────────────────────────────────────────────────────────────────
@@ -37,13 +36,6 @@ const GOAL_VALUES = ['full_income', 'validate_grow', 'side_income', 'build_found
 
 const schema = z.object({
   displayName: z.string().min(2, 'At least 2 characters').max(60, 'Max 60 characters'),
-  socialLinks: z.object({
-    instagram: z.string().max(200).optional(),
-    youtube: z.string().max(200).optional(),
-    linkedin: z.string().max(200).optional(),
-    twitter: z.string().max(200).optional(),
-    website: z.string().max(200).optional(),
-  }),
   nicheCategory: z.enum(NICHE_VALUES),
   credentialType: z.enum(CREDENTIAL_VALUES),
   audienceType: z.enum(AUDIENCE_VALUES),
@@ -105,38 +97,22 @@ const QUESTIONS = [
   { name: 'creatorGoal' as const, title: 'What is your goal?', subtitle: 'What does success look like on Creonex in 3 months?', options: GOAL_OPTIONS },
 ]
 
-const SOCIAL_FIELDS: {
-  key: keyof FormValues['socialLinks']
-  icon: IconDefinition
-  label: string
-  color: string
-  placeholder: string
-}[] = [
-  { key: 'instagram', icon: faInstagram, label: 'Instagram', color: 'from-purple-500 via-pink-500 to-orange-400', placeholder: 'instagram.com/yourhandle' },
-  { key: 'youtube', icon: faYoutube, label: 'YouTube', color: 'from-red-600 to-red-500', placeholder: 'youtube.com/@yourchannel' },
-  { key: 'linkedin', icon: faLinkedin, label: 'LinkedIn', color: 'from-blue-700 to-blue-600', placeholder: 'linkedin.com/in/yourprofile' },
-  { key: 'twitter', icon: faXTwitter, label: 'X / Twitter', color: 'from-gray-900 to-gray-800 dark:from-white dark:to-gray-200', placeholder: 'x.com/yourhandle' },
-  { key: 'website', icon: faGlobe, label: 'Website', color: 'from-emerald-600 to-teal-500', placeholder: 'yourwebsite.com' },
-]
-
 // screen → fields to validate before advancing
 const SCREEN_FIELDS: Record<number, (keyof FormValues)[]> = {
   0: ['displayName'],
-  1: ['socialLinks'],
-  2: ['nicheCategory'],
-  3: ['credentialType'],
-  4: ['audienceType'],
-  5: ['primaryPlatform'],
-  6: ['creatorGoal'],
+  1: ['nicheCategory'],
+  2: ['credentialType'],
+  3: ['audienceType'],
+  4: ['primaryPlatform'],
+  5: ['creatorGoal'],
 }
 
-const TOTAL_SCREENS = 7
+const TOTAL_SCREENS = 6
 const STORAGE_KEY = 'creonex-onboarding-step1'
 const AUTO_ADVANCE_MS = 280
 
 const DEFAULT_VALUES: FormValues = {
   displayName: '',
-  socialLinks: { instagram: '', youtube: '', linkedin: '', twitter: '', website: '' },
   nicheCategory: undefined as unknown as typeof NICHE_VALUES[number],
   credentialType: undefined as unknown as typeof CREDENTIAL_VALUES[number],
   audienceType: undefined as unknown as typeof AUDIENCE_VALUES[number],
@@ -201,7 +177,7 @@ export default function CreatorStep1Page() {
   useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current) }, [])
 
   const progress = ((screen + 1) / TOTAL_SCREENS) * 100
-  const currentQuestion = screen >= 2 ? QUESTIONS[screen - 2] : null
+  const currentQuestion = screen >= 1 ? QUESTIONS[screen - 1] : null
 
   const handleContinue = async () => {
     if (loading) return
@@ -238,9 +214,6 @@ export default function CreatorStep1Page() {
     setLoading(true)
     setApiError('')
     try {
-      const socialLinks = Object.fromEntries(
-        Object.entries(data.socialLinks).filter(([, v]) => (v as string | undefined)?.trim()),
-      )
       const res = await fetch('/api/v1/onboarding/creator/questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -252,7 +225,6 @@ export default function CreatorStep1Page() {
           audienceType: data.audienceType,
           primaryPlatform: data.primaryPlatform,
           creatorGoal: data.creatorGoal,
-          ...(Object.keys(socialLinks).length > 0 ? { socialLinks } : {}),
         }),
       })
       if (!res.ok) {
@@ -268,8 +240,6 @@ export default function CreatorStep1Page() {
       setLoading(false)
     }
   }
-
-  const hasSocials = Object.values(values.socialLinks ?? {}).some((v) => (v as string)?.trim())
 
   return (
     <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/[0.04] overflow-hidden">
@@ -317,50 +287,8 @@ export default function CreatorStep1Page() {
               </div>
             )}
 
-            {/* ── Screen 1: Social links ── */}
-            {screen === 1 && (
-              <div className="space-y-6">
-                <div className="text-center space-y-2">
-                  <h1 className="text-2xl font-semibold tracking-tight">Link your social profiles</h1>
-                  <p className="text-sm text-muted-foreground">
-                    Optional — helps students find and trust you
-                  </p>
-                </div>
-                <div className="space-y-3 max-w-sm mx-auto">
-                  {SOCIAL_FIELDS.map((field) => (
-                    <div key={field.key} className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0',
-                          field.color,
-                        )}
-                      >
-                        <FontAwesomeIcon
-                          icon={field.icon}
-                          className={cn(
-                            'size-4',
-                            field.key === 'twitter' ? 'text-white dark:text-gray-900' : 'text-white',
-                          )}
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <Input
-                          {...register(`socialLinks.${field.key}`)}
-                          placeholder={field.placeholder}
-                          className="w-full h-9 text-sm"
-                        />
-                        {errors.socialLinks?.[field.key] && (
-                          <p className="text-xs text-destructive">{errors.socialLinks[field.key]?.message}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ── Screens 2–6: Questions ── */}
-            {screen >= 2 && currentQuestion && (
+            {/* ── Screens 1–5: Questions ── */}
+            {screen >= 1 && currentQuestion && (
               <div className="space-y-6">
                 <div className="text-center space-y-2">
                   <h1 className="text-2xl font-semibold tracking-tight">{currentQuestion.title}</h1>

@@ -3,7 +3,7 @@
 import { motion } from 'motion/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPhone, faCalendarDays, faUsers, faFileLines } from '@fortawesome/free-solid-svg-icons'
-import type { OfferType } from '@/types/offer'
+import type { OfferDisplayType as OfferType } from '@/types/offer'
 import { cn } from '@/lib/utils'
 
 const offerTypes: { type: OfferType; label: string; description: string; icon: typeof faPhone }[] = [

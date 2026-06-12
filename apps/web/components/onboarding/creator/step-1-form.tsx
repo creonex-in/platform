@@ -76,7 +76,7 @@ export function CreatorStep1Form({ defaultName }: Props): React.ReactElement {
 
   return (
     <div className="w-full space-y-8 rounded-3xl border border-border/60 bg-card p-6 shadow-xl shadow-black/[0.04] duration-300 animate-in fade-in slide-in-from-bottom-2 sm:p-9">
-      <OnboardingProgressBar currentStep={1} totalSteps={3} label="Your expertise" />
+      <OnboardingProgressBar currentStep={1} totalSteps={4} label="Your expertise" />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
         <div className="space-y-3">

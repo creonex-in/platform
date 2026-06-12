@@ -1,12 +1,14 @@
 "use client";
 
-import { JSX, useRef } from "react";
+import { JSX, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
+import { parseRoles } from "@creonex/types";
 import { UserMenu } from "@/components/layout/user-menu";
 import { CreatorDashboardButton } from "@/components/layout/creator-dashboard-button";
+import { LearnerDashboardButton } from "@/components/layout/learner-dashboard-button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -80,7 +82,6 @@ const LEARNER_CONFIG: NavConfig = {
     { label: "Browse Topics", href: "#explore" },
     { label: "How It Works", href: "#how-it-works" },
     { label: "For Creators", href: "/creators" },
-    { label: "Get Started", href: "/sign-up" },
   ],
 };
 
@@ -111,12 +112,19 @@ const CREATOR_CONFIG: NavConfig = {
     { label: "Features", href: "#features" },
     { label: "How It Works", href: "#how-it-works" },
     { label: "For Learners", href: "/" },
-    { label: "Start Teaching", href: "/sign-up/creator" },
   ],
 };
 
-function getNavConfig(pathname: string): NavConfig {
-  return pathname === "/creators" ? CREATOR_CONFIG : LEARNER_CONFIG;
+function getNavConfig(pathname: string, isCreator: boolean): NavConfig {
+  if (pathname === "/creators") return CREATOR_CONFIG;
+  if (isCreator) return CREATOR_CONFIG;
+  return LEARNER_CONFIG;
+}
+
+function getLogoHref(isLoaded: boolean, isSignedIn: boolean, isCreator: boolean): string {
+  if (!isLoaded || !isSignedIn) return "/";
+  if (isCreator) return "/dashboard";
+  return "/learner/dashboard";
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -142,15 +150,24 @@ function MegaItem({ item }: { item: NavItem }): JSX.Element {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-import { useEffect } from "react";
-
 export default function Navbar(): JSX.Element {
   const { data: session, isPending } = authClient.useSession();
   const isSignedIn = !!session?.user;
   const isLoaded = !isPending;
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
-  const config = getNavConfig(pathname);
+
+  const roles = session?.user?.role ? parseRoles(session.user.role) : [];
+  const isCreator = roles.includes("creator");
+
+  const config = getNavConfig(pathname, isLoaded && isCreator);
+  const logoHref = getLogoHref(isLoaded, isSignedIn, isCreator);
+
+  const mobileDashboardLink = isLoaded && isSignedIn
+    ? isCreator
+      ? { label: "Creator Dashboard", href: "/dashboard" }
+      : { label: "My Learning", href: "/learner/dashboard" }
+    : undefined;
 
   useEffect(() => {
     const header = headerRef.current;
@@ -165,7 +182,7 @@ export default function Navbar(): JSX.Element {
     };
 
     window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Initial check
+    handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -178,7 +195,7 @@ export default function Navbar(): JSX.Element {
       <nav className="page-container grid h-16 grid-cols-2 items-center gap-6 lg:grid-cols-3">
 
         {/* ── Col 1: Logo ─────────────────────────────────────────────────── */}
-        <Link href="/" className="flex shrink-0 items-center gap-2">
+        <Link href={logoHref} className="flex shrink-0 items-center gap-2">
           <Image
             src="/logo.webp"
             alt=""
@@ -197,7 +214,6 @@ export default function Navbar(): JSX.Element {
           <NavigationMenu align="center">
             <NavigationMenuList className="gap-0.5">
 
-              {/* Mega menu — label + content driven by config */}
               <NavigationMenuItem>
                 <NavigationMenuTrigger
                   className={cn(
@@ -240,7 +256,6 @@ export default function Navbar(): JSX.Element {
                 </NavigationMenuContent>
               </NavigationMenuItem>
 
-              {/* Plain links */}
               {config.plainLinks.map((link) => (
                 <NavigationMenuItem key={link.label}>
                   <Link
@@ -283,6 +298,7 @@ export default function Navbar(): JSX.Element {
             )}
             {isLoaded && isSignedIn && (
               <div className="flex items-center gap-2">
+                <LearnerDashboardButton />
                 <CreatorDashboardButton />
                 <UserMenu />
               </div>
@@ -296,6 +312,7 @@ export default function Navbar(): JSX.Element {
               links={config.mobileLinks}
               ctaText={config.ctaText}
               ctaHref={pathname === '/creators' ? '/sign-up/creator' : '/sign-up/learner'}
+              dashboardLink={mobileDashboardLink}
             />
           </div>
 

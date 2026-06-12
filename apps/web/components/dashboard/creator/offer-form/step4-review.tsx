@@ -3,7 +3,7 @@
 import { useFormContext } from 'react-hook-form'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPhone, faCalendarDays, faUsers, faFileLines, faBullseye } from '@fortawesome/free-solid-svg-icons'
-import type { OfferType } from '@/types/offer'
+import type { OfferDisplayType as OfferType } from '@/types/offer'
 import type { OfferFormValues } from './index'
 import { formatCurrency } from '@/lib/utils'
 

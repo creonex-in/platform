@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { DATABASE_CONNECTION, type Database } from '../database/database-connection'
 import { offerings } from '../database/schema'
 import { generateId } from '../utils/id'
@@ -15,6 +15,19 @@ export class OfferingsRepository {
       .where(eq(offerings.creatorProfileId, creatorProfileId))
       .limit(1)
     return result[0] ?? null
+  }
+
+  async findPublicByCreatorProfileId(creatorProfileId: string) {
+    return this.db
+      .select()
+      .from(offerings)
+      .where(
+        and(
+          eq(offerings.creatorProfileId, creatorProfileId),
+          eq(offerings.status, 'live'),
+        ),
+      )
+      .orderBy(offerings.createdAt)
   }
 
   async create(data: {

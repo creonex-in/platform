@@ -8,6 +8,7 @@ import { AppController } from './app.controller'
 import { DatabaseModule } from './database/database.module'
 import { UsersModule } from './users/users.module'
 import { OnboardingModule } from './onboarding/onboarding.module'
+import { CreatorsModule } from './creators/creators.module'
 import { DATABASE_CONNECTION, type Database } from './database/database-connection'
 
 @Module({
@@ -42,6 +43,7 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
     }),
     UsersModule,
     OnboardingModule,
+    CreatorsModule,
   ],
   controllers: [AppController],
 })

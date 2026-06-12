@@ -1,5 +1,5 @@
 import type { UserRole } from './roles'
-import type { Niche, GoalType } from './onboarding'
+import type { Niche, GoalType, SocialLinks } from './onboarding'
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -78,6 +78,53 @@ export interface AddCreatorRoleResponse {
   roles: UserRole[]
   redirectTo: string
   alreadyCreator?: boolean
+}
+
+// ── Public Creator Profile ────────────────────────────────────────────────────
+
+export type { SocialLinks }
+
+export interface PublicOffering {
+  id: string
+  type: string
+  title: string
+  price: number
+  currency: string
+  durationMinutes: number | null
+  seatsTotal: number | null
+  seatsRemaining: number | null
+  status: string
+  totalBookings: number
+  thumbnailUrl: string | null
+}
+
+export interface PublicTestimonial {
+  id: string
+  learnerName: string
+  learnerRole: string | null
+  content: string
+  rating: number
+}
+
+export interface PublicCreatorProfile {
+  id: string
+  username: string
+  displayName: string | null
+  bio: string | null
+  profilePhotoUrl: string | null
+  coverBannerUrl: string | null
+  primaryNiche: string | null
+  experienceYears: number | null
+  languages: string[]
+  socialLinks: SocialLinks
+  qualityTier: string
+  smoothedRating: string
+  totalReviews: number
+  totalSessions: number
+  isVerified: boolean
+  tags: string[]
+  offerings: PublicOffering[]
+  testimonials: PublicTestimonial[]
 }
 
 // ── Onboarding Responses ──────────────────────────────────────────────────────

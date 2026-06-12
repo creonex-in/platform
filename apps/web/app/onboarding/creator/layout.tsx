@@ -8,8 +8,8 @@ export default async function CreatorOnboardingLayout({
 }): Promise<React.ReactElement> {
   const { profile } = await getCreatorContext()
 
-  // If the profile exists and onboarding is complete, redirect to dashboard
-  if (profile && profile.onboardingStatus === 'complete') {
+  // Single signal: isLive. Avoids loop if isLive/onboardingStatus are ever out of sync.
+  if (profile?.isLive) {
     redirect('/dashboard')
   }
 

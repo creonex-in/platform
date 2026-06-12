@@ -19,12 +19,14 @@ interface MobileNavProps {
   links: ReadonlyArray<{ label: string; href: string }>;
   ctaText?: string;
   ctaHref?: string;
+  dashboardLink?: { label: string; href: string };
 }
 
 export default function MobileNav({
   links,
   ctaText = "Get Started Free",
   ctaHref = "/sign-up",
+  dashboardLink,
 }: MobileNavProps): JSX.Element {
   const [open, setOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
@@ -82,6 +84,18 @@ export default function MobileNav({
               className={buttonVariants({ variant: "default", className: "w-full" })}
             >
               {ctaText}
+            </Link>
+          </div>
+        )}
+
+        {isLoaded && isSignedIn && dashboardLink && (
+          <div className="px-6 py-5">
+            <Link
+              href={dashboardLink.href}
+              onClick={close}
+              className={buttonVariants({ variant: "default", className: "w-full" })}
+            >
+              {dashboardLink.label}
             </Link>
           </div>
         )}

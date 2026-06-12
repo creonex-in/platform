@@ -5,7 +5,7 @@
     "rootDir": "./src",
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "paths": {
-      "@creonex/types": ["../../packages/types/src/index.d.ts"]
+      "@creonex/types": ["../../packages/types/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*"],

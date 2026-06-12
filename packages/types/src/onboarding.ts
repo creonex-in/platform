@@ -54,13 +54,27 @@ export interface CreatorStep1Request {
   experienceYears: number
 }
 
+export interface SocialLinks {
+  youtube?: string
+  linkedin?: string
+  instagram?: string
+  twitter?: string
+  website?: string
+}
+
 export interface CreatorStep2Request {
   bio: string
   tags: string[]
   photoUrl?: string
+  socialLinks?: SocialLinks
 }
 
 export interface CreatorStep3Request {
+  bannerUrl?: string
+  languages: string[]
+}
+
+export interface CreatorStep4Request {
   offerType: OfferType
   title: string
   price: number
@@ -72,3 +86,4 @@ export type LearnerStep1Data = LearnerStep1Request
 export type CreatorStep1Data = CreatorStep1Request
 export type CreatorStep2Data = CreatorStep2Request
 export type CreatorStep3Data = CreatorStep3Request
+export type CreatorStep4Data = CreatorStep4Request

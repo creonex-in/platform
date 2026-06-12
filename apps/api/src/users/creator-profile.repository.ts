@@ -42,15 +42,47 @@ export class CreatorProfileRepository {
       .where(eq(creatorProfiles.userId, userId))
   }
 
+  async updateQuestions(
+    userId: string,
+    data: {
+      displayName: string
+      nicheCategory: string
+      credentialType: string
+      audienceType: string
+      primaryPlatform: string
+      creatorGoal: string
+    },
+  ) {
+    await this.db
+      .update(creatorProfiles)
+      .set({
+        displayName: data.displayName,
+        nicheCategory: data.nicheCategory,
+        credentialType: data.credentialType,
+        audienceType: data.audienceType,
+        primaryPlatform: data.primaryPlatform,
+        creatorGoal: data.creatorGoal,
+        onboardingStatus: 'in_progress',
+        currentStep: 2,
+      })
+      .where(eq(creatorProfiles.userId, userId))
+  }
+
   async updateStep2(
     userId: string,
-    data: { bio: string; tags: string[]; photoUrl?: string },
+    data: {
+      bio: string
+      tags: string[]
+      photoUrl?: string
+      socialLinks?: Record<string, string | undefined>
+    },
   ) {
     await this.db
       .update(creatorProfiles)
       .set({
         bio: data.bio,
         profilePhotoUrl: data.photoUrl ?? null,
+        socialLinks: data.socialLinks ?? {},
         onboardingStatus: 'in_progress',
         currentStep: 3,
       })
@@ -75,6 +107,21 @@ export class CreatorProfileRepository {
     }
   }
 
+  async updateStep3(
+    userId: string,
+    data: { bannerUrl?: string; languages: string[] },
+  ) {
+    await this.db
+      .update(creatorProfiles)
+      .set({
+        coverBannerUrl: data.bannerUrl ?? null,
+        languages: data.languages,
+        onboardingStatus: 'in_progress',
+        currentStep: 4,
+      })
+      .where(eq(creatorProfiles.userId, userId))
+  }
+
   async goLive(
     userId: string,
     username: string,
@@ -91,6 +138,21 @@ export class CreatorProfileRepository {
         currentStep: 4,
       })
       .where(eq(creatorProfiles.userId, userId))
+  }
+
+  async findPublicByUsername(username: string) {
+    const profile = await this.db
+      .select()
+      .from(creatorProfiles)
+      .where(eq(creatorProfiles.username, username))
+      .limit(1)
+      .then((r) => r[0] ?? null)
+    if (!profile) return null
+    const tags = await this.db
+      .select({ tag: creatorTags.tag })
+      .from(creatorTags)
+      .where(eq(creatorTags.creatorProfileId, profile.id))
+    return { ...profile, tags: tags.map((t) => t.tag) }
   }
 
   async isUsernameTaken(username: string): Promise<boolean> {

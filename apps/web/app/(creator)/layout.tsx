@@ -9,17 +9,15 @@ const STEP_PATHS: Record<number, string> = {
   1: '/onboarding/creator/step-1',
   2: '/onboarding/creator/step-2',
   3: '/onboarding/creator/step-3',
+  4: '/onboarding/creator/step-4',
 }
 
 export default async function CreatorLayout({ children }: { children: React.ReactNode }): Promise<React.ReactElement> {
-  const { user, profile, profileMissing } = await getCreatorContext()
+  const { user, profile } = await getCreatorContext()
 
-  // redirect() throws NEXT_REDIRECT — never call it inside try/catch
-  if (profile && !profile.isLive) {
-    redirect(STEP_PATHS[profile.currentStep] ?? '/onboarding/creator/step-1')
-  }
-  if (profileMissing) {
-    redirect('/onboarding/creator/step-1')
+  // Single signal: isLive. Avoids loop if isLive/onboardingStatus are ever out of sync.
+  if (!profile?.isLive) {
+    redirect(profile ? (STEP_PATHS[profile.currentStep] ?? '/onboarding/creator/step-1') : '/onboarding/creator/step-1')
   }
 
   const displayName = profile?.displayName ?? user?.name ?? 'Creator'

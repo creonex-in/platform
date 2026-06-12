@@ -12,7 +12,10 @@ import {
   Max,
   ArrayMinSize,
   ArrayMaxSize,
+  ValidateNested,
+  IsNotEmpty,
 } from 'class-validator'
+import { Type } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   NICHES,
@@ -24,6 +27,39 @@ import {
   type OfferType,
   type DurationOption,
 } from '@creonex/types'
+
+export class CreatorQuestionsDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(60)
+  fullName!: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  nicheCategory!: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  credentialType!: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  audienceType!: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  primaryPlatform!: string
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  creatorGoal!: string
+}
 
 export class LearnerStep1Dto {
   @ApiPropertyOptional()
@@ -64,6 +100,33 @@ export class CreatorStep1Dto {
   experienceYears!: number
 }
 
+export class SocialLinksDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  youtube?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  linkedin?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  instagram?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  twitter?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  website?: string
+}
+
 export class CreatorStep2Dto {
   @ApiProperty()
   @IsString()
@@ -84,9 +147,30 @@ export class CreatorStep2Dto {
   @IsOptional()
   @IsUrl()
   photoUrl?: string
+
+  @ApiPropertyOptional({ type: SocialLinksDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SocialLinksDto)
+  socialLinks?: SocialLinksDto
 }
 
 export class CreatorStep3Dto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  bannerUrl?: string
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(12)
+  @IsString({ each: true })
+  languages!: string[]
+}
+
+export class CreatorStep4Dto {
   @ApiProperty({ enum: OFFER_TYPES })
   @IsEnum(OFFER_TYPES)
   offerType!: OfferType

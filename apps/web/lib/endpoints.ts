@@ -11,4 +11,7 @@ export const endpoints = {
     creatorStep2: '/api/v1/onboarding/creator/step-2',
     creatorStep3: '/api/v1/onboarding/creator/step-3',
   },
-} as const
+  creators: {
+    byUsername: (username: string) => `/api/v1/creators/${username}`,
+  },
+}

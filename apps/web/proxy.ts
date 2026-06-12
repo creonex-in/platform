@@ -48,8 +48,9 @@ export default async function proxy(request: NextRequest) {
     if (!session?.user) return toSignIn(request)
     if (session.user.role) role = session.user.role
   } catch {
-    // Session fetch failed — treat as unauthenticated
-    return toSignIn(request)
+    // Session fetch failed (transient error) — cookie exists so let through.
+    // Server layouts will handle actual auth failures.
+    return NextResponse.next()
   }
 
   const roles = role.split(',')

@@ -4,7 +4,7 @@ import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger'
 import { OnboardingService } from './onboarding.service'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
-import { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto } from './onboarding.dto'
+import { LearnerStep1Dto, CreatorQuestionsDto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorStep4Dto } from './onboarding.dto'
 import type { AppUserSession } from '../auth/types'
 
 @ApiTags('Onboarding')
@@ -22,10 +22,18 @@ export class OnboardingController {
     return this.onboardingService.saveLearnerStep1(session.user.id, dto)
   }
 
+  @Post('creator/questions')
+  @Roles('creator')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Save creator step 1 — discovery questions + name' })
+  creatorQuestions(@Session() session: AppUserSession, @Body() dto: CreatorQuestionsDto) {
+    return this.onboardingService.saveCreatorQuestions(session.user.id, dto)
+  }
+
   @Post('creator/step-1')
   @Roles('creator')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Save creator step 1 — name + niche + experience' })
+  @ApiOperation({ summary: 'Save creator step 1 — name + niche + experience (legacy)' })
   creatorStep1(@Session() session: AppUserSession, @Body() dto: CreatorStep1Dto) {
     return this.onboardingService.saveCreatorStep1(session.user.id, dto)
   }
@@ -33,7 +41,7 @@ export class OnboardingController {
   @Post('creator/step-2')
   @Roles('creator')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Save creator step 2 — bio + tags + photo' })
+  @ApiOperation({ summary: 'Save creator step 2 — bio + tags + photo + social links' })
   creatorStep2(@Session() session: AppUserSession, @Body() dto: CreatorStep2Dto) {
     return this.onboardingService.saveCreatorStep2(session.user.id, dto)
   }
@@ -41,8 +49,16 @@ export class OnboardingController {
   @Post('creator/step-3')
   @Roles('creator')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Save creator step 3 — first offering + go live' })
+  @ApiOperation({ summary: 'Save creator step 3 — banner + languages' })
   creatorStep3(@Session() session: AppUserSession, @Body() dto: CreatorStep3Dto) {
     return this.onboardingService.saveCreatorStep3(session.user.id, dto)
+  }
+
+  @Post('creator/step-4')
+  @Roles('creator')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Save creator step 4 — first offering + go live' })
+  creatorStep4(@Session() session: AppUserSession, @Body() dto: CreatorStep4Dto) {
+    return this.onboardingService.saveCreatorStep4(session.user.id, dto)
   }
 }

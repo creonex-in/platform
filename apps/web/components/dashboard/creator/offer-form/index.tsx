@@ -12,7 +12,7 @@ import { Step1Type } from './step1-type'
 import { Step2Details } from './step2-details'
 import { Step3Pricing } from './step3-pricing'
 import { Step4Review } from './step4-review'
-import type { OfferType } from '@/types/offer'
+import type { OfferDisplayType as OfferType } from '@/types/offer'
 import { toast } from 'sonner'
 
 const offerSchema = z.object({

@@ -5,6 +5,8 @@ import { UsersService } from './users.service'
 import { UsersRepository } from './users.repository'
 import { CreatorProfileRepository } from './creator-profile.repository'
 import { LearnerProfileRepository } from './learner-profile.repository'
+import { OfferingsRepository } from './offerings.repository'
+import { TestimonialsRepository } from './testimonials.repository'
 import { RolesGuard } from '../auth/roles.guard'
 
 @Module({
@@ -14,9 +16,18 @@ import { RolesGuard } from '../auth/roles.guard'
     UsersRepository,
     CreatorProfileRepository,
     LearnerProfileRepository,
+    OfferingsRepository,
+    TestimonialsRepository,
     RolesGuard,
     Reflector,
   ],
-  exports: [UsersService, UsersRepository, CreatorProfileRepository, LearnerProfileRepository],
+  exports: [
+    UsersService,
+    UsersRepository,
+    CreatorProfileRepository,
+    LearnerProfileRepository,
+    OfferingsRepository,
+    TestimonialsRepository,
+  ],
 })
 export class UsersModule {}

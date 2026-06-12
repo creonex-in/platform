@@ -3,7 +3,7 @@ import { UsersRepository } from '../users/users.repository'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
 import { LearnerProfileRepository } from '../users/learner-profile.repository'
 import { OfferingsRepository } from '../users/offerings.repository'
-import type { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto } from './onboarding.dto'
+import type { LearnerStep1Dto, CreatorQuestionsDto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorStep4Dto } from './onboarding.dto'
 
 const DISCOVERY_BOOST_DAYS = 14
 
@@ -33,6 +33,25 @@ export class OnboardingService {
     return { success: true }
   }
 
+  async saveCreatorQuestions(userId: string, dto: CreatorQuestionsDto) {
+    const [firstName, ...rest] = dto.fullName.trim().split(' ')
+    await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
+
+    const existing = await this.creatorRepo.findByUserId(userId)
+    if (!existing) await this.creatorRepo.create(userId)
+
+    await this.creatorRepo.updateQuestions(userId, {
+      displayName: dto.fullName,
+      nicheCategory: dto.nicheCategory,
+      credentialType: dto.credentialType,
+      audienceType: dto.audienceType,
+      primaryPlatform: dto.primaryPlatform,
+      creatorGoal: dto.creatorGoal,
+    })
+
+    return { success: true, nextStep: 2 }
+  }
+
   async saveCreatorStep1(userId: string, dto: CreatorStep1Dto) {
     const [firstName, ...rest] = dto.fullName.trim().split(' ')
     await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
@@ -53,10 +72,19 @@ export class OnboardingService {
     const profile = await this.creatorRepo.findByUserId(userId)
     if (!profile) throw new BadRequestException('Complete step 1 first')
 
+    // Strip empty strings from socialLinks before persisting
+    const socialLinks: Record<string, string> = {}
+    if (dto.socialLinks) {
+      for (const [key, val] of Object.entries(dto.socialLinks)) {
+        if (val) socialLinks[key] = val
+      }
+    }
+
     await this.creatorRepo.updateStep2(userId, {
       bio: dto.bio,
       tags: dto.tags,
       photoUrl: dto.photoUrl,
+      socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : undefined,
     })
 
     return { success: true, nextStep: 3 }
@@ -66,6 +94,21 @@ export class OnboardingService {
     const profile = await this.creatorRepo.findByUserId(userId)
     if (!profile) throw new BadRequestException('Complete step 1 first')
     if ((profile.currentStep ?? 1) < 3) {
+      throw new BadRequestException('Complete previous steps first')
+    }
+
+    await this.creatorRepo.updateStep3(userId, {
+      bannerUrl: dto.bannerUrl,
+      languages: dto.languages,
+    })
+
+    return { success: true, nextStep: 4 }
+  }
+
+  async saveCreatorStep4(userId: string, dto: CreatorStep4Dto) {
+    const profile = await this.creatorRepo.findByUserId(userId)
+    if (!profile) throw new BadRequestException('Complete step 1 first')
+    if ((profile.currentStep ?? 1) < 4) {
       throw new BadRequestException('Complete previous steps first')
     }
 
