@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowRight,
-  faMobileScreenButton,
+import { 
+  faArrowRight, 
+  faMobileScreenButton, 
   faCheck,
   faCoins,
   faChartLine,
@@ -16,25 +16,25 @@ import { Button } from "@/components/ui/button";
 export default function MobileAppSection(): React.ReactElement {
   return (
     <section className="bg-background py-24 relative overflow-hidden border-t border-border/10">
-
+      
       {/* Decorative background glow blobs in soft pastel */}
       <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-10 right-1/4 translate-x-1/3 w-[400px] h-[400px] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
 
       <div className="page-container relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-evenly gap-8 lg:gap-10">
-
+          
           {/* Left Side: Minimal Copy */}
           <div className="flex-1 max-w-xl  text-center lg:text-left">
             <p className="text-label text-primary mb-5 flex items-center gap-2 justify-center lg:justify-start font-sans">
                <FontAwesomeIcon icon={faMobileScreenButton} className="w-3.5 h-3.5" />
                Coming 2026
             </p>
-
+            
             <h2 className="text-4xl md:text-5xl lg:text-[54px] font-bold tracking-tight text-foreground mb-6 leading-tight font-display">
               Your entire creator business. <br className="hidden md:block"/> In your pocket.
             </h2>
-
+            
             <p className="text-lg text-muted-foreground mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0 font-light font-sans">
               Manage bookings, track live earnings, and engage with your community from a single, beautifully designed application. No laptop required.
             </p>
@@ -65,7 +65,7 @@ export default function MobileAppSection(): React.ReactElement {
                <Button size="lg" className="rounded-full px-8 gap-2 font-bold bg-foreground hover:bg-muted-foreground text-background h-12 shadow-sm transition-all duration-300">
                  Join Waitlist <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
                </Button>
-
+               
                <div className="flex items-center gap-4 opacity-40 grayscale pointer-events-none text-foreground">
                   <FontAwesomeIcon icon={faApple} className="h-6 w-6" />
                   <FontAwesomeIcon icon={faGooglePlay} className="h-5 w-5" />
@@ -78,7 +78,7 @@ export default function MobileAppSection(): React.ReactElement {
             {/* Phone background ambient glow */}
             <div className="absolute top-1/2 left-1/2 lg:left-2/3 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-100/60 dark:bg-indigo-950/20 rounded-full blur-[80px] pointer-events-none" />
 
-            <motion.div
+            <motion.div 
                animate={{ y: [-8, 8, -8] }}
                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                className="relative w-[280px] h-[580px] bg-card border-[10px] md:border-[12px] border-slate-200 dark:border-slate-800 rounded-[3rem] shadow-2xl flex flex-col overflow-hidden ring-1 ring-border/50 z-10"
@@ -106,9 +106,9 @@ export default function MobileAppSection(): React.ReactElement {
                <div className="w-full h-32 relative flex items-end px-4 gap-2 pb-2">
                    <div className="absolute inset-0 bg-gradient-to-t from-indigo-50/50 dark:from-indigo-950/10 to-transparent" />
                    {[20, 35, 25, 50, 45, 75, 60, 40, 85, 70].map((h, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 bg-indigo-300/40 dark:bg-indigo-500/20 border-t border-indigo-300/40 dark:border-indigo-500/30 rounded-t-sm"
+                      <div 
+                        key={i} 
+                        className="flex-1 bg-indigo-300/40 dark:bg-indigo-500/20 border-t border-indigo-300/40 dark:border-indigo-500/30 rounded-t-sm" 
                         style={{ height: `${h}%` }}
                       />
                    ))}
@@ -158,7 +158,7 @@ export default function MobileAppSection(): React.ReactElement {
                      <span className="text-[10px] text-muted-foreground font-medium">Just now</span>
                   </div>
                </div>
-
+               
                {/* Minimal Home Indicator */}
                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-border/50 rounded-full z-50" />
             </motion.div>

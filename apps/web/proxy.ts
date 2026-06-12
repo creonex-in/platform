@@ -31,7 +31,7 @@ export default async function proxy(request: NextRequest) {
 
   if (!sessionCookie) {
     const signInUrl = new URL('/sign-in', request.url)
-    signInUrl.searchParams.set('redirect_url', request.url)
+    signInUrl.searchParams.set('redirect_url', request.nextUrl.pathname)
     return NextResponse.redirect(signInUrl)
   }
 

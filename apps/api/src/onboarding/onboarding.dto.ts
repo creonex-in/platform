@@ -49,15 +49,24 @@ const VALID_NICHES: Niche[] = [
 ]
 
 export class LearnerStep1Dto {
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(60)
-  fullName!: string
+  fullName?: string
 
   @ApiProperty({ enum: GOAL_TYPES })
   @IsEnum(GOAL_TYPES)
   goalType!: GoalType
+
+  @ApiPropertyOptional({ type: [String], enum: VALID_NICHES })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(8)
+  @IsEnum(VALID_NICHES, { each: true })
+  interestedNiches?: Niche[]
 }
 
 export class CreatorStep1Dto {

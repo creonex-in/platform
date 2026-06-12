@@ -16,39 +16,39 @@ export default function WhyLearnersChoose(): React.ReactElement {
           <p className="text-muted-foreground text-lg mb-8 max-w-3xl">
             Connect directly with creators and experts who match your learning goals. Skip the generic video repositories and engage in interactive, outcome-driven learning.
           </p>
-
+          
           {/* 2x2 Standard Grid */}
           <div className="grid grid-cols-2 gap-4 w-full">
             <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-border/20">
-               <Image
-                 src="https://images.unsplash.com/photo-1616469829581-73993eb86b02?auto=format&fit=crop&w=800&q=80"
-                 alt="1-on-1 virtual call learning"
-                 fill
-                 className="object-cover hover:scale-105 transition-transform duration-500"
+               <Image 
+                 src="https://images.unsplash.com/photo-1616469829581-73993eb86b02?auto=format&fit=crop&w=800&q=80" 
+                 alt="1-on-1 virtual call learning" 
+                 fill 
+                 className="object-cover hover:scale-105 transition-transform duration-500" 
                />
             </div>
             <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-border/20">
-               <Image
-                 src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80"
-                 alt="Mentorship and code review discussion"
-                 fill
-                 className="object-cover hover:scale-105 transition-transform duration-500"
+               <Image 
+                 src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80" 
+                 alt="Mentorship and code review discussion" 
+                 fill 
+                 className="object-cover hover:scale-105 transition-transform duration-500" 
                />
             </div>
             <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-border/20">
-               <Image
-                 src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80"
-                 alt="Interactive student notebook workspace"
-                 fill
-                 className="object-cover hover:scale-105 transition-transform duration-500"
+               <Image 
+                 src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800&q=80" 
+                 alt="Interactive student notebook workspace" 
+                 fill 
+                 className="object-cover hover:scale-105 transition-transform duration-500" 
                />
             </div>
             <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-border/20">
-               <Image
-                 src="https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=800&q=80"
-                 alt="Virtual teacher tutorial board"
-                 fill
-                 className="object-cover hover:scale-105 transition-transform duration-500"
+               <Image 
+                 src="https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=800&q=80" 
+                 alt="Virtual teacher tutorial board" 
+                 fill 
+                 className="object-cover hover:scale-105 transition-transform duration-500" 
                />
             </div>
           </div>
@@ -66,31 +66,31 @@ export default function WhyLearnersChoose(): React.ReactElement {
           <p className="text-muted-foreground text-lg mb-8 max-w-3xl">
             Every creator goes through a quality review process before joining the platform. Learn only from practitioners actively working in the industry.
           </p>
-
+          
           {/* Top Heavy Grid */}
           <div className="grid grid-cols-2 gap-4 w-full">
              <div className="col-span-2 relative aspect-[21/9] rounded-xl overflow-hidden shadow-sm border border-border/20">
-                <Image
-                  src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1200&q=80"
-                  alt="Verified designer prototyping at office"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                <Image 
+                  src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=1200&q=80" 
+                  alt="Verified designer prototyping at office" 
+                  fill 
+                  className="object-cover hover:scale-105 transition-transform duration-500" 
                 />
              </div>
              <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-border/20">
-                <Image
-                  src="https://images.unsplash.com/photo-1607799279861-4dd421887fb3?auto=format&fit=crop&w=800&q=80"
-                  alt="Active programmer writing code"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                <Image 
+                  src="https://images.unsplash.com/photo-1607799279861-4dd421887fb3?auto=format&fit=crop&w=800&q=80" 
+                  alt="Active programmer writing code" 
+                  fill 
+                  className="object-cover hover:scale-105 transition-transform duration-500" 
                 />
              </div>
              <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-border/20">
-                <Image
-                  src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80"
-                  alt="Active workplace workstation"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                <Image 
+                  src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80" 
+                  alt="Active workplace workstation" 
+                  fill 
+                  className="object-cover hover:scale-105 transition-transform duration-500" 
                 />
              </div>
           </div>
@@ -108,31 +108,31 @@ export default function WhyLearnersChoose(): React.ReactElement {
           <p className="text-muted-foreground text-lg mb-8 max-w-3xl">
             Gain practical skills, career guidance, and actionable insights instead of passive content consumption. Walk away with clear outcomes.
           </p>
-
+          
           {/* Asymmetric Bento Grid */}
           <div className="grid grid-cols-2 gap-4 w-full h-[400px] md:h-[500px]">
              <div className="row-span-2 relative rounded-xl overflow-hidden shadow-sm border border-border/20">
-                <Image
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"
-                  alt="Outcome tracking panel and analytics chart"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                <Image 
+                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" 
+                  alt="Outcome tracking panel and analytics chart" 
+                  fill 
+                  className="object-cover hover:scale-105 transition-transform duration-500" 
                 />
              </div>
              <div className="relative rounded-xl overflow-hidden shadow-sm border border-border/20">
-                <Image
-                  src="https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?auto=format&fit=crop&w=800&q=80"
-                  alt="Hands-on designer crafting project layout"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                <Image 
+                  src="https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?auto=format&fit=crop&w=800&q=80" 
+                  alt="Hands-on designer crafting project layout" 
+                  fill 
+                  className="object-cover hover:scale-105 transition-transform duration-500" 
                 />
              </div>
              <div className="relative rounded-xl overflow-hidden shadow-sm border border-border/20">
-                <Image
-                  src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80"
-                  alt="Finished application code outcomes"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                <Image 
+                  src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80" 
+                  alt="Finished application code outcomes" 
+                  fill 
+                  className="object-cover hover:scale-105 transition-transform duration-500" 
                 />
              </div>
           </div>

@@ -110,10 +110,10 @@ function ExpertAvatar({ expert }: { expert: Session["expert"] }): React.ReactEle
 function SessionCard({ session }: { session: Session }): React.ReactElement {
   return (
     <article className="group relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-border/85 bg-card/60 p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-foreground/40 hover:bg-card hover:shadow-lg hover:shadow-foreground/5 animate-fade-up">
-
+      
       {/* Subtle top light effect */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-foreground/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
+      
       <div className="flex flex-col gap-3">
         {/* Top Header: Calendar Badge & Status Pill */}
         <div className="flex items-center justify-between gap-2">
@@ -121,7 +121,7 @@ function SessionCard({ session }: { session: Session }): React.ReactElement {
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{session.month}</span>
             <span className="text-xl font-extrabold leading-none tracking-tight">{session.day}</span>
           </div>
-
+          
           <span className={cn(
             "flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
             STATUS_CLASS[session.status],
@@ -167,7 +167,7 @@ function SessionCard({ session }: { session: Session }): React.ReactElement {
               {session.price.toLocaleString("en-IN")}
             </span>
           </div>
-
+          
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-background transition-all duration-300 ease-in-out group-hover:w-[80px] group-hover:px-2">
             <span className="max-w-0 opacity-0 group-hover:max-w-[40px] group-hover:opacity-100 group-hover:mr-1 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden text-[10px] font-bold uppercase tracking-widest leading-none">
               Book
@@ -191,7 +191,7 @@ export default function UpcomingSessions(): React.ReactElement {
 
   return (
     <section className="dark section-py relative bg-background overflow-hidden">
-
+      
       {/* CSS Animations style block */}
       <style>{`
         @keyframes fadeUp {

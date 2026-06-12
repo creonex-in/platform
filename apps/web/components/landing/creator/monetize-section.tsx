@@ -114,7 +114,7 @@ export default function MonetizeSection(): React.ReactElement {
   return (
     <section className="bg-background pt-12 pb-24 md:pt-16 md:pb-32 overflow-hidden">
       <div className="page-container">
-
+        
         {/* Header */}
         <div className="mx-auto max-w-4xl text-center mb-10">
           <p className="text-label text-primary mb-5">Create</p>
@@ -153,16 +153,16 @@ export default function MonetizeSection(): React.ReactElement {
 
         {/* Massive Card container holding all panels */}
         <div className="relative w-full rounded-[2.5rem] border border-border/80 bg-card p-6 md:p-12 shadow-2xl overflow-hidden min-h-[520px] lg:min-h-[580px]">
-
+          
           {/* Bottom Ambient Glows (Smooth cross-fade opacity transitions) */}
           {WAYS_TO_EARN.map((tab) => (
-            <div
+            <div 
               key={`glow-${tab.id}`}
               className={cn(
                 "absolute bottom-0 left-0 right-0 h-3/4 bg-gradient-to-t opacity-0 blur-[100px] transition-opacity duration-700 pointer-events-none",
                 tab.color,
                 activeTabId === tab.id && "opacity-20"
-              )}
+              )} 
             />
           ))}
 
@@ -174,8 +174,8 @@ export default function MonetizeSection(): React.ReactElement {
                 key={tab.id}
                 className={cn(
                   "grid gap-12 lg:grid-cols-2 lg:gap-12 items-center h-full transition-all duration-300",
-                  isActive
-                    ? "opacity-100 translate-y-0 pointer-events-auto z-10 relative"
+                  isActive 
+                    ? "opacity-100 translate-y-0 pointer-events-auto z-10 relative" 
                     : "opacity-0 translate-y-3 pointer-events-none absolute inset-6 md:inset-12 z-0"
                 )}
               >
@@ -187,7 +187,7 @@ export default function MonetizeSection(): React.ReactElement {
                   <p className="text-body text-lg mb-8 font-sans">
                     {tab.description}
                   </p>
-
+                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 mb-10 font-sans">
                     {tab.features.map((feature, i) => (
                       <div key={i} className="flex items-start gap-3">

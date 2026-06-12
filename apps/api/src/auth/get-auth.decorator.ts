@@ -1,15 +1,15 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common'
 
-export const GetAuth = createParamDecorator(
+export const GetUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest()
-    return request.auth
+    return request.user
   },
 )
 
 export const GetSession = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest()
-    return request.betterAuthSession
+    return request.session
   },
 )

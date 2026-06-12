@@ -7,22 +7,22 @@ export class OnboardingService {
   constructor(private readonly repo: UsersRepository) {}
 
   async saveLearnerStep1(userId: string, dto: LearnerStep1Dto) {
-    const [firstName, ...rest] = dto.fullName.trim().split(' ')
-    const lastName = rest.join(' ') || undefined
-
-    await this.repo.updateUserName(userId, firstName!, lastName)
+    if (dto.fullName) {
+      const [firstName, ...rest] = dto.fullName.trim().split(' ')
+      await this.repo.updateUserName(userId, firstName!, rest.join(' ') || undefined)
+    }
 
     let profile = await this.repo.getLearnerProfile(userId)
     if (!profile) {
       profile = await this.repo.createLearnerProfile(userId)
     }
 
-    await this.repo.updateLearnerStep1(userId, { goalType: dto.goalType })
+    await this.repo.updateLearnerStep1(userId, {
+      goalType: dto.goalType,
+      interestedNiches: dto.interestedNiches ?? [],
+    })
 
-    return {
-      success: true,
-      redirectTo: '/learner/dashboard',
-    }
+    return { success: true }
   }
 
   async saveCreatorStep1(userId: string, dto: CreatorStep1Dto) {

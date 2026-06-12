@@ -70,12 +70,13 @@ export class UsersRepository {
 
   async updateLearnerStep1(
     userId: string,
-    data: { goalType: string },
+    data: { goalType: string; interestedNiches?: string[] },
   ) {
     await this.db
       .update(learnerProfiles)
       .set({
         goalType: data.goalType as typeof learnerProfiles.$inferInsert['goalType'],
+        interestedNiches: data.interestedNiches ?? [],
         onboardingStatus: 'complete',
         currentStep: 2,
         updatedAt: new Date(),

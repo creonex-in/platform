@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-// import HeroSearch from "@/components/landing/shared/hero-search";
+import HeroSearch from "@/components/landing/shared/hero-search";
 
 gsap.registerPlugin(useGSAP);
 
@@ -49,7 +49,7 @@ export default function UserHero(): React.ReactElement {
           </p>
 
           <div className="u-hero-item relative z-10 mt-8 w-full px-1 text-left">
-            {/* <HeroSearch /> */}
+            <HeroSearch />
           </div>
 
         </div>

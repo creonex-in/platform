@@ -250,8 +250,8 @@ export default function CreatorTimeline(): React.ReactElement {
         {/* end grid */}
 
         {/* ── Ending — centered below the full grid ────────────────────────────── */}
-        <motion.div
-          ref={endingRef}
+        <motion.div 
+          ref={endingRef} 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}

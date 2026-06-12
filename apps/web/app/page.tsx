@@ -13,7 +13,6 @@ import Testimonials from "@/components/landing/user/testimonials";
 import Faqs from "@/components/landing/shared/faqs";
 import FinalCta from "@/components/landing/user/final-cta";
 import CreatorRoutingBanner from "@/components/landing/user/creator-routing-banner";
-
 export const metadata: Metadata = {
   title: "Creonex — Learn from India's Best Creators",
   description:

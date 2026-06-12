@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faVideo, faCalendarDays, faBookOpen, faCompass } from '@fortawesome/free-solid-svg-icons'
 import { getLearnerDashboard } from '@/dal/learner.dal'
@@ -8,6 +9,7 @@ import { ContinueLearning } from '@/components/dashboard/learner/continue-learni
 import { UpcomingAgenda } from '@/components/dashboard/learner/upcoming-agenda'
 import { SectionHeader } from '@/components/dashboard/shared/section-header'
 import { WelcomeHero } from '@/components/dashboard/shared/welcome-hero'
+import { LearnerOnboardingDialog } from '@/components/onboarding/learner/onboarding-dialog'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -16,11 +18,34 @@ export const metadata: Metadata = {
   description: 'Your upcoming sessions, workshops, and courses in one place.',
 }
 
+async function getLearnerOnboardingStatus(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('better-auth.session_token')
+    if (!sessionCookie) return false
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'}/api/v1/users/me/learner-profile`,
+      {
+        headers: { Cookie: `better-auth.session_token=${sessionCookie.value}` },
+        cache: 'no-store',
+      },
+    )
+    if (!res.ok) return true // 404 = no profile yet = needs onboarding
+    const profile = await res.json()
+    return profile.onboardingStatus !== 'complete'
+  } catch {
+    return false
+  }
+}
+
 export default async function LearnerHomePage(): Promise<React.ReactElement> {
-  const { learner, upcomingSessions, upcomingWorkshops, courses } = await getLearnerDashboard()
+  const [{ learner, upcomingSessions, upcomingWorkshops, courses }, needsOnboarding] =
+    await Promise.all([getLearnerDashboard(), getLearnerOnboardingStatus()])
 
   return (
     <>
+      <LearnerOnboardingDialog defaultOpen={needsOnboarding} />
       <DashboardTopbar title="Home" showSearch />
 
       <div className="space-y-12 p-4 sm:p-6 lg:p-8">

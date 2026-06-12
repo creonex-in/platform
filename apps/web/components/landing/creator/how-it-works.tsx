@@ -49,7 +49,7 @@ const STEPS: Step[] = [
 export default function HowItWorks(): React.ReactElement {
   return (
     <section id="how-it-works" className="bg-zinc-950 py-24 md:py-32 relative overflow-hidden border-t border-b border-zinc-900">
-
+      
       {/* Decorative dark mode background glow blobs */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[350px] h-[350px] rounded-full bg-purple-500/5 blur-[120px] pointer-events-none" />

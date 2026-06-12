@@ -21,7 +21,7 @@ export class RolesGuard implements CanActivate {
     if (!required || required.length === 0) return true
 
     const request = ctx.switchToHttp().getRequest()
-    const session = request.betterAuthSession
+    const session = request.session
 
     if (!session?.user?.role) throw new UnauthorizedException()
 

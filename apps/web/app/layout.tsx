@@ -1,9 +1,16 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { QueryProvider } from "@/providers/QueryProvider"
 import { Toaster } from "sonner"
+
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+})
 
 const geist = Geist({
   variable: "--font-geist",
@@ -30,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${geistMono.variable}`}
+      className={`${bricolage.variable} ${geist.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
       <body className="overflow-x-hidden antialiased">

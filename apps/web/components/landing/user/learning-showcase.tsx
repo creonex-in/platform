@@ -228,9 +228,9 @@ export default function LearningShowcase(): React.ReactElement {
 
         {/* 2-Column Responsive Layout - Vertically Centered, No Sticky scrolling */}
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16 items-center">
-
+          
           {/* Left Column: Image showcase on desktop, vertically centered, layout animated */}
-          <motion.div
+          <motion.div 
             layout
             transition={{ type: "spring", stiffness: 260, damping: 26 }}
             className="hidden lg:block lg:col-span-5"
@@ -362,3 +362,4 @@ export default function LearningShowcase(): React.ReactElement {
     </section>
   );
 }
+

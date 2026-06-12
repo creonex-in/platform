@@ -28,7 +28,7 @@ export default function CategoryCard({ cat }: Props): React.ReactElement {
         className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
         sizes="(max-width: 768px) 50vw, 25vw"
       />
-
+      
       {/* Dark gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
 

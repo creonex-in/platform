@@ -1,8 +1,6 @@
-// Isomorphic API client — no tokens, cookie-based auth throughout
-//
-// Client components : relative URL → proxied by next.config.ts to NestJS
-//                     browser sends better-auth.session_token cookie automatically
-// Server components : direct URL → bypass proxy, cookie forwarded from request headers
+// API client — cookie-based auth (better-auth session_token)
+// All requests (client + server) use NEXT_PUBLIC_API_URL → direct to NestJS
+// Server components pass cookieHeader manually; browser sends cookie automatically via credentials: 'include'
 
 export class ApiError extends Error {
   constructor(
@@ -35,10 +33,7 @@ export function isRetryable(e: unknown): boolean {
   return isApiError(e) && e.status >= 500
 }
 
-function getBaseUrl(): string {
-  if (typeof window !== 'undefined') return '' // browser: relative URL through proxy
-  return process.env.API_URL ?? 'http://localhost:3000' // server: direct to NestJS
-}
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -56,7 +51,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (isServer && cookieHeader) headers['Cookie'] = cookieHeader
 
-  const res = await fetch(`${getBaseUrl()}${path}`, {
+  const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
     credentials: isServer ? 'omit' : 'include',

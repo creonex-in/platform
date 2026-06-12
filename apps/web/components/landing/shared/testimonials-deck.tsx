@@ -20,17 +20,17 @@ interface TestimonialsDeckProps {
   testimonials: Testimonial[];
 }
 
-export default function TestimonialsDeck({
-  heading,
-  label = "TESTIMONIALS",
+export default function TestimonialsDeck({ 
+  heading, 
+  label = "TESTIMONIALS", 
   description,
-  testimonials
+  testimonials 
 }: TestimonialsDeckProps): React.ReactElement {
   return (
     <section className="bg-background pt-16 md:pt-24 pb-10 md:pb-16 border-t border-border/10">
       <div className="page-container">
         <div className="mx-auto max-w-6xl">
-
+        
         {/* Header */}
         <div className="mb-16 flex flex-col items-center text-center">
           <p className="text-label text-primary mb-5">
@@ -48,13 +48,13 @@ export default function TestimonialsDeck({
 
         {/* Masonry Grid */}
         <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
-
+          
           {testimonials.map((t) => (
             <div key={t.id} className="mb-6 break-inside-avoid rounded-[15px] border border-border/50 bg-card p-8 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
               <p className="text-body">
                 &ldquo;{t.quote}&rdquo;
               </p>
-
+              
               <div className="mt-8 flex items-center gap-4">
                 {t.avatarSrc ? (
                   <div className="relative h-10 w-10 overflow-hidden rounded-full bg-muted border border-border/50 shrink-0">
