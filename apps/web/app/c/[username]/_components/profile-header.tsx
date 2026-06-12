@@ -60,10 +60,10 @@ export function ProfileHeader({
               )}
             </div>
 
-            {/* Bio */}
-            {profile.bio && (
-              <p className="text-[14px] sm:text-[15px] text-foreground leading-relaxed font-semibold mb-3">
-                {profile.bio}
+            {/* Niche subtitle */}
+            {profile.primaryNiche && (
+              <p className="text-[13px] text-muted-foreground font-semibold mb-3 -mt-1">
+                {profile.primaryNiche}
               </p>
             )}
 
@@ -107,29 +107,35 @@ export function ProfileHeader({
           {/* Badges + Stats */}
           <div className="flex flex-col sm:items-end gap-5">
             <BadgesButton profile={profile} />
-            <div className="flex items-center gap-6 sm:gap-10">
-              <div>
-                <p className="text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider">Sessions</p>
-                <p className="text-[18px] sm:text-[22px] font-extrabold text-foreground leading-none">{profile.totalSessions}</p>
+            {(profile.totalSessions > 0 || profile.totalReviews > 0) ? (
+              <div className="flex items-center gap-6 sm:gap-10">
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider">Sessions</p>
+                  <p className="text-[18px] sm:text-[22px] font-extrabold text-foreground leading-none">{profile.totalSessions}</p>
+                </div>
+                <div className="border-l border-border h-8" />
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider">Reviews</p>
+                  <p className="text-[18px] sm:text-[22px] font-extrabold text-foreground leading-none">{profile.totalReviews}</p>
+                </div>
+                {parseFloat(profile.smoothedRating) > 0 && (
+                  <>
+                    <div className="border-l border-border h-8" />
+                    <div>
+                      <p className="text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider">Rating</p>
+                      <p className="text-[18px] sm:text-[22px] font-extrabold text-foreground leading-none flex items-baseline gap-1">
+                        {parseFloat(profile.smoothedRating).toFixed(1)}
+                        <span className="text-[12px] text-muted-foreground font-bold">/5</span>
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="border-l border-border h-8" />
-              <div>
-                <p className="text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider">Reviews</p>
-                <p className="text-[18px] sm:text-[22px] font-extrabold text-foreground leading-none">{profile.totalReviews}</p>
-              </div>
-              {parseFloat(profile.smoothedRating) > 0 && (
-                <>
-                  <div className="border-l border-border h-8" />
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-bold mb-0.5 uppercase tracking-wider">Rating</p>
-                    <p className="text-[18px] sm:text-[22px] font-extrabold text-foreground leading-none flex items-baseline gap-1">
-                      {parseFloat(profile.smoothedRating).toFixed(1)}
-                      <span className="text-[12px] text-muted-foreground font-bold">/5</span>
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
+            ) : profile.experienceYears != null ? (
+              <p className="text-[12px] text-muted-foreground font-semibold">
+                {profile.experienceYears}+ yrs experience
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
