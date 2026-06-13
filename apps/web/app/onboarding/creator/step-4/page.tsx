@@ -121,7 +121,7 @@ export default function CreatorStep4Page() {
         <p className="text-xs font-bold uppercase tracking-widest text-primary lg:hidden">Step 4 · First offer</p>
 
           {/* Hero */}
-          <div className="rounded-3xl bg-gradient-to-br from-foreground/5 via-foreground/[0.02] to-transparent border border-border/60 px-6 sm:px-8 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 relative overflow-hidden">
+          <div className="rounded-3xl bg-linear-to-br from-foreground/5 via-foreground/2 to-transparent border border-border/60 px-6 sm:px-8 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 relative overflow-hidden">
             <div className="absolute -right-10 -top-10 size-40 rounded-full bg-foreground/5 blur-3xl pointer-events-none" />
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-foreground text-background shadow-xl shadow-black/10 relative z-10">
               <FontAwesomeIcon icon={faVideo} className="size-7" />
@@ -234,7 +234,7 @@ export default function CreatorStep4Page() {
                 disabled={isPending}
                 className="group relative w-full h-14 font-bold text-base shadow-xl shadow-primary/25 gap-2 overflow-hidden transition-all hover:scale-[1.01] hover:shadow-primary/40 active:scale-[0.98] rounded-xl"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
                 {isPending ? (
                   <span className="h-6 w-6 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                 ) : (

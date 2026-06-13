@@ -58,7 +58,7 @@ export function OnboardingRail(): React.ReactElement {
           <h1 className="font-display text-[32px] font-bold leading-[1.15] tracking-tight text-white">
             Your creator<br />business, live<br />in minutes.
           </h1>
-          <p className="max-w-[280px] text-[15px] leading-relaxed text-white/55">
+          <p className="max-w-70 text-[15px] leading-relaxed text-white/55">
             Set up your profile, publish your first paid offering, and start taking bookings.
           </p>
         </div>
@@ -75,7 +75,7 @@ export function OnboardingRail(): React.ReactElement {
               {i < STEPS.length - 1 && (
                 <span
                   className={cn(
-                    'absolute left-[15px] top-[34px] h-[calc(100%-12px)] w-[2px] rounded-full',
+                    'absolute left-3.75 top-8.5 h-[calc(100%-12px)] w-0.5 rounded-full',
                     done ? 'bg-white/40' : 'bg-white/10',
                   )}
                 />
