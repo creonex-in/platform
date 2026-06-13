@@ -14,8 +14,10 @@ async function bootstrap() {
   const expressApp = app.getHttpAdapter().getInstance()
   const authService = app.get<AuthService>(AuthService)
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  expressApp.use(require('express').json())
+  const express = require('express') // eslint-disable-line @typescript-eslint/no-require-imports
+  // Razorpay webhook needs raw body for HMAC signature verification
+  expressApp.use('/api/v1/payments/webhook', express.raw({ type: 'application/json' }))
+  expressApp.use(express.json())
   expressApp.all(/^\/api\/auth\/.*/, toNodeHandler(authService.instance.handler))
 
   app.use(cookieParser())
@@ -28,21 +30,28 @@ async function bootstrap() {
 
   app.useGlobalFilters(new AllExceptionsFilter())
 
+  app.enableShutdownHooks()
+
   app.enableCors({
     origin: process.env['ALLOWED_ORIGINS']?.split(',') ?? 'http://localhost:3001',
     credentials: true,
   })
 
-  const config = new DocumentBuilder()
-    .setTitle('Creonex API')
-    .setDescription('REST API for Creonex platform')
-    .setVersion('1.0')
-    .addCookieAuth('better-auth.session_token')
-    .build()
-  const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api/docs', app, document)
+  if (process.env['NODE_ENV'] !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Creonex API')
+      .setDescription('REST API for Creonex platform')
+      .setVersion('1.0')
+      .addCookieAuth('better-auth.session_token')
+      .build()
+    const document = SwaggerModule.createDocument(app, config)
+    SwaggerModule.setup('api/docs', app, document)
+  }
 
   await app.listen(process.env['PORT'] ?? 3000)
 }
 
-bootstrap()
+bootstrap().catch((err) => {
+  console.error('Fatal bootstrap error:', err)
+  process.exit(1)
+})
