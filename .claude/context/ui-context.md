@@ -39,6 +39,18 @@ shadcn on Tailwind v4. Primitives in `components/ui/` — add via the shadcn CLI
 don't hand-write. Domain components elsewhere under `components/` (`dashboard/`,
 `landing/`, `layout/`, `onboarding/`).
 
+## Tailwind v4 syntax — prefer native utilities over arbitrary values
+
+Use built-in utilities, not `[brackets]`, when one exists:
+- `min-h-[100dvh]` → `min-h-dvh`
+- `min-w-[140px]` → `min-w-35` (spacing = px / 4)
+- `bg-gradient-to-b` → `bg-linear-to-b`
+- `rounded-[2rem]` → `rounded-4xl`, `backdrop-blur-[12px]` → `backdrop-blur-md`
+- `left-[-1px]` → `-left-px` (negatives use `-` prefix)
+- `data-[active]:` → `data-active:`, `[&_.x]:` → `*:[.x]:`
+
+Keep brackets only for true one-offs (`shadow-[0_8px_30px_#0000000a]`).
+
 ## Icons — Font Awesome ONLY
 `@fortawesome/react-fontawesome` with `free-solid-svg-icons` (UI) and
 `free-brands-svg-icons` (social). Pattern:
