@@ -14,6 +14,12 @@ export const endpoints = {
     creatorUsernameCheck: (username: string) =>
       `/api/v1/onboarding/creator/username-check?username=${encodeURIComponent(username)}`,
   },
+  offerings: {
+    me:               '/api/v1/offerings/me',
+    create:           '/api/v1/offerings',
+    byId:             (id: string) => `/api/v1/offerings/${id}`,
+    status:           (id: string) => `/api/v1/offerings/${id}/status`,
+  },
   creators: {
     byUsername: (username: string) => `/api/v1/creators/${username}`,
   },
