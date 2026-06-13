@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { addMinutes, addDays } from 'date-fns'
-import { fromZonedTime, toZonedTime, formatInTimeZone } from 'date-fns-tz'
+import { fromZonedTime, formatInTimeZone } from 'date-fns-tz'
 import { rrulestr } from 'rrule'
 import { SchedulesRepository } from './schedules.repository'
+import { CalendarAuthService, type FreeBusyInterval } from '../calendar/calendar-auth.service'
 
 export interface AvailableSlot {
   start: string       // ISO 8601 UTC
@@ -13,7 +14,10 @@ export interface AvailableSlot {
 
 @Injectable()
 export class SlotGenerationService {
-  constructor(private readonly schedulesRepo: SchedulesRepository) {}
+  constructor(
+    private readonly schedulesRepo: SchedulesRepository,
+    private readonly calendarAuth: CalendarAuthService,
+  ) {}
 
   async generateSlots(params: {
     offeringId: string
@@ -64,6 +68,18 @@ export class SlotGenerationService {
       bookedRows.map((b) => b.startTime?.toISOString()).filter(Boolean),
     )
 
+    // Google Calendar freebusy — gracefully ignored if not connected
+    let busyIntervals: FreeBusyInterval[] = []
+    try {
+      busyIntervals = await this.calendarAuth.getFreeBusy(
+        data.offering.creatorProfileId,
+        effectiveStart,
+        windowEnd,
+      )
+    } catch {
+      // calendar not connected or token error — proceed without freebusy
+    }
+
     const slots: AvailableSlot[] = []
 
     for (const rule of rules) {
@@ -104,7 +120,10 @@ export class SlotGenerationService {
           // Skip past or too-soon slots
           if (cursor >= effectiveStart && cursor > windowStart) {
             const startIso = cursor.toISOString()
-            if (!bookedSet.has(startIso)) {
+            const overlapsCalendar = busyIntervals.some(
+              (b) => cursor < b.end && slotEnd > b.start,
+            )
+            if (!bookedSet.has(startIso) && !overlapsCalendar) {
               slots.push({
                 start: startIso,
                 end: slotEnd.toISOString(),

@@ -23,6 +23,15 @@ export class CreatorProfileRepository {
     return { ...profile, tags: tags.map((t) => t.tag) }
   }
 
+  async findById(id: string) {
+    return this.db
+      .select()
+      .from(creatorProfiles)
+      .where(eq(creatorProfiles.id, id))
+      .limit(1)
+      .then((r) => r[0] ?? null)
+  }
+
   async create(userId: string) {
     const [profile] = await this.db
       .insert(creatorProfiles)
