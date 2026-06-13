@@ -1,31 +1,37 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
-  faArrowLeft, faArrowRight, faCheck,
-  faBookOpen, faBriefcase, faHeart, faPalette, faCircleQuestion,
+  faArrowLeft, faArrowRight, faCheck, faCircleCheck, faCircleXmark,
+  faCircleNotch, faMagnifyingGlass,
+  faPalette, faCircleQuestion,
   faAward, faBuilding, faWandMagicSparkles, faUsers, faGraduationCap,
   faBullseye, faLaptop, faDumbbell, faMusic, faGlobe,
   faArrowTrendUp, faChartColumn, faIndianRupeeSign, faLayerGroup, faCompass,
+  faCode, faChartLine, faLanguage, faBullhorn, faLandmark, faBrain,
+  faCamera, faFlask, faHouse, faPen, faRobot, faGamepad, faUtensils,
+  faUserTie, faSpa, faRocket,
 } from '@fortawesome/free-solid-svg-icons'
 import {
   faInstagram, faYoutube,
   faWhatsapp, faTelegram,
 } from '@fortawesome/free-brands-svg-icons'
+import { validateUsername } from '@creonex/types'
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import {
   InputGroup, InputGroupAddon, InputGroupText, InputGroupInput,
 } from '@/components/ui/input-group'
 import { cn } from '@/lib/utils'
 import { creatorStep1Schema, type CreatorStep1Form } from '@/lib/onboarding-schemas'
-import { useSaveCreatorStep1 } from '@/hooks/use-onboarding'
+import { useSaveCreatorStep1, useUsernameAvailability } from '@/hooks/use-onboarding'
 import { isApiError } from '@/lib/api'
 
 type FormValues = CreatorStep1Form
@@ -35,11 +41,26 @@ type FormValues = CreatorStep1Form
 type Option = { value: string; label: string; description: string; icon: IconDefinition }
 
 const NICHE_OPTIONS: Option[] = [
-  { value: 'exam_prep', label: 'Exam Preparation', description: 'CAT, UPSC, JEE, NEET, DSA or placements', icon: faBookOpen },
-  { value: 'professional_skills', label: 'Professional Skills', description: 'Finance, marketing, design, career transitions', icon: faBriefcase },
-  { value: 'health_wellness', label: 'Health & Wellness', description: 'Fitness, yoga, nutrition, self-improvement', icon: faHeart },
-  { value: 'creative_skills', label: 'Creative Skills', description: 'Music, photography, cooking or art', icon: faPalette },
-  { value: 'undecided', label: 'Not Sure Yet', description: "I have an audience but no clear paid offering", icon: faCircleQuestion },
+  { value: 'cat_mba_prep', label: 'CAT / MBA Prep', description: 'CAT, MBA entrance & B-school prep', icon: faGraduationCap },
+  { value: 'coding_dsa', label: 'Coding & DSA', description: 'Programming, DSA & dev interviews', icon: faCode },
+  { value: 'personal_finance', label: 'Personal Finance', description: 'Investing, budgeting & money habits', icon: faChartLine },
+  { value: 'fitness_nutrition', label: 'Fitness & Nutrition', description: 'Training, diet & body transformation', icon: faDumbbell },
+  { value: 'design_creative', label: 'Design & Creative', description: 'UI/UX, graphic & visual design', icon: faPalette },
+  { value: 'language_learning', label: 'Language Learning', description: 'Spoken English & other languages', icon: faLanguage },
+  { value: 'digital_marketing', label: 'Digital Marketing', description: 'SEO, ads, growth & social media', icon: faBullhorn },
+  { value: 'music_arts', label: 'Music & Arts', description: 'Instruments, vocals & performing arts', icon: faMusic },
+  { value: 'upsc_govt_exams', label: 'UPSC & Govt Exams', description: 'Civil services & government exams', icon: faLandmark },
+  { value: 'mental_wellness', label: 'Mental Wellness', description: 'Mindfulness, stress & emotional health', icon: faBrain },
+  { value: 'photography', label: 'Photography', description: 'Shooting, editing & visual storytelling', icon: faCamera },
+  { value: 'science_research', label: 'Science & Research', description: 'Academic science & research skills', icon: faFlask },
+  { value: 'real_estate', label: 'Real Estate', description: 'Property, investing & advisory', icon: faHouse },
+  { value: 'writing_content', label: 'Writing & Content', description: 'Copywriting, blogging & content', icon: faPen },
+  { value: 'ai_data_science', label: 'AI & Data Science', description: 'ML, data analysis & AI tools', icon: faRobot },
+  { value: 'gaming_esports', label: 'Gaming & Esports', description: 'Competitive gaming & streaming', icon: faGamepad },
+  { value: 'cooking_food', label: 'Cooking & Food', description: 'Recipes, techniques & culinary skills', icon: faUtensils },
+  { value: 'interview_prep', label: 'Interview Prep', description: 'Resume, HR & technical interviews', icon: faUserTie },
+  { value: 'ayurveda_yoga', label: 'Ayurveda & Yoga', description: 'Yoga, ayurveda & holistic health', icon: faSpa },
+  { value: 'startup_product', label: 'Startup & Product', description: 'Founders, product & entrepreneurship', icon: faRocket },
 ]
 
 const CREDIBILITY_OPTIONS: Option[] = [
@@ -75,7 +96,7 @@ const GOAL_OPTIONS: Option[] = [
 ]
 
 const QUESTIONS = [
-  { name: 'nicheCategory' as const, title: 'What is your niche?', subtitle: 'What do people most often come to you for help with?', options: NICHE_OPTIONS },
+  { name: 'primaryNiche' as const, title: 'What is your niche?', subtitle: 'What do people most often come to you for help with?', options: NICHE_OPTIONS },
   { name: 'credentialType' as const, title: 'What is your credibility?', subtitle: 'What gives you the right to teach this?', options: CREDIBILITY_OPTIONS },
   { name: 'audienceType' as const, title: 'Who is your audience?', subtitle: 'What situation are they in, what problem are they solving?', options: AUDIENCE_OPTIONS },
   { name: 'primaryPlatform' as const, title: 'Where is your audience most active?', subtitle: 'Where does your most genuine engagement happen?', options: PLATFORM_OPTIONS },
@@ -84,8 +105,8 @@ const QUESTIONS = [
 
 // screen → fields to validate before advancing
 const SCREEN_FIELDS: Record<number, (keyof FormValues)[]> = {
-  0: ['fullName'],
-  1: ['nicheCategory'],
+  0: ['fullName', 'username'],
+  1: ['primaryNiche'],
   2: ['credentialType'],
   3: ['audienceType'],
   4: ['primaryPlatform'],
@@ -98,7 +119,8 @@ const AUTO_ADVANCE_MS = 280
 
 const DEFAULT_VALUES = {
   fullName: '',
-  nicheCategory: undefined,
+  username: '',
+  primaryNiche: undefined,
   credentialType: undefined,
   audienceType: undefined,
   primaryPlatform: undefined,
@@ -114,6 +136,8 @@ export default function CreatorStep1Page() {
   const [screen, setScreen] = useState(0)
   const [apiError, setApiError] = useState('')
   const [hydrated, setHydrated] = useState(false)
+  const [nicheQuery, setNicheQuery] = useState('')
+  const [debouncedUsername, setDebouncedUsername] = useState('')
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const {
@@ -130,6 +154,22 @@ export default function CreatorStep1Page() {
   })
 
   const values = watch()
+  const usernameValue = (values.username ?? '').trim()
+  const usernameFormatOk = usernameValue.length > 0 && validateUsername(usernameValue) === null
+
+  // Debounce the handle before hitting the availability endpoint
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedUsername(usernameValue), 350)
+    return () => clearTimeout(id)
+  }, [usernameValue])
+
+  const checkEnabled = usernameFormatOk && debouncedUsername === usernameValue
+  const { data: availability, isFetching: checking } = useUsernameAvailability(debouncedUsername, checkEnabled)
+
+  // settled = the query result matches what's currently typed
+  const settled = checkEnabled && !checking && availability !== undefined
+  const usernameAvailable = settled && availability.available === true
+  const usernameTaken = settled && availability.available === false
 
   // Restore sessionStorage on mount
   useEffect(() => {
@@ -161,8 +201,17 @@ export default function CreatorStep1Page() {
 
   useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current) }, [])
 
-  const progress = ((screen + 1) / TOTAL_SCREENS) * 100
   const currentQuestion = screen >= 1 ? QUESTIONS[screen - 1] : null
+  const isNicheScreen = currentQuestion?.name === 'primaryNiche'
+
+  const filteredOptions = useMemo(() => {
+    if (!currentQuestion) return []
+    if (!isNicheScreen || !nicheQuery.trim()) return currentQuestion.options
+    const q = nicheQuery.trim().toLowerCase()
+    return currentQuestion.options.filter(
+      (o) => o.label.toLowerCase().includes(q) || o.description.toLowerCase().includes(q),
+    )
+  }, [currentQuestion, isNicheScreen, nicheQuery])
 
   const handleContinue = async () => {
     if (isPending) return
@@ -171,8 +220,15 @@ export default function CreatorStep1Page() {
       const valid = await trigger(fields)
       if (!valid) return
     }
+    // Screen 0 also gates on live handle availability
+    if (screen === 0 && !usernameAvailable) {
+      if (!settled) setApiError('Checking handle availability…')
+      return
+    }
+    setApiError('')
     if (screen < TOTAL_SCREENS - 1) {
       setScreen((s) => s + 1)
+      setNicheQuery('')
     } else {
       await handleSubmit(onSubmit)()
     }
@@ -189,6 +245,7 @@ export default function CreatorStep1Page() {
     advanceTimer.current = setTimeout(() => {
       if (screen < TOTAL_SCREENS - 1) {
         setScreen((s) => s + 1)
+        setNicheQuery('')
       } else {
         void handleSubmit(onSubmit)()
       }
@@ -200,7 +257,8 @@ export default function CreatorStep1Page() {
     try {
       await mutateAsync({
         fullName: data.fullName.trim(),
-        nicheCategory: data.nicheCategory,
+        username: data.username.trim().toLowerCase(),
+        primaryNiche: data.primaryNiche,
         credentialType: data.credentialType,
         audienceType: data.audienceType,
         primaryPlatform: data.primaryPlatform,
@@ -213,132 +271,216 @@ export default function CreatorStep1Page() {
     }
   }
 
+  const progress = ((screen + 1) / TOTAL_SCREENS) * 100
+
   return (
-    <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/4 overflow-hidden">
-      {/* Progress bar */}
-      <div className="w-full h-1 bg-muted">
-        <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
+    <div className="w-full">
+      {/* Mobile-only step counter (rail shows journey on desktop) */}
+      <div className="mb-8 lg:hidden">
+        <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+          <span className="font-bold uppercase tracking-widest text-primary">Step 1 · Identity</span>
+          <span className="font-medium">{screen + 1} / {TOTAL_SCREENS}</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
+        </div>
       </div>
 
-      <div className="flex flex-col items-center px-6 py-10 sm:p-12">
-        <div className="w-full max-w-2xl">
-          <p className="text-xs text-muted-foreground mb-6 text-center tracking-wide uppercase">
-            Step {screen + 1} of {TOTAL_SCREENS}
-          </p>
+      <div key={screen} className="animate-in fade-in slide-in-from-bottom-3 duration-300">
 
-          <div key={screen} className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+        {/* ── Screen 0: Name + handle ── */}
+        {screen === 0 && (
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-2 ring-1 ring-primary/20">
+                <FontAwesomeIcon icon={faWandMagicSparkles} className="size-7" />
+              </div>
+              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Claim your profile</h1>
+              <p className="text-base text-muted-foreground leading-relaxed">Your name and the link learners will visit to book you.</p>
+            </div>
 
-            {/* ── Screen 0: Claim your URL ── */}
-            {screen === 0 && (
-              <div className="space-y-8">
-                <div className="text-center space-y-2">
-                  <h1 className="text-2xl font-semibold tracking-tight">Claim your Creonex URL</h1>
-                  <p className="text-sm text-muted-foreground">This becomes your public profile link</p>
-                </div>
-                <div className="max-w-sm mx-auto space-y-1.5">
-                  <Label htmlFor="fullName">Your name or handle</Label>
-                  <InputGroup className="h-11">
-                    <InputGroupAddon>
-                      <InputGroupText className="text-sm text-muted-foreground select-none pr-0">
-                        creonex.in/c/
-                      </InputGroupText>
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      id="fullName"
-                      {...register('fullName')}
-                      placeholder="your-name"
-                      autoFocus
-                      className="text-sm"
-                      onKeyDown={(e) => e.key === 'Enter' && void handleContinue()}
-                    />
-                  </InputGroup>
-                  {errors.fullName && (
-                    <p className="text-xs text-destructive">{errors.fullName.message}</p>
+            <div className="space-y-6 rounded-3xl border border-border/50 bg-card/30 p-6 sm:p-8 shadow-sm">
+              {/* Display name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-sm font-semibold">Display name</Label>
+                <Input
+                  id="fullName"
+                  {...register('fullName')}
+                  placeholder="e.g. Srikar Chebrolu"
+                  autoFocus
+                  className="h-12 text-base rounded-xl bg-background shadow-sm"
+                  onKeyDown={(e) => e.key === 'Enter' && void handleContinue()}
+                />
+                {errors.fullName && <p className="text-[13px] font-medium text-destructive">{errors.fullName.message}</p>}
+              </div>
+
+              {/* Username */}
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-sm font-semibold">Your handle</Label>
+                <InputGroup
+                  className={cn(
+                    'h-12 rounded-xl bg-background shadow-sm transition-all',
+                    usernameTaken && 'border-destructive ring-1 ring-destructive/20',
+                    usernameAvailable && 'border-green-500/50 ring-1 ring-green-500/20',
                   )}
-                </div>
+                >
+                  <InputGroupAddon>
+                    <InputGroupText className="select-none pr-0 text-base text-muted-foreground font-medium">
+                      creonex.in/c/
+                    </InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="username"
+                    {...register('username', {
+                      onChange: (e) => {
+                        e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+                      },
+                    })}
+                    placeholder="your-handle"
+                    className="text-base font-semibold"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    onKeyDown={(e) => e.key === 'Enter' && void handleContinue()}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    {usernameFormatOk && checking && (
+                      <FontAwesomeIcon icon={faCircleNotch} className="size-5 animate-spin text-muted-foreground" />
+                    )}
+                    {usernameAvailable && (
+                      <FontAwesomeIcon icon={faCircleCheck} className="size-5 text-green-600 dark:text-green-500" />
+                    )}
+                    {usernameTaken && (
+                      <FontAwesomeIcon icon={faCircleXmark} className="size-5 text-destructive" />
+                    )}
+                  </InputGroupAddon>
+                </InputGroup>
+                {errors.username ? (
+                  <p className="text-[13px] font-medium text-destructive">{errors.username.message}</p>
+                ) : usernameTaken ? (
+                  <p className="text-[13px] font-medium text-destructive">{availability?.reason ?? 'That handle is taken'}</p>
+                ) : usernameAvailable ? (
+                  <p className="text-[13px] font-medium text-green-600 dark:text-green-500">@{usernameValue} is available!</p>
+                ) : (
+                  <p className="text-[13px] text-muted-foreground">Lowercase letters, numbers and hyphens · 3–20 characters</p>
+                )}
               </div>
-            )}
-
-            {/* ── Screens 1–5: Questions ── */}
-            {screen >= 1 && currentQuestion && (
-              <div className="space-y-6">
-                <div className="text-center space-y-2">
-                  <h1 className="text-2xl font-semibold tracking-tight">{currentQuestion.title}</h1>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">{currentQuestion.subtitle}</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {currentQuestion.options.map((opt) => {
-                    const selected = values[currentQuestion.name] === opt.value
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => selectAndAdvance(currentQuestion.name, opt.value)}
-                        disabled={isPending}
-                        className={cn(
-                          'relative text-left rounded-xl border-2 p-4 transition-all duration-150',
-                          'hover:border-primary/50 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5',
-                          'active:scale-[0.98] disabled:opacity-60',
-                          selected
-                            ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                            : 'border-border bg-background',
-                        )}
-                      >
-                        {selected && (
-                          <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-primary animate-in zoom-in duration-200">
-                            <FontAwesomeIcon icon={faCheck} className="size-3 text-primary-foreground" />
-                          </span>
-                        )}
-                        <FontAwesomeIcon
-                          icon={opt.icon}
-                          className={cn('size-5 mb-2 transition-colors', selected ? 'text-primary' : 'text-muted-foreground')}
-                        />
-                        <p className={cn('font-medium text-sm', selected ? 'text-primary' : 'text-foreground')}>
-                          {opt.label}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{opt.description}</p>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
+        )}
 
-          {apiError && (
-            <p className="text-sm text-destructive text-center mt-4 animate-in fade-in duration-200">{apiError}</p>
-          )}
+        {/* ── Screens 1–5: Questions ── */}
+        {screen >= 1 && currentQuestion && (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">{currentQuestion.title}</h1>
+              <p className="max-w-md text-base text-muted-foreground leading-relaxed">{currentQuestion.subtitle}</p>
+            </div>
 
-          <div className="flex items-center justify-between mt-8">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className={cn(screen === 0 && 'invisible')}
-            >
-              <FontAwesomeIcon icon={faArrowLeft} className="size-4 mr-1" />
-              Back
-            </Button>
+            {isNicheScreen && (
+              <div className="relative">
+                <FontAwesomeIcon
+                  icon={faMagnifyingGlass}
+                  className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  value={nicheQuery}
+                  onChange={(e) => setNicheQuery(e.target.value)}
+                  placeholder="Search your niche…"
+                  className="h-12 pl-11 text-base rounded-xl bg-card shadow-sm"
+                />
+              </div>
+            )}
 
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => void handleContinue()}
-              disabled={isPending}
-            >
-              {isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <>
-                  {screen === TOTAL_SCREENS - 1 ? 'Continue' : 'Next'}
-                  <FontAwesomeIcon icon={faArrowRight} className="size-4 ml-1" />
-                </>
+            <div
+              className={cn(
+                'overflow-y-auto pr-2 pb-2',
+                isNicheScreen
+                  ? 'grid max-h-[50vh] grid-cols-2 gap-3 sm:grid-cols-3'
+                  : 'grid max-h-[55vh] grid-cols-1 gap-3 sm:grid-cols-2',
               )}
-            </Button>
+            >
+              {filteredOptions.map((opt) => {
+                const selected = values[currentQuestion.name] === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => selectAndAdvance(currentQuestion.name, opt.value)}
+                    disabled={isPending}
+                    className={cn(
+                      'group relative text-left transition-all duration-200 active:scale-[0.98] disabled:opacity-60 overflow-hidden outline-none',
+                      isNicheScreen
+                        ? 'flex items-center gap-3 rounded-2xl border p-3 hover:shadow-md hover:-translate-y-0.5'
+                        : 'flex items-start sm:items-center gap-4 rounded-2xl border p-4 hover:shadow-md hover:-translate-y-0.5',
+                      selected
+                        ? 'border-foreground bg-foreground/5 ring-1 ring-foreground'
+                        : 'border-border/60 bg-card hover:border-foreground/30 focus-visible:ring-2 focus-visible:ring-foreground',
+                    )}
+                  >
+                    {!isNicheScreen && selected && (
+                      <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-foreground animate-in zoom-in duration-200 shadow-sm">
+                        <FontAwesomeIcon icon={faCheck} className="size-3 text-background" />
+                      </span>
+                    )}
+                    <div className={cn(
+                      "flex shrink-0 items-center justify-center rounded-xl transition-colors relative z-10",
+                      isNicheScreen ? "size-10" : "size-12",
+                      selected ? "bg-foreground text-background" : "bg-muted group-hover:bg-muted-foreground/10"
+                    )}>
+                      <FontAwesomeIcon
+                        icon={opt.icon}
+                        className={cn(
+                          'transition-colors',
+                          isNicheScreen ? 'size-4' : 'size-5',
+                          selected ? 'text-background' : 'text-muted-foreground group-hover:text-foreground',
+                        )}
+                      />
+                    </div>
+                    <div className={cn("relative z-10 min-w-0", !isNicheScreen && "pr-4")}>
+                      <p className={cn('font-bold tracking-tight', isNicheScreen ? 'text-[14px] truncate' : 'text-[15px]', selected ? 'text-foreground' : 'text-foreground')}>
+                        {opt.label}
+                      </p>
+                      {!isNicheScreen && (
+                        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{opt.description}</p>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+              {filteredOptions.length === 0 && (
+                <p className="col-span-full py-8 text-center text-[15px] text-muted-foreground font-medium">No niche matches “{nicheQuery}”.</p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+      </div>
+
+      {apiError && (
+        <p className="mt-4 text-[13px] font-medium text-destructive animate-in fade-in duration-200">{apiError}</p>
+      )}
+
+      <div className="mt-8 flex items-center justify-between">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleBack}
+          className={cn('font-semibold', screen === 0 && 'invisible')}
+        >
+          <FontAwesomeIcon icon={faArrowLeft} className="mr-2 size-4" />
+          Back
+        </Button>
+
+        <Button type="button" size="lg" onClick={() => void handleContinue()} disabled={isPending} className="font-semibold shadow-sm">
+          {isPending ? (
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+          ) : (
+            <>
+              {screen === TOTAL_SCREENS - 1 ? 'Continue' : 'Next'}
+              <FontAwesomeIcon icon={faArrowRight} className="ml-2 size-4" />
+            </>
+          )}
+        </Button>
       </div>
     </div>
   )

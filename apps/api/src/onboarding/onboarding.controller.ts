@@ -1,6 +1,6 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard, Session } from '@mguay/nestjs-better-auth'
-import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger'
+import { ApiTags, ApiCookieAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { OnboardingService } from './onboarding.service'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
@@ -22,10 +22,19 @@ export class OnboardingController {
     return this.onboardingService.saveLearnerStep1(session.user.id, dto)
   }
 
+  @Get('creator/username-check')
+  @Roles('creator')
+  @HttpCode(200)
+  @ApiQuery({ name: 'username', required: true })
+  @ApiOperation({ summary: 'Check if a creator handle is available' })
+  checkUsername(@Session() session: AppUserSession, @Query('username') username: string) {
+    return this.onboardingService.checkUsernameAvailability(session.user.id, username ?? '')
+  }
+
   @Post('creator/step-1')
   @Roles('creator')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Save creator step 1 — name + discovery questions' })
+  @ApiOperation({ summary: 'Save creator step 1 — name + handle + discovery questions' })
   creatorStep1(@Session() session: AppUserSession, @Body() dto: CreatorStep1Dto) {
     return this.onboardingService.saveCreatorStep1(session.user.id, dto)
   }

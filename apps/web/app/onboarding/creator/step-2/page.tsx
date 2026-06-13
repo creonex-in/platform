@@ -15,8 +15,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { creatorStep2Schema, type CreatorStep2Form } from '@/lib/onboarding-schemas'
-import { useSaveCreatorStep2 } from '@/hooks/use-onboarding'
+import { useSaveCreatorStep2, useCreatorProfile } from '@/hooks/use-onboarding'
 import { isApiError } from '@/lib/api'
+import { StepHeading } from '@/components/onboarding/step-heading'
 import type { SocialLinks } from '@creonex/types'
 import {
   validateImageFile,
@@ -31,6 +32,7 @@ type Persisted = {
   tags?: string[]
   photoUrl?: string
   deleteToken?: string
+  experienceYears?: number
   socialLinks?: {
     youtube?: string
     linkedin?: string
@@ -51,10 +53,14 @@ const SOCIAL_FIELDS = [
 export default function CreatorStep2Page() {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+  const photoTokenRef = useRef('')
+  const submittedRef = useRef(false)
   const { mutateAsync, isPending } = useSaveCreatorStep2()
+  const { data: savedProfile } = useCreatorProfile()
   const [tagInput, setTagInput] = useState('')
   const [apiError, setApiError] = useState('')
   const [hydrated, setHydrated] = useState(false)
+  const [hadStoredData, setHadStoredData] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [deleteToken, setDeleteToken] = useState('')
@@ -68,13 +74,14 @@ export default function CreatorStep2Page() {
     formState: { errors },
   } = useForm<CreatorStep2Form>({
     resolver: zodResolver(creatorStep2Schema),
-    defaultValues: { bio: '', tags: [], photoUrl: undefined, socialLinks: {} },
+    defaultValues: { bio: '', tags: [], photoUrl: undefined, socialLinks: {}, experienceYears: undefined },
   })
 
   const bio = watch('bio')
   const tags = watch('tags')
   const photoUrl = watch('photoUrl')
   const socialLinks = watch('socialLinks')
+  const experienceYears = watch('experienceYears')
 
   useEffect(() => {
     try {
@@ -86,8 +93,17 @@ export default function CreatorStep2Page() {
           tags: Array.isArray(parsed.tags) ? parsed.tags : [],
           photoUrl: parsed.photoUrl,
           socialLinks: parsed.socialLinks ?? {},
+          experienceYears: parsed.experienceYears,
         })
         if (parsed.deleteToken) setDeleteToken(parsed.deleteToken)
+        // Only block API fallback if there's real user-entered content
+        const hasMeaningful = !!(
+          parsed.bio ||
+          (Array.isArray(parsed.tags) && parsed.tags.length > 0) ||
+          parsed.photoUrl ||
+          parsed.experienceYears != null
+        )
+        if (hasMeaningful) setHadStoredData(true)
       }
     } catch { /* corrupt — start fresh */ }
     setHydrated(true)
@@ -95,19 +111,35 @@ export default function CreatorStep2Page() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // API fallback: populate from DB when sessionStorage was empty (e.g. coming back after submit)
+  useEffect(() => {
+    if (!hydrated || hadStoredData || !savedProfile) return
+    reset({
+      bio: savedProfile.bio ?? '',
+      tags: savedProfile.tags ?? [],
+      photoUrl: savedProfile.profilePhotoUrl ?? undefined,
+      socialLinks: (savedProfile.socialLinks as Persisted['socialLinks']) ?? {},
+      experienceYears: savedProfile.experienceYears ?? undefined,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, hadStoredData, savedProfile])
+
   useEffect(() => {
     if (!hydrated) return
     try {
-      const persisted: Persisted = { bio, tags, photoUrl, deleteToken, socialLinks }
+      const persisted: Persisted = { bio, tags, photoUrl, deleteToken, socialLinks, experienceYears }
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
     } catch { /* non-fatal */ }
-  }, [bio, tags, photoUrl, deleteToken, socialLinks, hydrated])
+  }, [bio, tags, photoUrl, deleteToken, socialLinks, experienceYears, hydrated])
 
+  useEffect(() => { photoTokenRef.current = deleteToken }, [deleteToken])
   useEffect(() => {
     return () => {
-      if (deleteToken) void tryDeleteCloudinaryUpload(deleteToken)
+      if (photoTokenRef.current && !submittedRef.current) {
+        void tryDeleteCloudinaryUpload(photoTokenRef.current)
+      }
     }
-  }, [deleteToken])
+  }, [])
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -168,7 +200,9 @@ export default function CreatorStep2Page() {
         tags: data.tags,
         ...(data.photoUrl ? { photoUrl: data.photoUrl } : {}),
         ...(Object.keys(socialLinks).length > 0 ? { socialLinks } : {}),
+        ...(data.experienceYears != null ? { experienceYears: data.experienceYears } : {}),
       })
+      submittedRef.current = true
       setDeleteToken('')
       try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* non-fatal */ }
       router.push('/onboarding/creator/step-3')
@@ -178,35 +212,24 @@ export default function CreatorStep2Page() {
   }
 
   return (
-    <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/[0.04] overflow-hidden">
-      <div className="w-full h-1 bg-muted">
-        <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: '50%' }} />
-      </div>
+    <div className="w-full animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="space-y-8">
+        <StepHeading
+          stepLabel="Step 2 · Story"
+          title="Tell people about yourself"
+          subtitle="A short bio, the topics you teach, and where to find you"
+        />
 
-      <div className="flex flex-col items-center px-6 py-10 sm:p-12">
-        <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <p className="text-xs text-muted-foreground text-center tracking-wide uppercase">Step 2 of 4</p>
-
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight">Tell people about yourself</h1>
-            <p className="text-sm text-muted-foreground">A short bio, the topics you teach, and where to find you</p>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
 
             {/* Profile photo */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Profile photo</Label>
-                <span className="text-xs text-muted-foreground">Optional</span>
-              </div>
-
-              <div className="flex items-center gap-4">
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 rounded-3xl border border-border/50 bg-card/30 p-6 shadow-sm">
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
-                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border bg-muted transition-colors hover:border-primary hover:bg-muted/80 disabled:pointer-events-none disabled:opacity-60 overflow-hidden"
+                  className="group relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border bg-background transition-all hover:border-foreground/30 hover:bg-foreground/5 disabled:pointer-events-none disabled:opacity-60 overflow-hidden shadow-sm"
                   aria-label="Upload profile photo"
                 >
                   {photoUrl ? (
@@ -214,49 +237,56 @@ export default function CreatorStep2Page() {
                       src={photoUrl}
                       alt="Profile photo preview"
                       fill
-                      className="object-cover"
-                      sizes="80px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="96px"
                     />
                   ) : (
-                    <FontAwesomeIcon icon={faCamera} className="size-5 text-muted-foreground" />
+                    <div className="flex flex-col items-center gap-1.5 text-muted-foreground transition-colors group-hover:text-foreground">
+                      <FontAwesomeIcon icon={faCamera} className="size-6" />
+                    </div>
                   )}
                   {uploading && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70">
-                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-sm">
+                      <span className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     </div>
                   )}
                 </button>
 
-                <div className="flex flex-col gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    {uploading ? 'Uploading…' : photoUrl ? 'Replace photo' : 'Upload photo'}
-                  </Button>
-                  {photoUrl && (
+                <div className="flex flex-col gap-2.5">
+                  <div>
+                    <h3 className="font-semibold text-foreground text-base">Profile Photo</h3>
+                    <p className="text-[13px] text-muted-foreground mt-0.5">JPEG, PNG, or WebP · Max 5 MB</p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
-                      onClick={handleRemovePhoto}
+                      onClick={() => fileRef.current?.click()}
                       disabled={uploading}
-                      className="text-muted-foreground hover:text-destructive"
+                      className="font-medium shadow-sm"
                     >
-                      Remove
+                      {uploading ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
                     </Button>
-                  )}
+                    {photoUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemovePhoto}
+                        disabled={uploading}
+                        className="text-muted-foreground hover:text-destructive font-medium"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {uploadError && (
-                <p className="text-xs text-destructive animate-in fade-in duration-200">{uploadError}</p>
+                <p className="text-[13px] font-medium text-destructive animate-in fade-in duration-200">{uploadError}</p>
               )}
-              <p className="text-xs text-muted-foreground">JPEG, PNG, or WebP · Max 5 MB · At least 200×200 px</p>
-
               <input
                 ref={fileRef}
                 type="file"
@@ -266,103 +296,146 @@ export default function CreatorStep2Page() {
               />
             </div>
 
-            {/* Bio */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="bio">Your bio</Label>
-                <span className={cn('text-xs', bio.length > 2000 ? 'text-destructive' : 'text-muted-foreground')}>
-                  {bio.length} / 2000
-                </span>
+            {/* Section: Professional Details */}
+            <div className="pt-2">
+              <div className="pb-5">
+                <h3 className="font-display text-xl font-bold text-foreground">Professional Details</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">What do you do and what is your expertise?</p>
               </div>
-              <Textarea
-                id="bio"
-                {...register('bio')}
-                placeholder="I help working professionals crack CAT in 90 days with a structured, doubt-first approach..."
-                rows={6}
-                className="resize-y text-sm"
-              />
-              {errors.bio ? (
-                <p className="text-xs text-destructive">{errors.bio.message}</p>
-              ) : bio.length > 0 && bio.length < 20 ? (
-                <p className="text-xs text-muted-foreground">{20 - bio.length} more characters needed</p>
-              ) : null}
-            </div>
 
-            {/* Tags */}
-            <div className="space-y-2">
-              <Label>
-                Teaching topics{' '}
-                <span className="text-muted-foreground font-normal">(1–5)</span>
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); addTag() }
-                  }}
-                  placeholder="e.g. CAT Quantitative"
-                  maxLength={30}
-                  disabled={tags.length >= 5}
-                  className="flex-1 text-sm h-9"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addTag}
-                  disabled={!tagInput.trim() || tags.length >= 5}
-                >
-                  Add
-                </Button>
-              </div>
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="gap-1.5 pl-3 pr-2 py-1 text-sm animate-in fade-in zoom-in-95 duration-200"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="hover:text-destructive transition-colors"
-                      >
-                        <FontAwesomeIcon icon={faXmark} className="size-3" />
-                      </button>
-                    </Badge>
-                  ))}
+              <div className="space-y-6">
+                {/* Bio */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="bio" className="text-sm font-semibold">Your bio</Label>
+                    <span className={cn('text-[13px] font-medium', bio.length > 2000 ? 'text-destructive' : 'text-muted-foreground')}>
+                      {bio.length} / 2000
+                    </span>
+                  </div>
+                  <Textarea
+                    id="bio"
+                    {...register('bio')}
+                    placeholder="I help working professionals crack CAT in 90 days with a structured, doubt-first approach..."
+                    rows={5}
+                    className="resize-y text-base rounded-xl bg-card shadow-sm"
+                  />
+                  {errors.bio ? (
+                    <p className="text-[13px] font-medium text-destructive">{errors.bio.message}</p>
+                  ) : bio.length > 0 && bio.length < 20 ? (
+                    <p className="text-[13px] text-muted-foreground font-medium">{20 - bio.length} more characters needed</p>
+                  ) : null}
                 </div>
-              )}
-              {errors.tags && (
-                <p className="text-xs text-destructive">{errors.tags.message}</p>
-              )}
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {/* Years of experience */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="experienceYears" className="text-sm font-semibold">Years of experience</Label>
+                      <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-md">Optional</span>
+                    </div>
+                    <Input
+                      id="experienceYears"
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={60}
+                      {...register('experienceYears', {
+                        setValueAs: (v) => (v === '' || v == null ? undefined : Number(v)),
+                      })}
+                      placeholder="e.g. 5"
+                      className="h-11 text-base rounded-xl bg-card shadow-sm"
+                    />
+                    {errors.experienceYears ? (
+                      <p className="text-[13px] font-medium text-destructive">{errors.experienceYears.message}</p>
+                    ) : (
+                      <p className="text-[13px] text-muted-foreground">Shown as “{(experienceYears ?? 0) || 'N'}+ yrs experience”</p>
+                    )}
+                  </div>
+
+                  {/* Tags */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">
+                      Teaching topics{' '}
+                      <span className="text-muted-foreground font-normal">(1–5)</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { e.preventDefault(); addTag() }
+                        }}
+                        placeholder="e.g. CAT Quantitative"
+                        maxLength={30}
+                        disabled={tags.length >= 5}
+                        className="flex-1 text-base h-11 rounded-xl bg-card shadow-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={addTag}
+                        disabled={!tagInput.trim() || tags.length >= 5}
+                        className="h-11 font-medium shadow-sm"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="gap-1.5 pl-3 pr-2 py-1.5 text-sm font-medium animate-in fade-in zoom-in-95 duration-200"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="hover:text-destructive transition-colors ml-1"
+                            >
+                              <FontAwesomeIcon icon={faXmark} className="size-3.5" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {errors.tags && (
+                      <p className="text-[13px] font-medium text-destructive">{errors.tags.message}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Social links */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Social links</Label>
-                <span className="text-xs text-muted-foreground">Optional</span>
+            <div className="my-8 h-px w-full bg-border/60" />
+
+            {/* Section: Social Links */}
+            <div>
+              <div className="pb-5 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl font-bold text-foreground">Social Links</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">Where can your audience find more of your content?</p>
+                </div>
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md hidden sm:inline-block">Optional</span>
               </div>
-              <div className="space-y-2">
+              
+              <div className="space-y-3">
                 {SOCIAL_FIELDS.map(({ key, icon, label, placeholder, color }) => (
                   <div key={key} className="relative flex items-center">
                     <span
-                      className="pointer-events-none absolute left-3 flex h-4 w-4 items-center justify-center"
+                      className="pointer-events-none absolute left-4 flex h-5 w-5 items-center justify-center"
                       style={color ? { color } : undefined}
                     >
-                      <FontAwesomeIcon icon={icon} className="size-4 text-inherit" />
+                      <FontAwesomeIcon icon={icon} className="size-5 text-inherit" />
                     </span>
                     <Input
                       {...register(`socialLinks.${key}`)}
                       type="url"
                       placeholder={placeholder}
                       className={cn(
-                        'pl-9 text-sm h-9',
-                        errors.socialLinks?.[key] && 'border-destructive focus-visible:ring-destructive/30',
+                        'pl-12 text-base h-12 rounded-xl bg-card shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary/50',
+                        errors.socialLinks?.[key] && 'border-destructive focus-visible:ring-destructive',
                       )}
                       aria-label={label}
                     />
@@ -370,38 +443,37 @@ export default function CreatorStep2Page() {
                 ))}
               </div>
               {(errors.socialLinks?.youtube ?? errors.socialLinks?.linkedin ?? errors.socialLinks?.instagram ?? errors.socialLinks?.twitter ?? errors.socialLinks?.website) && (
-                <p className="text-xs text-destructive">Enter a valid URL (e.g. https://...)</p>
+                <p className="text-[13px] font-medium text-destructive mt-2">Enter a valid URL (e.g. https://...)</p>
               )}
             </div>
 
             {apiError && (
-              <p className="text-sm text-destructive animate-in fade-in duration-200">{apiError}</p>
+              <p className="text-[13px] font-medium text-destructive animate-in fade-in duration-200">{apiError}</p>
             )}
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between pt-4">
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => router.push('/onboarding/creator/step-1')}
+                className="font-semibold"
               >
-                <FontAwesomeIcon icon={faArrowLeft} className="size-4 mr-1" />
+                <FontAwesomeIcon icon={faArrowLeft} className="size-4 mr-2" />
                 Back
               </Button>
 
-              <Button type="submit" size="sm" disabled={isPending || uploading}>
+              <Button type="submit" size="lg" disabled={isPending || uploading} className="font-semibold shadow-sm">
                 {isPending ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                 ) : (
                   <>
                     Next
-                    <FontAwesomeIcon icon={faArrowRight} className="size-4 ml-1" />
+                    <FontAwesomeIcon icon={faArrowRight} className="size-4 ml-2" />
                   </>
                 )}
               </Button>
             </div>
-          </form>
-        </div>
+        </form>
       </div>
     </div>
   )

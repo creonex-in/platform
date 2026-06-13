@@ -6,6 +6,7 @@ import {
   IsArray,
   IsUrl,
   IsIn,
+  Matches,
   MinLength,
   MaxLength,
   Min,
@@ -15,23 +16,24 @@ import {
   ValidateNested,
   IsNotEmpty,
 } from 'class-validator'
-import { Type } from 'class-transformer'
+import { Type, Transform } from 'class-transformer'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   NICHES,
   GOAL_TYPES,
   OFFER_TYPES,
   DURATION_OPTIONS,
-  NICHE_CATEGORIES,
   CREDENTIAL_TYPES,
   AUDIENCE_TYPES,
   PLATFORM_TYPES,
   CREATOR_GOALS,
+  USERNAME_MIN,
+  USERNAME_MAX,
+  USERNAME_REGEX,
   type GoalType,
   type Niche,
   type OfferType,
   type DurationOption,
-  type NicheCategory,
   type CredentialType,
   type AudienceType,
   type PlatformType,
@@ -67,9 +69,17 @@ export class CreatorStep1Dto {
   @MaxLength(60)
   fullName!: string
 
-  @ApiProperty({ enum: NICHE_CATEGORIES })
-  @IsEnum(NICHE_CATEGORIES)
-  nicheCategory!: NicheCategory
+  @ApiProperty({ description: 'Public handle — creonex.in/c/<username>' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @IsString()
+  @MinLength(USERNAME_MIN)
+  @MaxLength(USERNAME_MAX)
+  @Matches(USERNAME_REGEX, { message: 'Use lowercase letters, numbers and hyphens' })
+  username!: string
+
+  @ApiProperty({ enum: NICHES })
+  @IsEnum(NICHES)
+  primaryNiche!: Niche
 
   @ApiProperty({ enum: CREDENTIAL_TYPES })
   @IsEnum(CREDENTIAL_TYPES)
@@ -141,6 +151,13 @@ export class CreatorStep2Dto {
   @ValidateNested()
   @Type(() => SocialLinksDto)
   socialLinks?: SocialLinksDto
+
+  @ApiPropertyOptional({ minimum: 0, maximum: 60 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(60)
+  experienceYears?: number
 }
 
 export class CreatorStep3Dto {

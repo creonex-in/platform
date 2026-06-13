@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
+import { normalizeUsername, validateUsername } from '@creonex/types'
 import { UsersRepository } from '../users/users.repository'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
 import { LearnerProfileRepository } from '../users/learner-profile.repository'
@@ -52,7 +53,22 @@ export class OnboardingService {
     return { success: true }
   }
 
+  /** Live availability for step-1. A user's own reserved handle counts as free. */
+  async checkUsernameAvailability(userId: string, raw: string) {
+    const username = normalizeUsername(raw ?? '')
+    const formatError = validateUsername(username)
+    if (formatError) return { available: false, reason: formatError }
+
+    const ownerId = await this.creatorRepo.findUserIdByUsername(username)
+    if (ownerId && ownerId !== userId) return { available: false, reason: 'Already taken' }
+    return { available: true }
+  }
+
   async saveCreatorStep1(userId: string, dto: CreatorStep1Dto) {
+    const username = normalizeUsername(dto.username)
+    const { available, reason } = await this.checkUsernameAvailability(userId, username)
+    if (!available) throw new BadRequestException(reason ?? 'Username unavailable')
+
     const { first, last } = this.splitFullName(dto.fullName)
     await this.usersRepo.updateName(userId, first, last)
 
@@ -61,7 +77,8 @@ export class OnboardingService {
 
     await this.creatorRepo.updateStep1(userId, {
       displayName: dto.fullName,
-      nicheCategory: dto.nicheCategory,
+      username,
+      primaryNiche: dto.primaryNiche,
       credentialType: dto.credentialType,
       audienceType: dto.audienceType,
       primaryPlatform: dto.primaryPlatform,
@@ -87,6 +104,7 @@ export class OnboardingService {
       tags: dto.tags,
       photoUrl: dto.photoUrl,
       socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : undefined,
+      experienceYears: dto.experienceYears,
     })
 
     return { success: true, nextStep: 3 }
@@ -118,10 +136,14 @@ export class OnboardingService {
       }
     }
 
+    const username = profile.username
+    if (!username) {
+      throw new BadRequestException('Choose a username in step 1 before going live')
+    }
+
     const priceInPaise = dto.price * 100
     const boostEndDate = new Date()
     boostEndDate.setDate(boostEndDate.getDate() + DISCOVERY_BOOST_DAYS)
-    const username = await this.generateUsername(profile.displayName ?? '')
 
     const offeringId = await this.offeringsRepo.create({
       creatorProfileId: profile.id,
@@ -141,18 +163,5 @@ export class OnboardingService {
       offeringId,
       redirectTo: '/dashboard',
     }
-  }
-
-  private async generateUsername(displayName: string): Promise<string> {
-    const base = displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'creator'
-    let candidate = base
-    let suffix = 0
-
-    while (await this.creatorRepo.isUsernameTaken(candidate)) {
-      suffix++
-      candidate = `${base}${suffix}`
-    }
-
-    return candidate
   }
 }

@@ -1,7 +1,28 @@
 'use client'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { onboardingService } from '@/services/onboarding.service'
+import { usersService } from '@/services/users.service'
 import type { LearnerStep1Data, CreatorStep1Data, CreatorStep2Data, CreatorStep3Data, CreatorStep4Data } from '@creonex/types'
+
+export function useCreatorProfile() {
+  return useQuery({
+    queryKey: ['creator-profile-me'],
+    queryFn: () => usersService.getCreatorProfile(),
+    staleTime: 60_000,
+    retry: false,
+  })
+}
+
+/** Live handle availability. Pass a debounced, format-valid username + enabled flag. */
+export function useUsernameAvailability(username: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['username-available', username],
+    queryFn: () => onboardingService.checkUsername(username),
+    enabled,
+    staleTime: 30_000,
+    retry: false,
+  })
+}
 
 export function useSaveLearnerStep1() {
   return useMutation({

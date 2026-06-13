@@ -101,14 +101,14 @@ export default function CreatorStep4Page() {
 
   if (live) {
     return (
-      <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/[0.04] overflow-hidden py-24 px-6 items-center justify-center">
-        <div className="text-center space-y-5 animate-in fade-in zoom-in-95 duration-500">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 ring-4 ring-primary/20">
-            <FontAwesomeIcon icon={faRocket} className="size-9 text-primary" />
+      <div className="flex w-full flex-col items-center justify-center py-20">
+        <div className="text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 ring-4 ring-primary/20 shadow-lg shadow-primary/20">
+            <FontAwesomeIcon icon={faRocket} className="size-10 text-primary animate-bounce" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">You&apos;re live!</h1>
-            <p className="text-muted-foreground">Your first session is published. Taking you to your dashboard…</p>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground">You&apos;re live!</h1>
+            <p className="text-base text-muted-foreground">Your first session is published. Taking you to your dashboard…</p>
           </div>
         </div>
       </div>
@@ -116,48 +116,44 @@ export default function CreatorStep4Page() {
   }
 
   return (
-    <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/[0.04] overflow-hidden">
-      <div className="w-full h-1 bg-muted">
-        <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: '100%' }} />
-      </div>
-
-      <div className="flex flex-col items-center px-6 py-10 sm:p-12">
-        <div className="w-full max-w-lg space-y-7 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <p className="text-xs text-muted-foreground text-center tracking-wide uppercase">Step 4 of 4 · The finale</p>
+    <div className="w-full animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="space-y-8">
+        <p className="text-xs font-bold uppercase tracking-widest text-primary lg:hidden">Step 4 · First offer</p>
 
           {/* Hero */}
-          <div className="rounded-2xl bg-primary/5 border border-primary/10 px-6 py-5 flex items-center gap-5">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
-              <FontAwesomeIcon icon={faVideo} className="size-6" />
+          <div className="rounded-3xl bg-gradient-to-br from-foreground/5 via-foreground/[0.02] to-transparent border border-border/60 px-6 sm:px-8 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 relative overflow-hidden">
+            <div className="absolute -right-10 -top-10 size-40 rounded-full bg-foreground/5 blur-3xl pointer-events-none" />
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-foreground text-background shadow-xl shadow-black/10 relative z-10">
+              <FontAwesomeIcon icon={faVideo} className="size-7" />
             </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-sm">1-on-1 Session</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                The fastest way to earn your first ₹ and get real reviews
+            <div className="space-y-2 relative z-10">
+              <p className="font-display text-2xl font-bold tracking-tight text-foreground">1-on-1 Session</p>
+              <p className="text-[15px] text-muted-foreground leading-relaxed max-w-md">
+                The fastest way to earn your first ₹ and build a reputation with real reviews from your learners.
               </p>
             </div>
           </div>
 
           {/* Why 1:1 chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {SESSION_HIGHLIGHTS.map(({ icon, text }) => (
               <span
                 key={text}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs text-muted-foreground"
+                className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3.5 py-1.5 text-[13px] font-semibold text-foreground shadow-sm"
               >
-                <FontAwesomeIcon icon={icon} className="size-3 text-primary" />
+                <FontAwesomeIcon icon={icon} className="size-3.5 text-muted-foreground" />
                 {text}
               </span>
             ))}
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-2">
 
             {/* Title */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="title">Session title</Label>
-                <span className="text-xs text-muted-foreground">{(title ?? '').length}/80</span>
+                <Label htmlFor="title" className="text-sm font-semibold">Session title</Label>
+                <span className="text-[13px] font-medium text-muted-foreground">{(title ?? '').length}/80</span>
               </div>
               <Input
                 id="title"
@@ -165,19 +161,19 @@ export default function CreatorStep4Page() {
                 placeholder="30-min CAT Quant Doubt Clearing"
                 maxLength={80}
                 autoFocus
-                className="h-10 text-sm"
+                className="h-12 text-base rounded-xl bg-card shadow-sm"
               />
               {errors.title && (
-                <p className="text-xs text-destructive">{errors.title.message}</p>
+                <p className="text-[13px] font-medium text-destructive">{errors.title.message}</p>
               )}
             </div>
 
             {/* Price */}
-            <div className="space-y-1.5">
-              <Label htmlFor="price">Price per session</Label>
-              <InputGroup className="h-10">
+            <div className="space-y-2">
+              <Label htmlFor="price" className="text-sm font-semibold">Price per session</Label>
+              <InputGroup className="h-12 rounded-xl bg-card shadow-sm">
                 <InputGroupAddon>
-                  <InputGroupText className="text-sm font-medium select-none">₹</InputGroupText>
+                  <InputGroupText className="text-base font-semibold select-none text-muted-foreground">₹</InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
                   id="price"
@@ -185,18 +181,18 @@ export default function CreatorStep4Page() {
                   {...register('price', { valueAsNumber: true })}
                   placeholder="499"
                   min={299}
-                  className="text-sm"
+                  className="text-base font-semibold"
                 />
               </InputGroup>
               {errors.price ? (
-                <p className="text-xs text-destructive">{errors.price.message}</p>
+                <p className="text-[13px] font-medium text-destructive">{errors.price.message}</p>
               ) : (price ?? 0) >= 299 ? (
-                <div className="flex items-center justify-between rounded-lg bg-muted/60 px-4 py-2.5 animate-in fade-in duration-200">
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-muted/60 px-4 py-3 animate-in fade-in duration-200 border border-border/50">
+                  <span className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
                     <FontAwesomeIcon icon={faClock} className="size-3.5" />
                     15% platform fee
                   </span>
-                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                  <p className="text-[15px] font-bold text-green-600 dark:text-green-500">
                     You earn ₹{earnings.toLocaleString('en-IN')}
                   </p>
                 </div>
@@ -204,19 +200,19 @@ export default function CreatorStep4Page() {
             </div>
 
             {/* Duration */}
-            <div className="space-y-2">
-              <Label>Duration</Label>
-              <div className="flex gap-2 flex-wrap">
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Duration</Label>
+              <div className="flex gap-3 flex-wrap">
                 {DURATIONS.map((d) => (
                   <button
                     key={d}
                     type="button"
                     onClick={() => setValue('durationMinutes', d, { shouldValidate: true })}
                     className={cn(
-                      'px-4 py-2 rounded-lg border text-sm font-medium transition-all active:scale-[0.97]',
+                      'px-5 py-2.5 rounded-xl border text-sm font-bold transition-all active:scale-[0.97]',
                       durationMinutes === d
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-background hover:border-primary/50',
+                        ? 'border-foreground bg-foreground text-background shadow-md'
+                        : 'border-border/60 bg-card hover:border-foreground/30 text-muted-foreground hover:text-foreground shadow-sm',
                     )}
                   >
                     {d} min
@@ -224,44 +220,47 @@ export default function CreatorStep4Page() {
                 ))}
               </div>
               {errors.durationMinutes && (
-                <p className="text-xs text-destructive">{errors.durationMinutes.message}</p>
+                <p className="text-[13px] font-medium text-destructive">{errors.durationMinutes.message}</p>
               )}
             </div>
 
             {apiError && (
-              <p className="text-sm text-destructive animate-in fade-in duration-200">{apiError}</p>
+              <p className="text-[13px] font-medium text-destructive animate-in fade-in duration-200">{apiError}</p>
             )}
 
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="w-full h-11 font-semibold text-sm shadow-lg shadow-primary/20 gap-2"
-            >
-              {isPending ? (
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faBolt} className="size-4" />
-                  Go Live
-                </>
-              )}
-            </Button>
-
-            <p className="text-center text-[11px] text-muted-foreground">
-              Editable anytime from your dashboard · More offering types unlock after you go live
-            </p>
+            <div className="pt-4">
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="group relative w-full h-14 font-bold text-base shadow-xl shadow-primary/25 gap-2 overflow-hidden transition-all hover:scale-[1.01] hover:shadow-primary/40 active:scale-[0.98] rounded-xl"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
+                {isPending ? (
+                  <span className="h-6 w-6 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faBolt} className="size-5" />
+                    Publish & Go Live
+                  </>
+                )}
+              </Button>
+              <p className="text-center text-xs font-medium text-muted-foreground mt-4 leading-relaxed max-w-md mx-auto">
+                Editable anytime from your dashboard.<br/>More offering types unlock after you go live.
+              </p>
+            </div>
           </form>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/onboarding/creator/step-3')}
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="size-4 mr-1" />
-            Back
-          </Button>
-        </div>
+          <div className="pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.push('/onboarding/creator/step-3')}
+              className="font-semibold"
+            >
+              <FontAwesomeIcon icon={faArrowLeft} className="size-4 mr-2" />
+              Back
+            </Button>
+          </div>
       </div>
     </div>
   )

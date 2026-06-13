@@ -11,6 +11,8 @@ export const endpoints = {
     creatorStep2: '/api/v1/onboarding/creator/step-2',
     creatorStep3: '/api/v1/onboarding/creator/step-3',
     creatorStep4: '/api/v1/onboarding/creator/step-4',
+    creatorUsernameCheck: (username: string) =>
+      `/api/v1/onboarding/creator/username-check?username=${encodeURIComponent(username)}`,
   },
   creators: {
     byUsername: (username: string) => `/api/v1/creators/${username}`,

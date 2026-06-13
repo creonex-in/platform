@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
   pgTable,
   text,
@@ -7,7 +8,9 @@ import {
   integer,
   pgEnum,
   decimal,
+  date,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import {
   NICHES,
@@ -16,6 +19,8 @@ import {
   OFFER_STATUSES,
   KYC_STATUSES,
   ONBOARDING_STATUSES,
+  BOOKING_STATUSES,
+  OVERRIDE_TYPES,
 } from '@creonex/types'
 
 // ============================================================
@@ -88,6 +93,8 @@ export const offerTypeEnum = pgEnum('offer_type', [...OFFER_TYPES] as [string, .
 export const offerStatusEnum = pgEnum('offer_status', [...OFFER_STATUSES] as [string, ...string[]])
 export const kycStatusEnum = pgEnum('kyc_status', [...KYC_STATUSES] as [string, ...string[]])
 export const onboardingStatusEnum = pgEnum('onboarding_status', [...ONBOARDING_STATUSES] as [string, ...string[]])
+export const bookingStatusEnum = pgEnum('booking_status', [...BOOKING_STATUSES] as [string, ...string[]])
+export const overrideTypeEnum = pgEnum('override_type', [...OVERRIDE_TYPES] as [string, ...string[]])
 
 // ============================================================
 // LEARNER PROFILES
@@ -140,7 +147,6 @@ export const creatorProfiles = pgTable(
       .notNull(),
     totalReviews: integer('total_reviews').default(0).notNull(),
     totalSessions: integer('total_sessions').default(0).notNull(),
-    responseTimeHrs: decimal('response_time_hrs', { precision: 6, scale: 2 }),
     inDiscoveryBoost: boolean('in_discovery_boost').default(false).notNull(),
     boostEndDate: timestamp('boost_end_date'),
     isLive: boolean('is_live').default(false).notNull(),
@@ -164,7 +170,6 @@ export const creatorProfiles = pgTable(
       .notNull(),
     currentStep: integer('current_step').default(1).notNull(),
     // Creator discovery answers (onboarding questions)
-    nicheCategory: text('niche_category'),
     credentialType: text('credential_type'),
     audienceType: text('audience_type'),
     primaryPlatform: text('primary_platform'),
@@ -219,12 +224,158 @@ export const offerings = pgTable(
     totalBookings: integer('total_bookings').default(0).notNull(),
     totalRevenuePaise: integer('total_revenue_paise').default(0).notNull(),
     thumbnailUrl: text('thumbnail_url'),
+    // Scheduling (one_on_one): reusable availability + booking guards
+    scheduleId: text('schedule_id').references(() => schedules.id, { onDelete: 'set null' }),
+    minNoticeMinutes: integer('min_notice_minutes').default(120).notNull(),
+    bookingWindowDays: integer('booking_window_days').default(30).notNull(),
+    bufferAfterMinutes: integer('buffer_after_minutes').default(0).notNull(),
+    minParticipants: integer('min_participants'),
+    // Universal core extras
+    slug: text('slug').unique(),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
   },
   (t) => ({
     creatorIdx: index('idx_offerings_creator').on(t.creatorProfileId),
     statusIdx: index('idx_offerings_status').on(t.status),
+    scheduleIdx: index('idx_offerings_schedule').on(t.scheduleId),
+  }),
+)
+
+// ============================================================
+// SCHEDULING — schedules, rules, overrides
+// ============================================================
+
+export const schedules = pgTable(
+  'schedules',
+  {
+    id: text('id').primaryKey(),
+    creatorProfileId: text('creator_profile_id')
+      .notNull()
+      .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    timezone: text('timezone').notNull(), // IANA, e.g. 'Asia/Kolkata' — anchor tz
+    isDefault: boolean('is_default').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (t) => ({
+    creatorIdx: index('idx_schedules_creator').on(t.creatorProfileId),
+  }),
+)
+
+export const scheduleRules = pgTable(
+  'schedule_rules',
+  {
+    id: text('id').primaryKey(),
+    scheduleId: text('schedule_id')
+      .notNull()
+      .references(() => schedules.id, { onDelete: 'cascade' }),
+    rrule: text('rrule').notNull(), // e.g. 'FREQ=WEEKLY;BYDAY=MO,WE,FR'
+    startTime: text('start_time').notNull(), // 'HH:MM' local to schedule.timezone
+    endTime: text('end_time').notNull(), // 'HH:MM' local to schedule.timezone
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    scheduleIdx: index('idx_schedule_rules_schedule').on(t.scheduleId),
+  }),
+)
+
+export const scheduleOverrides = pgTable(
+  'schedule_overrides',
+  {
+    id: text('id').primaryKey(),
+    scheduleId: text('schedule_id')
+      .notNull()
+      .references(() => schedules.id, { onDelete: 'cascade' }),
+    date: date('date').notNull(), // 'YYYY-MM-DD' in schedule.timezone
+    type: overrideTypeEnum('type').notNull(),
+    startTime: text('start_time'), // 'HH:MM' (custom only)
+    endTime: text('end_time'), // 'HH:MM' (custom only)
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    scheduleDateUnique: uniqueIndex('uq_schedule_overrides_schedule_date').on(t.scheduleId, t.date),
+  }),
+)
+
+// ============================================================
+// CALENDAR CONNECTIONS — creator's external calendar (Google)
+// ============================================================
+
+export const calendarConnections = pgTable(
+  'calendar_connections',
+  {
+    id: text('id').primaryKey(),
+    creatorProfileId: text('creator_profile_id')
+      .notNull()
+      .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(), // 'google'
+    accountEmail: text('account_email'),
+    accessToken: text('access_token'), // ENCRYPTED at rest
+    refreshToken: text('refresh_token'), // ENCRYPTED at rest
+    tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+    calendarId: text('calendar_id').default('primary').notNull(),
+    syncEnabled: boolean('sync_enabled').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (t) => ({
+    creatorProviderUnique: uniqueIndex('uq_calendar_connections_creator_provider').on(
+      t.creatorProfileId,
+      t.provider,
+    ),
+  }),
+)
+
+// ============================================================
+// BOOKINGS
+// ============================================================
+
+export const bookings = pgTable(
+  'bookings',
+  {
+    id: text('id').primaryKey(),
+    offeringId: text('offering_id')
+      .notNull()
+      .references(() => offerings.id, { onDelete: 'cascade' }),
+    learnerProfileId: text('learner_profile_id')
+      .notNull()
+      .references(() => learnerProfiles.id, { onDelete: 'cascade' }),
+    // UTC instants (null for digital). withTimezone keeps storage unambiguous.
+    startTime: timestamp('start_time', { withTimezone: true }),
+    endTime: timestamp('end_time', { withTimezone: true }),
+    status: bookingStatusEnum('status').default('pending_payment').notNull(),
+    amountPaise: integer('amount_paise').notNull(), // price snapshot at booking
+    creatorTimezone: text('creator_timezone'),
+    learnerTimezone: text('learner_timezone'),
+    // Meeting (provider-agnostic, dynamic per booking)
+    meetingProvider: text('meeting_provider'), // 'google_meet' | 'zoom' | 'teams'
+    meetingUrl: text('meeting_url'),
+    calendarEventId: text('calendar_event_id'),
+    // Payment
+    razorpayOrderId: text('razorpay_order_id'),
+    razorpayPaymentId: text('razorpay_payment_id'),
+    // Group only
+    waitlistPosition: integer('waitlist_position'),
+    // 1:1 only
+    topic: text('topic'),
+    // Lifecycle
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    cancelledBy: text('cancelled_by'), // 'learner' | 'creator' | 'system'
+    cancellationReason: text('cancellation_reason'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (t) => ({
+    offeringIdx: index('idx_bookings_offering').on(t.offeringId),
+    learnerIdx: index('idx_bookings_learner').on(t.learnerProfileId),
+    startIdx: index('idx_bookings_start').on(t.startTime),
+    // backstop against double-booking a 1:1 slot
+    activeSlotUnique: uniqueIndex('uq_bookings_active_slot')
+      .on(t.offeringId, t.startTime)
+      .where(sql`status in ('pending_payment', 'confirmed')`),
   }),
 )
 

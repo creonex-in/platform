@@ -49,8 +49,12 @@ export interface CreatorProfile {
   displayName: string | null
   bio: string | null
   profilePhotoUrl: string | null
+  coverBannerUrl: string | null
   primaryNiche: Niche | null
   experienceYears: number | null
+  socialLinks: SocialLinks | null
+  languages: string[]
+  tags: string[]
   qualityScore: string
   qualityTier: string
   isLive: boolean
@@ -133,6 +137,11 @@ export interface OnboardingStepResponse {
   success: boolean
   nextStep?: number
   redirectTo?: string
+}
+
+export interface UsernameCheckResponse {
+  available: boolean
+  reason?: string
 }
 
 export interface GoLiveResponse {

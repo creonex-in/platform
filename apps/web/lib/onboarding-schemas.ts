@@ -2,17 +2,22 @@ import { z } from 'zod'
 import {
   OFFER_TYPES,
   DURATION_OPTIONS,
-  NICHE_CATEGORIES,
+  NICHES,
   CREDENTIAL_TYPES,
   AUDIENCE_TYPES,
   PLATFORM_TYPES,
   CREATOR_GOALS,
+  validateUsername,
 } from '@creonex/types'
 
-// Step 1 = creator discovery questions (name + 5 discovery answers)
+// Step 1 = creator discovery questions (name + handle + 5 discovery answers)
 export const creatorStep1Schema = z.object({
   fullName: z.string().min(2, 'At least 2 characters').max(60, 'Max 60 characters'),
-  nicheCategory: z.enum(NICHE_CATEGORIES),
+  username: z.string().superRefine((val, ctx) => {
+    const err = validateUsername(val)
+    if (err) ctx.addIssue({ code: z.ZodIssueCode.custom, message: err })
+  }),
+  primaryNiche: z.enum(NICHES),
   credentialType: z.enum(CREDENTIAL_TYPES),
   audienceType: z.enum(AUDIENCE_TYPES),
   primaryPlatform: z.enum(PLATFORM_TYPES),
@@ -32,6 +37,7 @@ export const creatorStep2Schema = z.object({
     twitter: urlOrEmpty,
     website: urlOrEmpty,
   }).optional(),
+  experienceYears: z.number().int('Whole number').min(0, 'Cannot be negative').max(60, 'Too high').optional(),
 })
 
 export const creatorStep3Schema = z.object({

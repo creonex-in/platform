@@ -31,11 +31,35 @@ export const ONBOARDING_STATUSES = [
 
 export const DURATION_OPTIONS = [30, 45, 60, 90] as const
 
-// ── Creator discovery questions (step-1) ──────────────────────────────────────
+// ── Username (creator handle) ─────────────────────────────────────────────────
 
-export const NICHE_CATEGORIES = [
-  'exam_prep', 'professional_skills', 'health_wellness', 'creative_skills', 'undecided',
+export const USERNAME_MIN = 3
+export const USERNAME_MAX = 20
+
+/** lowercase alphanumeric + single hyphens; must start & end alphanumeric */
+export const USERNAME_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
+
+export const RESERVED_USERNAMES = [
+  'admin', 'api', 'app', 'auth', 'creonex', 'dashboard', 'onboarding',
+  'login', 'logout', 'signup', 'signin', 'settings', 'about', 'help',
+  'support', 'c', 'me', 'new', 'profile', 'explore', 'search',
 ] as const
+
+export function normalizeUsername(input: string): string {
+  return input.trim().toLowerCase()
+}
+
+/** Returns an error message, or null if the (normalized) handle is valid. */
+export function validateUsername(input: string): string | null {
+  const u = normalizeUsername(input)
+  if (u.length < USERNAME_MIN) return `At least ${USERNAME_MIN} characters`
+  if (u.length > USERNAME_MAX) return `Max ${USERNAME_MAX} characters`
+  if (!USERNAME_REGEX.test(u)) return 'Use lowercase letters, numbers and hyphens'
+  if ((RESERVED_USERNAMES as readonly string[]).includes(u)) return 'This handle is reserved'
+  return null
+}
+
+// ── Creator discovery questions (step-1) ──────────────────────────────────────
 
 export const CREDENTIAL_TYPES = [
   'verified_result', 'professional_exp', 'personal_transformation',
@@ -64,7 +88,6 @@ export type OfferStatus = typeof OFFER_STATUSES[number]
 export type KycStatus = typeof KYC_STATUSES[number]
 export type OnboardingStatus = typeof ONBOARDING_STATUSES[number]
 export type DurationOption = typeof DURATION_OPTIONS[number]
-export type NicheCategory = typeof NICHE_CATEGORIES[number]
 export type CredentialType = typeof CREDENTIAL_TYPES[number]
 export type AudienceType = typeof AUDIENCE_TYPES[number]
 export type PlatformType = typeof PLATFORM_TYPES[number]
@@ -78,10 +101,11 @@ export interface LearnerStep1Request {
   interestedNiches?: string[]
 }
 
-/** Step 1 = creator discovery questions (name + 5 discovery answers) */
+/** Step 1 = creator discovery questions (name + handle + 5 discovery answers) */
 export interface CreatorStep1Request {
   fullName: string
-  nicheCategory: NicheCategory
+  username: string
+  primaryNiche: Niche
   credentialType: CredentialType
   audienceType: AudienceType
   primaryPlatform: PlatformType
@@ -101,6 +125,7 @@ export interface CreatorStep2Request {
   tags: string[]
   photoUrl?: string
   socialLinks?: SocialLinks
+  experienceYears?: number
 }
 
 export interface CreatorStep3Request {

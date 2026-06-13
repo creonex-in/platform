@@ -63,7 +63,10 @@ export function ProfileHeader({
             {/* Niche subtitle */}
             {profile.primaryNiche && (
               <p className="text-[13px] text-muted-foreground font-semibold mb-3 -mt-1">
-                {profile.primaryNiche}
+                {profile.primaryNiche
+                  .split('_')
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(' ')}
               </p>
             )}
 

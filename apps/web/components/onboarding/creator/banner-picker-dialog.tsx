@@ -286,7 +286,7 @@ export function BannerPickerDialog({ open, onOpenChange, current, onApply }: Pro
                       aria-label={preset.label}
                       style={{ paddingBottom: 'calc(100% / 3)', animationDelay: `${i * 35}ms` }}
                       className={cn(
-                        'relative animate-in fade-in zoom-in-95 overflow-hidden rounded-xl transition-all duration-150 fill-mode-both active:scale-95',
+                        'relative animate-in fade-in zoom-in-95 overflow-hidden transition-all duration-150 fill-mode-both active:scale-95',
                         selected
                           ? 'ring-2 ring-primary ring-offset-2 ring-offset-popover'
                           : 'ring-1 ring-border hover:-translate-y-0.5 hover:ring-primary/50 hover:shadow-md hover:shadow-primary/5',

@@ -9,12 +9,18 @@ export class CreatorProfileRepository {
   constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
 
   async findByUserId(userId: string) {
-    const result = await this.db
+    const profile = await this.db
       .select()
       .from(creatorProfiles)
       .where(eq(creatorProfiles.userId, userId))
       .limit(1)
-    return result[0] ?? null
+      .then((r) => r[0] ?? null)
+    if (!profile) return null
+    const tags = await this.db
+      .select({ tag: creatorTags.tag })
+      .from(creatorTags)
+      .where(eq(creatorTags.creatorProfileId, profile.id))
+    return { ...profile, tags: tags.map((t) => t.tag) }
   }
 
   async create(userId: string) {
@@ -30,7 +36,8 @@ export class CreatorProfileRepository {
     userId: string,
     data: {
       displayName: string
-      nicheCategory: string
+      username: string
+      primaryNiche: string
       credentialType: string
       audienceType: string
       primaryPlatform: string
@@ -41,7 +48,8 @@ export class CreatorProfileRepository {
       .update(creatorProfiles)
       .set({
         displayName: data.displayName,
-        nicheCategory: data.nicheCategory,
+        username: data.username,
+        primaryNiche: data.primaryNiche as typeof creatorProfiles.$inferInsert['primaryNiche'],
         credentialType: data.credentialType,
         audienceType: data.audienceType,
         primaryPlatform: data.primaryPlatform,
@@ -59,6 +67,7 @@ export class CreatorProfileRepository {
       tags: string[]
       photoUrl?: string
       socialLinks?: Record<string, string | undefined>
+      experienceYears?: number
     },
   ) {
     await this.db
@@ -67,6 +76,7 @@ export class CreatorProfileRepository {
         bio: data.bio,
         profilePhotoUrl: data.photoUrl ?? null,
         socialLinks: data.socialLinks ?? {},
+        experienceYears: data.experienceYears ?? null,
         onboardingStatus: 'in_progress',
         currentStep: 3,
       })
@@ -139,12 +149,14 @@ export class CreatorProfileRepository {
     return { ...profile, tags: tags.map((t) => t.tag) }
   }
 
-  async isUsernameTaken(username: string): Promise<boolean> {
+  /** Returns the userId owning a username, or null if free. Lets callers
+   *  treat a user's own reserved handle as available to themselves. */
+  async findUserIdByUsername(username: string): Promise<string | null> {
     const result = await this.db
-      .select({ id: creatorProfiles.id })
+      .select({ userId: creatorProfiles.userId })
       .from(creatorProfiles)
       .where(eq(creatorProfiles.username, username))
       .limit(1)
-    return result.length > 0
+    return result[0]?.userId ?? null
   }
 }
