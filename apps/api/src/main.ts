@@ -6,6 +6,7 @@ import { toNodeHandler } from 'better-auth/node'
 import { AuthService } from '@mguay/nestjs-better-auth'
 import cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
+import { AllExceptionsFilter } from './utils/all-exceptions.filter'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false })
@@ -24,6 +25,8 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true }),
   )
+
+  app.useGlobalFilters(new AllExceptionsFilter())
 
   app.enableCors({
     origin: process.env['ALLOWED_ORIGINS']?.split(',') ?? 'http://localhost:3001',

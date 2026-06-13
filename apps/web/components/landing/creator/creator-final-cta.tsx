@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "@/components/ui/button";
 
 export default function CreatorFinalCta() {
@@ -25,7 +26,7 @@ export default function CreatorFinalCta() {
             size="lg" 
             className="w-full sm:w-auto rounded-full px-10 gap-2 font-medium bg-foreground text-background hover:bg-foreground/90 h-14 text-base shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
           >
-            Get Started For Free <ArrowRight className="h-4 w-4" />
+            Get Started For Free <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4" />
           </Button>
           <Button 
             size="lg" 

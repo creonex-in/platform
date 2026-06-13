@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { serverAuthClient } from '@/lib/auth-server-client'
 
 const isPublicPath = (pathname: string) =>
   pathname === '/' ||
@@ -18,58 +17,44 @@ const isLearnerPath = (pathname: string) => pathname.startsWith('/learner')
 
 const isOnboardingPath = (pathname: string) => pathname.startsWith('/onboarding')
 
+const isProtectedPath = (pathname: string) =>
+  isCreatorPath(pathname) || isLearnerPath(pathname) || isOnboardingPath(pathname)
+
+// Better Auth session cookie. Prefixed `__Secure-` when served over HTTPS.
+const hasSessionCookie = (request: NextRequest) =>
+  request.cookies.has('better-auth.session_token') ||
+  request.cookies.has('__Secure-better-auth.session_token')
+
 function toSignIn(request: NextRequest) {
   const url = new URL('/sign-in', request.url)
   url.searchParams.set('redirect_url', request.nextUrl.pathname)
   return NextResponse.redirect(url)
 }
 
-export default async function proxy(request: NextRequest) {
+/**
+ * Edge middleware — coarse gating only. NO network requests, NO session fetch,
+ * NO role validation. Real auth + RBAC happens in server layouts via the
+ * guards in `lib/auth-guards.ts` (requireAuth / requireCreator / requireLearner).
+ *
+ * Responsibilities: public-vs-protected routing + session-cookie presence.
+ * The pathname is forwarded as `x-pathname` so server guards can build an
+ * accurate `redirect_url` for stale-session redirects.
+ */
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (isPublicPath(pathname)) return NextResponse.next()
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', pathname)
+  const next = () => NextResponse.next({ request: { headers: requestHeaders } })
 
-  if (!isCreatorPath(pathname) && !isLearnerPath(pathname) && !isOnboardingPath(pathname)) {
-    return NextResponse.next()
-  }
+  if (isPublicPath(pathname)) return next()
+  if (!isProtectedPath(pathname)) return next()
 
-  const sessionCookie = request.cookies.get('better-auth.session_token')
-  if (!sessionCookie) return toSignIn(request)
+  // Cookie present? Let it through — layouts validate the session for real.
+  // Absent? No point rendering a protected layout that will only redirect.
+  if (!hasSessionCookie(request)) return toSignIn(request)
 
-  let role = 'learner'
-
-  try {
-    const { data: session } = await serverAuthClient.getSession({
-      fetchOptions: {
-        headers: { Cookie: `better-auth.session_token=${sessionCookie.value}` },
-        cache: 'no-store' as RequestCache,
-      },
-    })
-    if (!session?.user) return toSignIn(request)
-    if (session.user.role) role = session.user.role
-  } catch {
-    // Session fetch failed (transient error) — cookie exists so let through.
-    // Server layouts will handle actual auth failures.
-    return NextResponse.next()
-  }
-
-  const roles = role.split(',')
-  const isCreator = roles.includes('creator')
-  const isLearner = roles.includes('learner')
-
-  if (isOnboardingPath(pathname)) return NextResponse.next()
-
-  if (isCreatorPath(pathname)) {
-    if (!isCreator) return NextResponse.redirect(new URL('/learner/dashboard', request.url))
-    return NextResponse.next()
-  }
-
-  if (isLearnerPath(pathname)) {
-    if (!isLearner) return toSignIn(request)
-    return NextResponse.next()
-  }
-
-  return NextResponse.next()
+  return next()
 }
 
 export const config = {

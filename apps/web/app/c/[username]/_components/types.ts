@@ -76,11 +76,6 @@ export const SOCIAL_ICONS: Record<string, { icon: IconDefinition; color: string;
   website:   { icon: faGlobe,    color: 'text-primary',    label: 'Website'  },
 }
 
-export function getInitials(name: string | null): string {
-  if (!name) return '?'
-  return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
-}
-
 export const isBannerUrl = (s: string): boolean =>
   s.startsWith('http') || s.startsWith('/')
 

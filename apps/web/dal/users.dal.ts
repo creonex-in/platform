@@ -32,7 +32,8 @@ export const getCreatorContext = cache(async (): Promise<CreatorContext> => {
   const cookieHeader = await getCookieHeader()
 
   const [user, profileResult] = await Promise.all([
-    userService.getMe(cookieHeader).catch(() => null),
+    // cached getMe() — dedupes with requireAuth/requireCreator in the same request
+    getMe(),
     userService
       .getCreatorProfile(cookieHeader)
       .then((profile) => ({ profile, missing: false }))
@@ -40,4 +41,18 @@ export const getCreatorContext = cache(async (): Promise<CreatorContext> => {
   ])
 
   return { user, profile: profileResult.profile, profileMissing: profileResult.missing }
+})
+
+/**
+ * Whether the current learner still needs onboarding.
+ * No profile yet (404) → needs onboarding. Auth/other errors → false (don't nag).
+ */
+export const needsLearnerOnboarding = cache(async (): Promise<boolean> => {
+  try {
+    const profile = await userService.getLearnerProfile(await getCookieHeader())
+    return profile.onboardingStatus !== 'complete'
+  } catch (e) {
+    if (isNotFound(e)) return true
+    return false
+  }
 })

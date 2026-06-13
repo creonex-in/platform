@@ -18,14 +18,14 @@ export default async function OnboardingLayout({
             alt="Creonex"
             width={30}
             height={30}
-            className="size-[30px] object-contain"
+            className="size-7.5 object-contain"
           />
           <span className="font-display text-lg font-bold tracking-tight">Creonex</span>
         </Link>
       </header>
 
       <main className="flex flex-1 items-start justify-center px-4 py-10 sm:items-center sm:py-14">
-        <div className="w-full max-w-[44rem]">{children}</div>
+        <div className="w-full max-w-176">{children}</div>
       </main>
     </div>
   )

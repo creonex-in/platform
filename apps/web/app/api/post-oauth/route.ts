@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { parseRoles } from '@creonex/types'
 import { serverAuthClient } from '@/lib/auth-server-client'
 import { userService } from '@/services/user.service'
 
@@ -25,13 +26,13 @@ async function routeExistingCreator(cookieHeader: string, request: NextRequest):
 
 export async function GET(request: NextRequest) {
   const intent = request.nextUrl.searchParams.get('intent')
-  const sessionCookie = request.cookies.get('better-auth.session_token')
 
-  if (!sessionCookie) {
+  // Forward the full cookie header — never reconstruct a single cookie
+  // (would drop the `__Secure-` prefix + any other Better Auth cookies).
+  const cookieHeader = request.headers.get('cookie') ?? ''
+  if (!cookieHeader) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
   }
-
-  const cookieHeader = `better-auth.session_token=${sessionCookie.value}`
 
   const { data: session } = await serverAuthClient.getSession({
     fetchOptions: {
@@ -44,8 +45,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
   }
 
-  const roles = ((session.user as { role?: string }).role ?? '').split(',').filter(Boolean)
-  const isCreator = roles.includes('creator')
+  const isCreator = parseRoles((session.user as { role?: string }).role ?? '').includes('creator')
 
   if (intent === 'creator') {
     if (!isCreator) {

@@ -16,10 +16,29 @@ export class OnboardingService {
     private readonly offeringsRepo: OfferingsRepository,
   ) {}
 
+  /** Split a full name into first + (optional) last. */
+  private splitFullName(fullName: string): { first: string; last?: string } {
+    const [first, ...rest] = fullName.trim().split(/\s+/)
+    return { first: first ?? '', last: rest.join(' ') || undefined }
+  }
+
+  /**
+   * Load the creator profile and assert the user has reached `minStep`.
+   * Throws 400 if the profile is missing or earlier steps are incomplete.
+   */
+  private async loadCreatorAtStep(userId: string, minStep: number) {
+    const profile = await this.creatorRepo.findByUserId(userId)
+    if (!profile) throw new BadRequestException('Complete step 1 first')
+    if ((profile.currentStep ?? 1) < minStep) {
+      throw new BadRequestException('Complete previous steps first')
+    }
+    return profile
+  }
+
   async saveLearnerStep1(userId: string, dto: LearnerStep1Dto) {
     if (dto.fullName) {
-      const [firstName, ...rest] = dto.fullName.trim().split(' ')
-      await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
+      const { first, last } = this.splitFullName(dto.fullName)
+      await this.usersRepo.updateName(userId, first, last)
     }
 
     const existing = await this.learnerRepo.findByUserId(userId)
@@ -34,8 +53,8 @@ export class OnboardingService {
   }
 
   async saveCreatorStep1(userId: string, dto: CreatorStep1Dto) {
-    const [firstName, ...rest] = dto.fullName.trim().split(' ')
-    await this.usersRepo.updateName(userId, firstName!, rest.join(' ') || undefined)
+    const { first, last } = this.splitFullName(dto.fullName)
+    await this.usersRepo.updateName(userId, first, last)
 
     const existing = await this.creatorRepo.findByUserId(userId)
     if (!existing) await this.creatorRepo.create(userId)
@@ -53,11 +72,7 @@ export class OnboardingService {
   }
 
   async saveCreatorStep2(userId: string, dto: CreatorStep2Dto) {
-    const profile = await this.creatorRepo.findByUserId(userId)
-    if (!profile) throw new BadRequestException('Complete step 1 first')
-    if ((profile.currentStep ?? 1) < 2) {
-      throw new BadRequestException('Complete previous steps first')
-    }
+    await this.loadCreatorAtStep(userId, 2)
 
     // Strip empty strings from socialLinks before persisting
     const socialLinks: Record<string, string> = {}
@@ -78,11 +93,7 @@ export class OnboardingService {
   }
 
   async saveCreatorStep3(userId: string, dto: CreatorStep3Dto) {
-    const profile = await this.creatorRepo.findByUserId(userId)
-    if (!profile) throw new BadRequestException('Complete step 1 first')
-    if ((profile.currentStep ?? 1) < 3) {
-      throw new BadRequestException('Complete previous steps first')
-    }
+    await this.loadCreatorAtStep(userId, 3)
 
     await this.creatorRepo.updateStep3(userId, {
       bannerUrl: dto.bannerUrl,
@@ -93,11 +104,7 @@ export class OnboardingService {
   }
 
   async saveCreatorStep4(userId: string, dto: CreatorStep4Dto) {
-    const profile = await this.creatorRepo.findByUserId(userId)
-    if (!profile) throw new BadRequestException('Complete step 1 first')
-    if ((profile.currentStep ?? 1) < 4) {
-      throw new BadRequestException('Complete previous steps first')
-    }
+    const profile = await this.loadCreatorAtStep(userId, 4)
 
     // Idempotent: if already live, return existing state
     if (profile.isLive) {

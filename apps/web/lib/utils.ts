@@ -18,7 +18,8 @@ export function formatFollowers(n: number): string {
   return n.toString()
 }
 
-export function getInitials(name: string): string {
+export function getInitials(name: string | null | undefined): string {
+  if (!name) return '?'
   return (
     name
       .split(' ')

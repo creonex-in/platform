@@ -11,7 +11,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { BookOpen, Users, MonitorPlay, Download, Smartphone, CreditCard, Megaphone, ShieldCheck, Globe, Bot, Brain, MessageCircle } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBookOpen, faUsers, faVideo, faDownload, faMobileScreen, faCreditCard,
+  faBullhorn, faShieldHalved, faGlobe, faRobot, faBrain, faComment,
+} from "@fortawesome/free-solid-svg-icons";
+
 export default function CreatorNavbar() {
   return (
     <div className="fixed left-1/2 top-6 z-50 w-full max-w-[700px] -translate-x-1/2 px-4">
@@ -46,7 +51,7 @@ export default function CreatorNavbar() {
                       <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-3">Products You Can Sell</h4>
                       
                       <Link href="#courses" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><BookOpen size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faBookOpen} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">Courses</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Create and sell live or recorded courses.</p>
@@ -54,7 +59,7 @@ export default function CreatorNavbar() {
                       </Link>
                       
                       <Link href="#communities" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><Users size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faUsers} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">Communities</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Create and manage your free and paid communities.</p>
@@ -62,7 +67,7 @@ export default function CreatorNavbar() {
                       </Link>
 
                       <Link href="#webinars" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><MonitorPlay size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faVideo} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">Webinars</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Launch and host free or paid webinars.</p>
@@ -70,7 +75,7 @@ export default function CreatorNavbar() {
                       </Link>
 
                       <Link href="#digital-products" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><Download size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faDownload} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">Digital Products</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Host and sell documents, links, text, images, and more.</p>
@@ -83,7 +88,7 @@ export default function CreatorNavbar() {
                       <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-3">Feature Highlights</h4>
                       
                       <Link href="#app" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><Smartphone size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faMobileScreen} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">Branded Mobile App</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Your own fully branded iOS & Android apps.</p>
@@ -91,7 +96,7 @@ export default function CreatorNavbar() {
                       </Link>
 
                       <Link href="#payments" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><CreditCard size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faCreditCard} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">Integrated Payments</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Accept local and global payments with country specific pricing.</p>
@@ -99,7 +104,7 @@ export default function CreatorNavbar() {
                       </Link>
 
                       <Link href="#marketing" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><Megaphone size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faBullhorn} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">Marketing Tools</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Conversion-optimized pages, funnels, campaigns and more.</p>
@@ -107,7 +112,7 @@ export default function CreatorNavbar() {
                       </Link>
 
                       <Link href="#security" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><ShieldCheck size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faShieldHalved} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base text-foreground">DRM Security</h5>
                           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">DRM-protected content with enterprise-grade security.</p>
@@ -120,7 +125,7 @@ export default function CreatorNavbar() {
                       <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 px-3">AI Features</h4>
                       
                       <Link href="#ai-website" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><Globe size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faGlobe} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base flex items-center gap-3 text-foreground">
                             AI Website Builder
@@ -131,7 +136,7 @@ export default function CreatorNavbar() {
                       </Link>
 
                       <Link href="#ai-agents" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><Bot size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faRobot} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base flex items-center gap-3 text-foreground">
                             AI Agents
@@ -142,7 +147,7 @@ export default function CreatorNavbar() {
                       </Link>
                       
                       <Link href="#ai-brain" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><Brain size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faBrain} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base flex items-center gap-3 text-foreground">
                             AI Brain
@@ -153,7 +158,7 @@ export default function CreatorNavbar() {
                       </Link>
                       
                       <Link href="#coaching" className="flex gap-4 group cursor-pointer p-3 rounded-xl hover:bg-muted/60 transition-colors">
-                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><MessageCircle size={24} strokeWidth={1.5} /></div>
+                        <div className="mt-1 text-muted-foreground group-hover:text-foreground transition-colors"><FontAwesomeIcon icon={faComment} className="size-6" /></div>
                         <div>
                           <h5 className="font-semibold text-base flex items-center gap-3 text-foreground">
                             Coaching

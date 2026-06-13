@@ -15,21 +15,6 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
-export const CATEGORY_ICON: Record<Category, string> = {
-  "UI/UX Design": "🎨",
-  "Full Stack Dev": "💻",
-  "Govt. Exam Prep": "📚",
-  "Photography": "📷",
-  "Digital Marketing": "📣",
-  "Music Production": "🎵",
-  "Content Creation": "✍️",
-  "Finance & Investing": "📈",
-  "Fitness & Yoga": "🧘",
-  "Data Science": "🔬",
-  "Video Editing": "🎬",
-  "Graphic Design": "🖌️",
-};
-
 /** What kind of entity a search result represents */
 export type SearchResultType = "creator" | "course" | "category" | "learning-path";
 

@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/dashboard/shared/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { getCreatorContext } from '@/dal/users.dal'
+import { requireCreator } from '@/lib/auth-guards'
 import { getInitials } from '@/lib/utils'
 
 const STEP_PATHS: Record<number, string> = {
@@ -13,6 +14,10 @@ const STEP_PATHS: Record<number, string> = {
 }
 
 export default async function CreatorLayout({ children }: { children: React.ReactNode }): Promise<React.ReactElement> {
+  // Auth + creator-role gate (moved out of middleware). Non-creators are sent
+  // to /learner/dashboard, unauthenticated users to /sign-in.
+  await requireCreator()
+
   const { user, profile } = await getCreatorContext()
 
   // Single signal: isLive. Avoids loop if isLive/onboardingStatus are ever out of sync.

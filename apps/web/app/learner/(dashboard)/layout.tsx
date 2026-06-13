@@ -1,13 +1,12 @@
-import { redirect } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/dashboard/shared/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
-import { getMe } from '@/dal/users.dal'
+import { requireLearner } from '@/lib/auth-guards'
 import { getInitials } from '@/lib/utils'
 
 export default async function LearnerLayout({ children }: { children: React.ReactNode }): Promise<React.ReactElement> {
-  const user = await getMe()
-  if (!user) redirect('/sign-in')
+  // Auth + learner-role gate (moved out of middleware).
+  const user = await requireLearner()
 
   const displayName = user.name ?? 'Learner'
 

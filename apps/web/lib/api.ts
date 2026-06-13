@@ -25,6 +25,11 @@ export function isServerError(e: unknown): boolean {
   return isApiError(e) && e.status >= 500
 }
 
+/** API unreachable — connection refused / DNS / socket reset (not an HTTP response). */
+export function isNetworkError(e: unknown): boolean {
+  return isApiError(e) && e.status === 0
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -43,13 +48,34 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (isServer && cookieHeader) headers['Cookie'] = cookieHeader
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const init: RequestInit = {
     method,
     headers,
     credentials: isServer ? 'omit' : 'include',
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     ...(next ? { next } : { cache: 'no-store' }),
-  })
+  }
+
+  let res: Response
+  try {
+    res = await fetch(`${BASE_URL}${path}`, init)
+  } catch (e) {
+    // Connection failed (API down / DNS / socket reset) — a raw
+    // TypeError("fetch failed"), not an HTTP response. GETs are safe to retry
+    // once: this absorbs the ~1-2s window where `nest --watch` is restarting.
+    if (method === 'GET') {
+      await new Promise((r) => setTimeout(r, 600))
+      try {
+        res = await fetch(`${BASE_URL}${path}`, init)
+      } catch (retryErr) {
+        throw new ApiError(0, `Cannot reach API at ${BASE_URL}`, retryErr)
+      }
+    } else {
+      // Normalize into a typed ApiError so callers use isNetworkError/isApiError
+      // instead of catching a raw TypeError (which crashes the SSR render).
+      throw new ApiError(0, `Cannot reach API at ${BASE_URL}`, e)
+    }
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
