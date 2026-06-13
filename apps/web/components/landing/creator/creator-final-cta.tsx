@@ -1,5 +1,3 @@
-"use client";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "@/components/ui/button";
@@ -9,7 +7,7 @@ export default function CreatorFinalCta() {
     <section className="bg-background py-24 md:py-32 relative border-t border-border/40">
       
       {/* Very faint, elegant background glow - NOT a card, just ambient */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] h-[300px] bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-200 h-75 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
 
       <div className="page-container flex flex-col items-center text-center relative z-10">
         

@@ -300,7 +300,7 @@ export function BannerPickerDialog({ open, onOpenChange, current, onApply }: Pro
                           </span>
                         </span>
                       )}
-                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent px-2 py-1.5">
+                      <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/45 to-transparent px-2 py-1.5">
                         <span className="text-[10px] font-medium leading-none text-white">{preset.label}</span>
                       </span>
                     </button>

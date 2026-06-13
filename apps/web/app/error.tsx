@@ -19,7 +19,7 @@ export default function ErrorPage({
   }, [error])
 
   return (
-    <div className="flex min-h-[100dvh] flex-col items-center justify-center relative overflow-hidden bg-background">
+    <div className="flex min-h-dvh flex-col items-center justify-center relative overflow-hidden bg-background">
       {/* Background decorations matching the premium UI aesthetic */}
       <div className="absolute inset-0 z-0 flex items-center justify-center opacity-30 blur-[100px] pointer-events-none">
         <div className="h-72 w-72 rounded-full bg-destructive/30" />
@@ -27,7 +27,7 @@ export default function ErrorPage({
       </div>
 
       <div className="z-10 flex w-full max-w-lg flex-col items-center px-6 text-center animate-in fade-in zoom-in-95 duration-700 slide-in-from-bottom-8">
-        <div className="relative mb-8 flex h-32 w-32 items-center justify-center rounded-3xl bg-gradient-to-b from-destructive/20 to-destructive/5 shadow-2xl shadow-destructive/10 border border-destructive/20">
+        <div className="relative mb-8 flex h-32 w-32 items-center justify-center rounded-3xl bg-linear-to-b from-destructive/20 to-destructive/5 shadow-2xl shadow-destructive/10 border border-destructive/20">
           <FontAwesomeIcon icon={faTriangleExclamation} className="size-16 text-destructive drop-shadow-md" />
         </div>
         
@@ -47,7 +47,7 @@ export default function ErrorPage({
           <Button 
             onClick={() => reset()} 
             size="lg" 
-            className="w-full sm:w-auto min-w-[140px] rounded-full shadow-lg shadow-destructive/20"
+            className="w-full sm:w-auto min-w-35 rounded-full shadow-lg shadow-destructive/20"
           >
             <FontAwesomeIcon icon={faRotateRight} className="mr-2 size-4" />
             Try again
@@ -57,7 +57,7 @@ export default function ErrorPage({
             className={buttonVariants({
               variant: "outline",
               size: "lg",
-              className: "w-full sm:w-auto min-w-[140px] rounded-full border-border/60 bg-background/50 backdrop-blur-md"
+              className: "w-full sm:w-auto min-w-35 rounded-full border-border/60 bg-background/50 backdrop-blur-md"
             })}
           >
             <FontAwesomeIcon icon={faHouse} className="mr-2 size-4" />

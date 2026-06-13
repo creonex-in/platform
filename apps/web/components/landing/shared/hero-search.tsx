@@ -178,14 +178,14 @@ export default function HeroSearch({
             {open && (
               <div
                 className={cn(
-                  "absolute left-[-1px] right-[-1px] top-full z-50",
+                  "absolute -left-px -right-px top-full z-50",
                   "rounded-b-2xl border border-t-0 bg-card py-2 shadow-lg",
                   isActive ? "border-primary" : "border-border",
                 )}
               >
                 <div className="mx-5 h-px bg-border/40" />
 
-                <CommandList className="max-h-[280px] py-2">
+                <CommandList className="max-h-70 py-2">
 
                   {isLoading ? (
                     <div className="py-6 text-center text-sm text-muted-foreground">
@@ -247,7 +247,7 @@ export default function HeroSearch({
                       {/* Popular / filtered */}
                       <CommandGroup
                         heading={!trimmed ? "Popular" : undefined}
-                        className={cn(!trimmed && "[&_[cmdk-group-heading]]:px-5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground/40")}
+                        className={cn(!trimmed && "**:[[cmdk-group-heading]]:px-5 **:[[cmdk-group-heading]]:text-[10px] **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-widest **:[[cmdk-group-heading]]:text-muted-foreground/40")}
                       >
                         {suggestions.map((s) => (
                           <CommandItem

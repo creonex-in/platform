@@ -19,8 +19,8 @@ import {
 
 export default function CreatorNavbar() {
   return (
-    <div className="fixed left-1/2 top-6 z-50 w-full max-w-[700px] -translate-x-1/2 px-4">
-      <nav className="mx-auto flex h-14 items-center justify-between rounded-[2rem] border border-border/50 bg-background/60 px-5 shadow-sm backdrop-blur-xl">
+    <div className="fixed left-1/2 top-6 z-50 w-full max-w-175 -translate-x-1/2 px-4">
+      <nav className="mx-auto flex h-14 items-center justify-between rounded-4xl border border-border/50 bg-background/60 px-5 shadow-sm backdrop-blur-xl">
         
         {/* Left: Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
@@ -42,9 +42,9 @@ export default function CreatorNavbar() {
           <NavigationMenu align="center">
             <NavigationMenuList className="gap-2">
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent font-medium text-muted-foreground hover:text-foreground hover:bg-transparent data-[state=open]:bg-transparent data-[active]:bg-transparent">Features</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="bg-transparent font-medium text-muted-foreground hover:text-foreground hover:bg-transparent data-[state=open]:bg-transparent data-active:bg-transparent">Features</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10 p-6 lg:p-8 w-[calc(100vw-2rem)] md:w-[700px] lg:w-[900px]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10 p-6 lg:p-8 w-[calc(100vw-2rem)] md:w-175 lg:w-225">
                     
                     {/* Column 1: Products */}
                     <div className="flex flex-col gap-2">

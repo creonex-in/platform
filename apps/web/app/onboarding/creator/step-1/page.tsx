@@ -214,7 +214,7 @@ export default function CreatorStep1Page() {
   }
 
   return (
-    <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/[0.04] overflow-hidden">
+    <div className="flex flex-col w-full rounded-3xl border border-border/60 bg-card shadow-xl shadow-black/4 overflow-hidden">
       {/* Progress bar */}
       <div className="w-full h-1 bg-muted">
         <div className="h-full bg-primary transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
