@@ -193,4 +193,20 @@ export class CalendarAuthService {
 
     return { meetUrl, calendarEventId: event.id! }
   }
+
+  async deleteCalendarEvent(creatorProfileId: string, calendarEventId: string): Promise<void> {
+    const conn = await this.calendarRepo.findByCreatorAndProvider(creatorProfileId, 'google')
+    if (!conn) return
+
+    const accessToken = await this.getValidAccessToken(creatorProfileId)
+    const client = this.buildClient()
+    client.setCredentials({ access_token: accessToken })
+
+    const calendar = google.calendar({ version: 'v3', auth: client })
+    await calendar.events.delete({
+      calendarId: conn.calendarId,
+      eventId: calendarEventId,
+      sendUpdates: 'all', // notify attendees of cancellation
+    }).catch(() => {/* already deleted or not found — ignore */})
+  }
 }
