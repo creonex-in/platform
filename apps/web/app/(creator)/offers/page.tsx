@@ -28,7 +28,7 @@ export default async function OffersPage(): Promise<React.ReactElement> {
           </Link>
         }
       />
-      <div className="p-6">
+      <div className="space-y-5 p-4 sm:p-6">
         <OffersList offerings={offerings} username={username} />
       </div>
     </>

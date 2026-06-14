@@ -1,5 +1,5 @@
 import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
-import { MetricCard } from '@/components/dashboard/creator/metric-card'
+import { StatPanel } from '@/components/dashboard/creator/stat-panel'
 import { EarningsChart } from '@/components/dashboard/creator/earnings-chart'
 import { InsightBox } from '@/components/dashboard/creator/insight-box'
 import { BookingRow } from '@/components/dashboard/creator/booking-row'
@@ -69,34 +69,32 @@ export default async function CreatorDashboardPage(): Promise<React.ReactElement
           }
         />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MetricCard
-            label="Earnings (this month)"
-            value={formatCurrency(creatorMetrics.earningsThisMonth)}
-            change={creatorMetrics.earningsGrowth}
-            changeLabel="vs last month"
-            index={0}
-          />
-          <MetricCard
-            label="Total bookings"
-            value={creatorMetrics.totalBookings.toString()}
-            changeLabel={`${creatorMetrics.bookingsThisWeek} this week`}
-            index={1}
-          />
-          <MetricCard
-            label="Profile views"
-            value={creatorMetrics.profileViews.toLocaleString()}
-            changeLabel={`${creatorMetrics.conversionRate}% conversion`}
-            index={2}
-          />
-          <MetricCard
-            label="CQS score"
-            value={creatorMetrics.cqsScore.toString()}
-            change={creatorMetrics.cqsChange}
-            changeLabel="this month"
-            index={3}
-          />
-        </div>
+        <StatPanel
+          stats={[
+            {
+              label: 'Earnings (this month)',
+              value: formatCurrency(creatorMetrics.earningsThisMonth),
+              change: creatorMetrics.earningsGrowth,
+              changeLabel: 'vs last month',
+            },
+            {
+              label: 'Total bookings',
+              value: creatorMetrics.totalBookings.toString(),
+              changeLabel: `${creatorMetrics.bookingsThisWeek} this week`,
+            },
+            {
+              label: 'Profile views',
+              value: creatorMetrics.profileViews.toLocaleString(),
+              changeLabel: `${creatorMetrics.conversionRate}% conversion`,
+            },
+            {
+              label: 'CQS score',
+              value: creatorMetrics.cqsScore.toString(),
+              change: creatorMetrics.cqsChange,
+              changeLabel: 'this month',
+            },
+          ]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <Card className="lg:col-span-3">
