@@ -19,11 +19,15 @@ export function OfferingsSection({
   if (activeTabs.length === 0) return null
 
   return (
-    <div id="offerings" className="w-full bg-muted/5 py-12 border-b border-border/50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-6">
-          Offerings · {offerings.length} available
-        </h2>
+    <div id="offerings" className="w-full">
+      <div className="mb-4">
+        <h3 className="text-[15px] font-bold text-foreground font-display">
+          Available Services ({offerings.length})
+        </h3>
+        <p className="text-[12.5px] text-muted-foreground font-medium mt-0.5">
+          Select a session or product below to proceed.
+        </p>
+      </div>
 
         <Tabs defaultValue={defaultTab}>
           {activeTabs.length > 1 && (
@@ -72,7 +76,6 @@ export function OfferingsSection({
             ))}
           </div>
         </Tabs>
-      </div>
     </div>
   )
 }

@@ -10,9 +10,10 @@ import { cn } from '@/lib/utils'
 interface ShareDialogProps {
   username: string
   displayName: string
+  variant?: 'icon' | 'banner'
 }
 
-export function ShareDialog({ username, displayName }: ShareDialogProps): React.ReactElement {
+export function ShareDialog({ username, displayName, variant = 'icon' }: ShareDialogProps): React.ReactElement {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -59,13 +60,24 @@ export function ShareDialog({ username, displayName }: ShareDialogProps): React.
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer shadow-sm"
-        aria-label="Share profile"
-      >
-        <FontAwesomeIcon icon={faShareNodes} className="size-3.5" />
-      </button>
+      {variant === 'banner' ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 hover:bg-black/55 backdrop-blur-md border border-white/20 text-white text-[12.5px] font-bold transition-all hover:scale-[1.02] active:scale-98 cursor-pointer shadow-md select-none"
+          aria-label="Share profile"
+        >
+          <FontAwesomeIcon icon={faShareNodes} className="size-3.5" />
+          <span>Share Profile</span>
+        </button>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer shadow-sm"
+          aria-label="Share profile"
+        >
+          <FontAwesomeIcon icon={faShareNodes} className="size-3.5" />
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm bg-card text-foreground border border-border">

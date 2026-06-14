@@ -82,7 +82,7 @@ export default function FeaturedCreators(): React.ReactElement {
             />
             {/* Dark gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
-            
+
             <div className="relative z-10 p-6 sm:p-8">
               <h3 className="text-xl font-bold tracking-tight text-white sm:text-2xl">{creator.name}</h3>
               <p className="mt-1.5 text-sm font-medium text-white/80 sm:text-base">{creator.role}</p>

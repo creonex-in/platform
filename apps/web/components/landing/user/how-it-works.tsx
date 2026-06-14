@@ -87,12 +87,12 @@ function CardImage({ src, alt }: { src: string; alt: string }): React.ReactEleme
   const [errored, setErrored] = useState(false);
 
   return (
-    <div className="relative mx-5 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
-      <div className="flex items-center gap-1.5 border-b border-white/[0.07] px-3 py-2">
-        <div className="h-1.5 w-1.5 rounded-full bg-white/20" />
-        <div className="h-1.5 w-1.5 rounded-full bg-white/10" />
-        <div className="h-1.5 w-1.5 rounded-full bg-white/10" />
-        <div className="mx-2 h-1 flex-1 rounded-full bg-white/[0.07]" />
+    <div className="relative mx-5 overflow-hidden rounded-xl border border-border bg-muted">
+      <div className="flex items-center gap-1.5 border-b border-border px-3 py-2">
+        <div className="h-1.5 w-1.5 rounded-full bg-foreground/30" />
+        <div className="h-1.5 w-1.5 rounded-full bg-foreground/15" />
+        <div className="h-1.5 w-1.5 rounded-full bg-foreground/15" />
+        <div className="mx-2 h-1 flex-1 rounded-full bg-foreground/10" />
       </div>
       <div className="relative aspect-video w-full">
         {!errored ? (
@@ -107,20 +107,20 @@ function CardImage({ src, alt }: { src: string; alt: string }): React.ReactEleme
         ) : (
           <div className="absolute inset-0 flex flex-col gap-3 p-4">
             <div className="flex items-start gap-3">
-              <div className="h-8 w-8 shrink-0 rounded-lg bg-white/10 ring-1 ring-white/10" />
+              <div className="h-8 w-8 shrink-0 rounded-lg bg-foreground/10 ring-1 ring-border" />
               <div className="flex-1 space-y-2 pt-1">
-                <div className="h-1.5 w-3/4 rounded-full bg-white/10" />
-                <div className="h-1.5 w-1/2 rounded-full bg-white/6" />
+                <div className="h-1.5 w-3/4 rounded-full bg-foreground/10" />
+                <div className="h-1.5 w-1/2 rounded-full bg-foreground/5" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-2 h-12 rounded-lg border border-white/[0.06] bg-white/[0.03]" />
-              <div className="h-12 rounded-lg border border-white/[0.06] bg-white/[0.03]" />
+              <div className="col-span-2 h-12 rounded-lg border border-border bg-background" />
+              <div className="h-12 rounded-lg border border-border bg-background" />
             </div>
           </div>
         )}
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
     </div>
   );
 }
@@ -233,15 +233,15 @@ export default function HowItWorks(): React.ReactElement {
               <div
                 key={step.id}
                 ref={(el) => { cardRefs.current[index] = el; }}
-                className="dark flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl lg:invisible lg:col-start-1 lg:row-start-1 lg:max-h-[88vh] lg:w-[780px] lg:max-w-none"
+                className="flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl lg:invisible lg:col-start-1 lg:row-start-1 lg:max-h-[88vh] lg:w-[780px] lg:max-w-none"
               >
                 {/* Top bar */}
                 <div className="flex items-center justify-between px-5 pb-3 pt-5">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10">
-                      <FontAwesomeIcon icon={step.icon} className="h-2.5 w-2.5 text-white" />
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
+                      <FontAwesomeIcon icon={step.icon} className="h-2.5 w-2.5 text-primary" />
                     </div>
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-white/60">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                       {step.tag}
                     </span>
                   </div>

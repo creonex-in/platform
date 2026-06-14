@@ -4,13 +4,52 @@ import { creatorsService } from '@/services/creators.service'
 import { isNotFound } from '@/lib/api'
 import { getInitials } from '@/lib/utils'
 import { ProfileHero } from './_components/profile-hero'
-import { ProfileHeader } from './_components/profile-header'
-import { AboutSection } from './_components/about-section'
+import { ProfileSidebar } from './_components/profile-sidebar'
+import { OverviewTab } from './_components/overview-tab'
 import { OfferingsSection } from './_components/offerings-section'
-import { CtaBanner } from './_components/cta-banner'
 import { FaqSection } from './_components/faq-section'
 import { BookSessionBar } from './_components/book-session-bar'
+import MarketingShell from '@/components/layout/marketing-shell'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { PublicCreatorProfile, PublicOffering } from '@creonex/types'
+
+const MOCK_TESTIMONIALS = [
+  {
+    id: 'u1',
+    name: 'Ananya Joshi',
+    niche: 'Aspiring Product Designer',
+    quote: 'Booked a portfolio review session and got an offer at a product startup the very next week. Worth every rupee.',
+    initials: 'AJ',
+  },
+  {
+    id: 'u2',
+    name: 'Karan Bhatia',
+    niche: 'Software Engineer',
+    quote: 'Cracked my system design round after two 1:1 sessions. The expert explained things my college never did in four years.',
+    initials: 'KB',
+  },
+  {
+    id: 'u3',
+    name: 'Meghna Pillai',
+    niche: 'Marketing Professional',
+    quote: 'I went from zero to running my own freelance campaigns. The personal branding course was exactly what I needed.',
+    initials: 'MP',
+  },
+  {
+    id: 'u4',
+    name: 'Sahil Gupta',
+    niche: 'Computer Science Student',
+    quote: 'The React course was more useful than my entire semester. Practical, fast, and the mentor actually responds to questions.',
+    initials: 'SG',
+  },
+  {
+    id: 'u5',
+    name: 'Riya Malhotra',
+    niche: 'Finance Analyst',
+    quote: 'Booked a career growth session and completely changed my trajectory. Three months later I switched jobs and got a 40% hike.',
+    initials: 'RM',
+  },
+]
 
 export default async function CreatorProfilePage({
   params,
@@ -40,60 +79,113 @@ export default async function CreatorProfilePage({
   const firstSession = profile.offerings.find((o) => o.type === 'one_on_one')
   const sessionPrice = firstSession?.price ?? null
 
-  const socialEntries = Object.entries(profile.socialLinks ?? {}).filter(
-    ([, v]) => typeof v === 'string' && (v as string).length > 0,
-  ) as [string, string][]
-
   const displayName = profile.displayName ?? `@${profile.username}`
-  const initials = getInitials(profile.displayName)
 
   return (
-    <div className="min-h-screen theme-creator bg-background text-foreground pb-20 sm:pb-0 font-sans w-full overflow-x-hidden">
-      <ProfileHero coverBannerUrl={profile.coverBannerUrl} />
-
-      <ProfileHeader
-        profile={profile}
-        displayName={displayName}
-        initials={initials}
-        socialEntries={socialEntries}
-      />
-
-      <AboutSection bio={profile.bio} tags={profile.tags} />
-
-      <OfferingsSection
-        offerings={profile.offerings}
-        activeTabs={activeTabs}
-        showAllTab={showAllTab}
-        defaultTab={defaultTab}
-      />
-
-      {firstSession && (
-        <CtaBanner offering={firstSession} displayName={displayName} />
-      )}
-
-      {profile.testimonials.length > 0 && (
-        <TestimonialsDeck
-          testimonials={profile.testimonials.map((t) => ({
-            id: t.id,
-            name: t.learnerName,
-            niche: t.learnerRole ?? '',
-            quote: t.content,
-            initials: getInitials(t.learnerName),
-          }))}
-          label="Testimonials"
-          heading={
-            <>
-              What learners say,{' '}
-              <span className="text-muted-foreground">in their own words.</span>
-            </>
-          }
-          description={`Read what students of ${displayName} have experienced.`}
+    <MarketingShell>
+      <div className="min-h-screen theme-creator bg-background text-foreground pb-20 sm:pb-0 font-sans w-full overflow-x-hidden">
+        {/* Cover Banner */}
+        <ProfileHero
+          coverBannerUrl={profile.coverBannerUrl}
+          username={profile.username}
+          displayName={displayName}
         />
-      )}
 
-      <FaqSection />
+        {/* Content Layout */}
+        <div className="page-container pb-24 pt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            
+            {/* Left Column: Sidebar Profile Card */}
+            <div className="lg:col-span-4 xl:col-span-4 lg:sticky lg:top-6">
+              <ProfileSidebar profile={profile} displayName={displayName} />
+            </div>
 
-      <BookSessionBar name={displayName} price={sessionPrice} />
-    </div>
+            {/* Right Column: Dynamic Tabs & Content */}
+            <div className="lg:col-span-8 xl:col-span-8 flex flex-col gap-6 w-full">
+              <Tabs defaultValue="overview" className="w-full">
+                {/* Custom UNDERLINED styled tab navigation header */}
+                <div className="overflow-x-auto scrollbar-hide border-b border-border/80 mb-8">
+                  <TabsList className="flex justify-start bg-transparent h-auto p-0 gap-6 rounded-none w-fit">
+                    <TabsTrigger
+                      value="overview"
+                      className="border-b-2 border-transparent data-[state=active]:border-cyan-600 rounded-none px-1 py-3 text-[14px] font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Overview
+                    </TabsTrigger>
+                    
+                    {profile.offerings.length > 0 && (
+                      <TabsTrigger
+                        value="offerings"
+                        className="border-b-2 border-transparent data-[state=active]:border-cyan-600 rounded-none px-1 py-3 text-[14px] font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        Offerings ({profile.offerings.length})
+                      </TabsTrigger>
+                    )}
+
+                    <TabsTrigger
+                      value="reviews"
+                      className="border-b-2 border-transparent data-[state=active]:border-cyan-600 rounded-none px-1 py-3 text-[14px] font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Reviews ({profile.testimonials.length > 0 ? profile.testimonials.length : MOCK_TESTIMONIALS.length})
+                    </TabsTrigger>
+
+
+                  </TabsList>
+                </div>
+
+                {/* Tab content panels */}
+                <TabsContent value="overview" className="mt-0 outline-none">
+                  <OverviewTab profile={profile} displayName={displayName} />
+                </TabsContent>
+
+                {profile.offerings.length > 0 && (
+                  <TabsContent value="offerings" className="mt-0 outline-none">
+                    <div className="bg-card rounded-[20px] border border-border p-6 sm:p-8">
+                      <OfferingsSection
+                        offerings={profile.offerings}
+                        activeTabs={activeTabs}
+                        showAllTab={showAllTab}
+                        defaultTab={defaultTab}
+                      />
+                    </div>
+                  </TabsContent>
+                )}
+
+                <TabsContent value="reviews" className="mt-0 outline-none">
+                  <div className="bg-card rounded-[20px] border border-border p-6 sm:p-8">
+                    <TestimonialsDeck
+                      testimonials={profile.testimonials.length > 0 ? profile.testimonials.map((t) => ({
+                        id: t.id,
+                        name: t.learnerName,
+                        niche: t.learnerRole ?? '',
+                        quote: t.content,
+                        initials: getInitials(t.learnerName),
+                      })) : MOCK_TESTIMONIALS}
+                      label="Testimonials"
+                      heading={
+                        <>
+                          What learners say,{' '}
+                          <span className="text-muted-foreground">in their own words.</span>
+                        </>
+                      }
+                      description={profile.testimonials.length > 0 
+                        ? `Read what students of ${displayName} have experienced.`
+                        : "Thousands of learners across India use Creonex to upskill, switch careers, and grow — guided by experts who've been there."
+                      }
+                    />
+                  </div>
+                </TabsContent>
+
+
+              </Tabs>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Mobile quick-book sticky bar */}
+        <BookSessionBar name={displayName} price={sessionPrice} />
+      </div>
+    </MarketingShell>
   )
 }

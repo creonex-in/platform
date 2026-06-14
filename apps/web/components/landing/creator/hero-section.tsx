@@ -102,7 +102,7 @@ export default function HeroSection(): React.ReactElement {
 
           {/* Highlighted Beam Path perfectly anchored behind the text */}
           <div
-            className="absolute top-[45%] left-[45%] -translate-x-1/2 -translate-y-1/2 w-[200vw] h-[220px] border-y border-primary/20 dark:border-primary/10 bg-primary/[0.01] backdrop-blur-[2px] shadow-[0_0_80px_rgba(0,100,255,0.06)] dark:shadow-[0_0_150px_rgba(0,100,255,0.25)] rotate-[40deg] pointer-events-none -z-10 flex items-center overflow-hidden"
+            className="absolute top-[45%] left-[45%] -translate-x-1/2 -translate-y-1/2 w-[200vw] h-[220px] border-y border-primary/20 dark:border-primary/10 bg-primary/[0.02] shadow-[0_0_80px_rgba(0,100,255,0.06)] dark:shadow-[0_0_150px_rgba(0,100,255,0.25)] rotate-[40deg] pointer-events-none -z-10 flex items-center overflow-hidden"
             style={{
               maskImage: "linear-gradient(to right, transparent 5%, black 25%, black 75%, transparent 95%)",
               WebkitMaskImage: "linear-gradient(to right, transparent 5%, black 25%, black 75%, transparent 95%)"
@@ -141,7 +141,7 @@ export default function HeroSection(): React.ReactElement {
         </div>
         {/* Product demo video inside Mockup Frame */}
         <div className="relative mt-10 w-full z-20">
-          <div className="rounded-[2rem] border border-border/50 bg-card/80 backdrop-blur-xl p-2.5 shadow-2xl md:p-5 lg:rounded-[3rem]">
+          <div className="rounded-[2rem] border border-border/50 bg-card p-2.5 shadow-2xl md:p-5 lg:rounded-[3rem]">
             <div className="relative w-full aspect-video overflow-hidden rounded-2xl bg-background lg:rounded-[2rem] shadow-inner border border-border/30">
               <VideoPlayer
                 src="/videos/demo.mp4"

@@ -24,7 +24,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { motion } from "motion/react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -214,7 +213,7 @@ export default function LearningShowcase(): React.ReactElement {
     <section ref={sectionRef} className="section-py bg-background">
       <div className="page-container">
 
-        <div className="ls-header mx-auto mb-16 max-w-2xl text-center md:mb-24">
+        <div className="ls-header mx-auto mb-10 max-w-2xl text-center md:mb-14">
           <p className="text-label text-primary mb-4">Multiple Ways to Learn</p>
           <h2 className="text-h1 text-balance text-foreground">
             Learn Your Way on Creonex
@@ -226,15 +225,12 @@ export default function LearningShowcase(): React.ReactElement {
           </p>
         </div>
 
-        {/* 2-Column Responsive Layout - Vertically Centered, No Sticky scrolling */}
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16 items-center">
-          
-          {/* Left Column: Image showcase on desktop, vertically centered, layout animated */}
-          <motion.div 
-            layout
-            transition={{ type: "spring", stiffness: 260, damping: 26 }}
-            className="hidden lg:block lg:col-span-5"
-          >
+        {/* 2-Column Responsive Layout - Image column top-aligned & static so it
+            stays fixed while the accordion expands/collapses (no shifting, no scroll). */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10 items-start">
+
+          {/* Left Column: static image showcase on desktop */}
+          <div className="hidden lg:block lg:col-span-5">
             <div className="relative aspect-square w-full">
               {FEATURES.map((feature) => {
                 const isActive = feature.id === activeId;
@@ -242,10 +238,10 @@ export default function LearningShowcase(): React.ReactElement {
                   <div
                     key={feature.id}
                     className={cn(
-                      "absolute inset-0 transition-all duration-500 ease-out",
+                      "absolute inset-0 transition-opacity duration-500 ease-out",
                       isActive
-                        ? "opacity-100 scale-100 translate-y-0 pointer-events-auto z-10"
-                        : "opacity-0 scale-95 translate-y-2 pointer-events-none z-0"
+                        ? "opacity-100 pointer-events-auto z-10"
+                        : "opacity-0 pointer-events-none z-0"
                     )}
                   >
                     <ShowcaseImage src={feature.imageSrc} alt={feature.imageAlt} />
@@ -253,7 +249,7 @@ export default function LearningShowcase(): React.ReactElement {
                 );
               })}
             </div>
-          </motion.div>
+          </div>
 
           {/* Right Column: Accordion (Col span 7 to allocate more space for the text) */}
           <div className="lg:col-span-7 w-full">
@@ -265,7 +261,7 @@ export default function LearningShowcase(): React.ReactElement {
                   setLastActiveId(val[0]);
                 }
               }}
-              className="space-y-4"
+              className="space-y-2"
             >
               {FEATURES.map((feature) => {
                 const isActive = feature.id === activeId;
@@ -274,13 +270,13 @@ export default function LearningShowcase(): React.ReactElement {
                     key={feature.id}
                     value={feature.id}
                     className={cn(
-                      "rounded-2xl border border-border/60 bg-card/40 px-5 transition-all duration-300",
+                      "rounded-xl border border-border/60 bg-card/40 px-4 transition-all duration-300",
                       isActive
                         ? "border-border bg-muted/20 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
                         : "hover:border-border hover:bg-muted/10"
                     )}
                   >
-                    <AccordionTrigger className="w-full py-5 text-left text-foreground hover:no-underline transition-all duration-300">
+                    <AccordionTrigger className="w-full py-3.5 text-left text-foreground hover:no-underline transition-all duration-300">
                       <div className="flex items-start gap-4 pr-4">
                         <div
                           className={cn(
@@ -301,8 +297,8 @@ export default function LearningShowcase(): React.ReactElement {
                       </div>
                     </AccordionTrigger>
 
-                    <AccordionContent className="pt-1 pb-6 pl-14 text-muted-foreground">
-                      <div className="flex flex-col gap-5">
+                    <AccordionContent className="pt-1 pb-5 pl-14 text-muted-foreground">
+                      <div className="flex flex-col gap-4">
                         {/* Mobile-only Image */}
                         <div className="lg:hidden w-full">
                           <ShowcaseImage src={feature.imageSrc} alt={feature.imageAlt} />

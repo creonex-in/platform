@@ -368,7 +368,7 @@ export default function CinematicGallery(): React.ReactElement {
   );
 
   return (
-    <section className="dark section-py relative overflow-hidden bg-background">
+    <section className="section-py relative overflow-hidden bg-[#eaf2ff]">
 
       <div className="page-container mb-12 text-center">
         <p className="text-label text-primary mb-3">Top Creators</p>
@@ -392,8 +392,8 @@ export default function CinematicGallery(): React.ReactElement {
           {cardElements}
         </div>
 
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 sm:w-40 md:w-52 bg-gradient-to-r from-background to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 sm:w-40 md:w-52 bg-gradient-to-l from-background to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-16 md:w-20 bg-gradient-to-r from-[#eaf2ff] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 sm:w-16 md:w-20 bg-gradient-to-l from-[#eaf2ff] to-transparent" />
       </div>
 
       {/* Center Creator Profile Link Button (outside the card, matching current centered card) */}
