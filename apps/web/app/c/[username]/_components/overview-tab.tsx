@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendar, faUsers, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { PublicCreatorProfile } from '@creonex/types'
-import { getInitials } from './types'
+import { getInitials } from '@/lib/utils'
 
 interface OverviewTabProps {
   profile: PublicCreatorProfile
@@ -58,7 +58,7 @@ export function OverviewTab({ profile, displayName }: OverviewTabProps) {
 
   // Render mock community if profile testimonials are empty, otherwise use testimonials
   const communityMembers = profile.testimonials.length > 0 
-    ? profile.testimonials.map((t, idx) => ({
+    ? profile.testimonials.map((t) => ({
         name: t.learnerName,
         role: t.learnerRole || 'Learner',
         initials: getInitials(t.learnerName),

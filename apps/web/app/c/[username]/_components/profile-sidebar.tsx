@@ -17,7 +17,7 @@ import {
   faYoutube,
   faInstagram
 } from '@fortawesome/free-brands-svg-icons'
-import { getInitials } from './types'
+import { getInitials } from '@/lib/utils'
 import type { PublicCreatorProfile } from '@creonex/types'
 
 interface ProfileSidebarProps {
