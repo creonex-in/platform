@@ -292,14 +292,14 @@ export default function CreatorStep1Page() {
         {screen === 0 && (
           <div className="space-y-8">
             <div className="space-y-3">
-              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-2 ring-1 ring-primary/20">
+              <div className="inline-flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-1 ring-1 ring-primary/20">
                 <FontAwesomeIcon icon={faWandMagicSparkles} className="size-7" />
               </div>
               <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Claim your profile</h1>
               <p className="text-base text-muted-foreground leading-relaxed">Your name and the link learners will visit to book you.</p>
             </div>
 
-            <div className="space-y-6 rounded-3xl border border-border/50 bg-card/30 p-6 sm:p-8 shadow-sm">
+            <div className="space-y-6 rounded-2xl border border-border/50 bg-card/30 p-5 sm:p-6 shadow-sm">
               {/* Display name */}
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-semibold">Display name</Label>
@@ -308,7 +308,7 @@ export default function CreatorStep1Page() {
                   {...register('fullName')}
                   placeholder="e.g. Srikar Chebrolu"
                   autoFocus
-                  className="h-12 text-base rounded-xl bg-background shadow-sm"
+                  className="h-10 text-sm rounded-lg bg-background shadow-sm"
                   onKeyDown={(e) => e.key === 'Enter' && void handleContinue()}
                 />
                 {errors.fullName && <p className="text-[13px] font-medium text-destructive">{errors.fullName.message}</p>}
@@ -319,13 +319,13 @@ export default function CreatorStep1Page() {
                 <Label htmlFor="username" className="text-sm font-semibold">Your handle</Label>
                 <InputGroup
                   className={cn(
-                    'h-12 rounded-xl bg-background shadow-sm transition-all',
+                    'h-10 rounded-lg bg-background shadow-sm transition-all',
                     usernameTaken && 'border-destructive ring-1 ring-destructive/20',
                     usernameAvailable && 'border-green-500/50 ring-1 ring-green-500/20',
                   )}
                 >
                   <InputGroupAddon>
-                    <InputGroupText className="select-none pr-0 text-base text-muted-foreground font-medium">
+                    <InputGroupText className="select-none pr-0 text-sm text-muted-foreground font-medium">
                       creonex.in/c/
                     </InputGroupText>
                   </InputGroupAddon>
@@ -337,7 +337,7 @@ export default function CreatorStep1Page() {
                       },
                     })}
                     placeholder="your-handle"
-                    className="text-base font-semibold"
+                    className="text-sm font-semibold"
                     autoComplete="off"
                     autoCapitalize="none"
                     spellCheck={false}
@@ -387,7 +387,7 @@ export default function CreatorStep1Page() {
                   value={nicheQuery}
                   onChange={(e) => setNicheQuery(e.target.value)}
                   placeholder="Search your niche…"
-                  className="h-12 pl-11 text-base rounded-xl bg-card shadow-sm"
+                  className="h-10 pl-10 text-sm rounded-lg bg-card shadow-sm"
                 />
               </div>
             )}
@@ -411,8 +411,8 @@ export default function CreatorStep1Page() {
                     className={cn(
                       'group relative text-left transition-all duration-200 active:scale-[0.98] disabled:opacity-60 overflow-hidden outline-none',
                       isNicheScreen
-                        ? 'flex items-center gap-3 rounded-2xl border p-3 hover:shadow-md hover:-translate-y-0.5'
-                        : 'flex items-start sm:items-center gap-4 rounded-2xl border p-4 hover:shadow-md hover:-translate-y-0.5',
+                        ? 'flex items-center gap-3 rounded-xl border p-2 hover:shadow-sm hover:border-foreground/30'
+                        : 'flex items-start sm:items-center gap-3 rounded-xl border p-3 hover:shadow-sm hover:border-foreground/30',
                       selected
                         ? 'border-foreground bg-foreground/5 ring-1 ring-foreground'
                         : 'border-border/60 bg-card hover:border-foreground/30 focus-visible:ring-2 focus-visible:ring-foreground',
@@ -424,8 +424,8 @@ export default function CreatorStep1Page() {
                       </span>
                     )}
                     <div className={cn(
-                      "flex shrink-0 items-center justify-center rounded-xl transition-colors relative z-10",
-                      isNicheScreen ? "size-10" : "size-12",
+                      "flex shrink-0 items-center justify-center rounded-lg transition-colors relative z-10",
+                      isNicheScreen ? "size-8" : "size-10",
                       selected ? "bg-foreground text-background" : "bg-muted group-hover:bg-muted-foreground/10"
                     )}>
                       <FontAwesomeIcon
@@ -471,7 +471,7 @@ export default function CreatorStep1Page() {
           Back
         </Button>
 
-        <Button type="button" size="lg" onClick={() => void handleContinue()} disabled={isPending} className="font-semibold shadow-sm">
+        <Button type="button" onClick={() => void handleContinue()} disabled={isPending} className="font-semibold shadow-sm">
           {isPending ? (
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
           ) : (

@@ -125,7 +125,7 @@ export function SignInForm(): React.ReactElement {
         onClick={handleGoogleSignIn}
         disabled={isLoading}
         variant="outline"
-        className="h-12 w-full gap-3 rounded-xl border-border bg-background/50 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5 hover:text-foreground shadow-sm"
+        className="h-10 w-full gap-3 rounded-lg border-border bg-background/50 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5 hover:text-foreground shadow-sm"
       >
         <GoogleIcon />
         {googleLoading ? 'Redirecting…' : 'Continue with Google'}
@@ -155,7 +155,7 @@ export function SignInForm(): React.ReactElement {
               autoComplete="email"
               disabled={isLoading}
               {...register('email')}
-              className="h-12 rounded-xl border-border bg-background/50 px-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50"
+              className="h-10 rounded-lg border-border bg-background/50 px-3 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50"
             />
             {errors.email && (
               <p className="text-xs text-destructive">{errors.email.message}</p>
@@ -181,7 +181,7 @@ export function SignInForm(): React.ReactElement {
               autoComplete="current-password"
               disabled={isLoading}
               {...register('password')}
-              className="h-12 rounded-xl border-border bg-background/50 px-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50"
+              className="h-10 rounded-lg border-border bg-background/50 px-3 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50"
             />
             {errors.password && (
               <p className="text-xs text-destructive">{errors.password.message}</p>
@@ -206,7 +206,7 @@ export function SignInForm(): React.ReactElement {
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-12 w-full rounded-xl bg-primary text-primary-foreground font-medium transition-all hover:bg-primary/90 hover:scale-[0.98] active:scale-[0.95]"
+          className="h-10 w-full rounded-lg bg-primary text-primary-foreground font-medium transition-all hover:bg-primary/90 hover:scale-[0.99] active:scale-[0.98]"
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">

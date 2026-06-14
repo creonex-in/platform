@@ -25,7 +25,7 @@ export default function SignInPage(): React.ReactElement {
           </Link>
         </div>
 
-        <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-background/60 p-8 shadow-2xl backdrop-blur-2xl sm:p-10">
+        <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-background/60 p-6 shadow-xl backdrop-blur-2xl sm:p-8">
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/5 to-transparent pointer-events-none opacity-50" />
           <div className="relative z-10">
             <SignInForm />

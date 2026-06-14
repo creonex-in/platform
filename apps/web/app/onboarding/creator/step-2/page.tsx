@@ -317,7 +317,7 @@ export default function CreatorStep2Page() {
                     {...register('bio')}
                     placeholder="I help working professionals crack CAT in 90 days with a structured, doubt-first approach..."
                     rows={5}
-                    className="resize-y text-base rounded-xl bg-card shadow-sm"
+                    className="resize-y text-sm rounded-lg bg-card shadow-sm"
                   />
                   {errors.bio ? (
                     <p className="text-[13px] font-medium text-destructive">{errors.bio.message}</p>
@@ -343,7 +343,7 @@ export default function CreatorStep2Page() {
                         setValueAs: (v) => (v === '' || v == null ? undefined : Number(v)),
                       })}
                       placeholder="e.g. 5"
-                      className="h-11 text-base rounded-xl bg-card shadow-sm"
+                      className="h-10 text-sm rounded-lg bg-card shadow-sm"
                     />
                     {errors.experienceYears ? (
                       <p className="text-[13px] font-medium text-destructive">{errors.experienceYears.message}</p>
@@ -368,14 +368,14 @@ export default function CreatorStep2Page() {
                         placeholder="e.g. CAT Quantitative"
                         maxLength={30}
                         disabled={tags.length >= 5}
-                        className="flex-1 text-base h-11 rounded-xl bg-card shadow-sm"
+                        className="flex-1 text-sm h-10 rounded-lg bg-card shadow-sm"
                       />
                       <Button
                         type="button"
                         variant="secondary"
                         onClick={addTag}
                         disabled={!tagInput.trim() || tags.length >= 5}
-                        className="h-11 font-medium shadow-sm"
+                        className="h-10 font-medium shadow-sm"
                       >
                         Add
                       </Button>
@@ -434,7 +434,7 @@ export default function CreatorStep2Page() {
                       type="url"
                       placeholder={placeholder}
                       className={cn(
-                        'pl-12 text-base h-12 rounded-xl bg-card shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary/50',
+                        'pl-12 text-sm h-10 rounded-lg bg-card shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary/50',
                         errors.socialLinks?.[key] && 'border-destructive focus-visible:ring-destructive',
                       )}
                       aria-label={label}
@@ -462,7 +462,7 @@ export default function CreatorStep2Page() {
                 Back
               </Button>
 
-              <Button type="submit" size="lg" disabled={isPending || uploading} className="font-semibold shadow-sm">
+              <Button type="submit" disabled={isPending || uploading} className="font-semibold shadow-sm">
                 {isPending ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                 ) : (

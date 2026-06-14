@@ -1,21 +1,25 @@
 # Progress Tracker
 
 ## Phase
+
 Web booking flow live end-to-end. Creator dashboard UI consolidated.
 Next: learner-side history + replace remaining mocked dashboard data.
 
 ## Done
 
 **Infrastructure**
+
 - Monorepo, Auth (Better Auth + Google + RBAC), global error handling, Font Awesome enforced
 - API gzip compression (`main.ts`) — slot payloads ~85% smaller on wire
 
 **Onboarding + Profiles**
+
 - Creator 4-step onboarding, username availability check, public profile `/c/[username]` (redesigned)
 - Creator/learner dashboards (learner data still mocked)
 - Creator calendar/availability builder (schedule rules + overrides + Google Calendar connect)
 
 **Booking Flow (web)** ✅
+
 - Slot picker modal: month-calendar + scrollable time list (Calendly-style), skeleton/empty
   states, hover/press interactions, cursor states
 - `useOfferingSlots` hook (react-query) — cached/deduped fetch; `slotsByDate`/`availableDates`
@@ -28,16 +32,19 @@ Next: learner-side history + replace remaining mocked dashboard data.
 - Responsive: whole modal scrolls on mobile, slots-only scroll on desktop (`grid-rows-1`), sticky CTA
 
 **Testimonials** ✅ (merged from `feature/testimonals`, 2026-06-14)
+
 - API module (controller/service/dto/repo), creator management page, public submission form
   `/c/[username]/testimonial`, reviews tab on public profile
 
 **Dashboard UI consolidation** ✅
+
 - Shared `StatPanel` (one framed panel, hairline-divided cells, tabular-nums, trend deltas)
   on creator dashboard + offers page; `MetricCard` retained for analytics
 - Offers page aligned to dashboard/bookings: StatPanel + `FilterChipGroup` + standard
   `p-4 sm:p-6`; `OfferItem` rows de-toyed (no left-accent/ping/primary tile)
 
 **Schema** (migrations 0001–0004 + later `db:push`)
+
 - Tables: schedules, schedule_rules, schedule_overrides, calendar_connections,
   bookings (+ guest name/email/phone, nullable learnerProfileId), testimonials
 - Partial unique index: `uq_bookings_active_slot` (race guard)
@@ -54,14 +61,16 @@ Next: learner-side history + replace remaining mocked dashboard data.
 | TestimonialsModule | ✅ Submit + visibility toggle + public list |
 
 ## Next Up (web layer)
+
 1. Learner booking history
 2. Replace remaining mocked learner/dashboard data with real API
 3. Availability builder polish (3 base-ui Select edge cases fixed; UX pass pending)
 
 ## Open / To Clarify (decide before building)
+
 1. **Per-type checkout flow** — only `one_on_one` tested. Make checkout dynamic per offer
    type: `group`/`workshop` (seat counter + fixed `scheduled_at`, no slot math), `digital`
-   + `courses` (instant access, no scheduling). Lock the final type set + each buy flow.
+   - `courses` (instant access, no scheduling). Lock the final type set + each buy flow.
 2. **Testimonial eligibility** — `/c/[username]/testimonial`: who may review? Any logged-in
    user vs only learners who actually booked from this creator (trust / real reviews).
    Decide + enforce server-side.
@@ -77,12 +86,15 @@ Next: learner-side history + replace remaining mocked dashboard data.
    availability per `docs/offerings-bookings-slots-schedulies.md` §10.2
    (`AvailabilityScheduleBuilder showOverrides={false}`, collapsed expander, default
    Mon–Fri 09:00–17:00). Add description + `rules[]` to step-4 schema/mutation.
+   We need to assist him to set availability, because we need schedule table and schedule rules table to show the slots in the booking page / profile. (because if he/she forgots to add this thier offerings cannot be booked to the users)
 
 ## Blocked / Needs Config
+
 - `RAZORPAY_KEY_ID/SECRET/WEBHOOK_SECRET` — empty in API `.env`; web needs `NEXT_PUBLIC_RAZORPAY_KEY_ID`
 - Google Console: add callback URI, enable Calendar API
 
 ## Key Decisions
+
 - Prices in paise (DB), INR (API)
 - Bookings UTC, slots in learner tz — UTC instant is source of truth; `startLocal` is
   display-only; `endLocal` dropped (was unused)

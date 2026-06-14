@@ -58,7 +58,7 @@ export default function SignUpPage(): React.ReactElement {
         {/* LEARNER */}
         <Link
           href="/sign-up/learner"
-          className="group flex-1 flex flex-col rounded-2xl lg:rounded-r-none border border-blue-500/20 bg-blue-500/[0.03] backdrop-blur-xl p-7 lg:p-10 shadow-xl shadow-blue-500/5 transition-all hover:border-blue-500/40 hover:bg-blue-500/[0.07] hover:shadow-blue-500/10 hover:-translate-y-0.5"
+          className="group flex-1 flex flex-col rounded-2xl lg:rounded-r-none border border-blue-500/20 bg-blue-500/[0.03] backdrop-blur-xl p-6 lg:p-8 shadow-xl shadow-blue-500/5 transition-all hover:border-blue-500/40 hover:bg-blue-500/[0.07] hover:shadow-blue-500/10 hover:-translate-y-0.5"
         >
           <div className="flex flex-col h-full max-w-xs mx-auto w-full space-y-6">
             <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1">
@@ -101,7 +101,7 @@ export default function SignUpPage(): React.ReactElement {
         {/* CREATOR */}
         <Link
           href="/sign-up/creator"
-          className="group flex-1 flex flex-col rounded-2xl lg:rounded-l-none border border-primary/20 bg-primary/[0.03] backdrop-blur-xl p-7 lg:p-10 shadow-xl shadow-primary/5 transition-all hover:border-primary/40 hover:bg-primary/[0.07] hover:shadow-primary/10 hover:-translate-y-0.5"
+          className="group flex-1 flex flex-col rounded-2xl lg:rounded-l-none border border-primary/20 bg-primary/[0.03] backdrop-blur-xl p-6 lg:p-8 shadow-xl shadow-primary/5 transition-all hover:border-primary/40 hover:bg-primary/[0.07] hover:shadow-primary/10 hover:-translate-y-0.5"
         >
           <div className="flex flex-col h-full max-w-xs mx-auto w-full space-y-6">
             <div className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1">

@@ -86,7 +86,7 @@ export default function LearnerSignUpPage(): React.ReactElement {
         <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] hidden lg:block" />
 
         <div className="w-full max-w-110 relative z-10">
-          <div className="rounded-4xl border border-border/50 bg-background/80 p-8 shadow-2xl shadow-blue-500/5 backdrop-blur-2xl sm:p-10 text-center">
+          <div className="rounded-2xl border border-border/50 bg-background/80 p-6 shadow-xl shadow-blue-500/5 backdrop-blur-2xl sm:p-8 text-center">
             <div className="mx-auto mb-6 flex items-center justify-center gap-2">
               <Image src="/logo.webp" alt="Creonex" width={28} height={28} className="object-contain" />
               <span className="font-display text-xl font-bold tracking-tight text-foreground">Creonex</span>
@@ -100,7 +100,7 @@ export default function LearnerSignUpPage(): React.ReactElement {
               onClick={handleGoogleSignUp}
               disabled={loading}
               variant="outline"
-              className="h-12 w-full gap-3 rounded-xl border-border bg-background text-sm font-medium transition-colors hover:bg-foreground/5 shadow-sm mb-8"
+              className="h-10 w-full gap-3 rounded-lg border-border bg-background text-sm font-medium transition-colors hover:bg-foreground/5 shadow-sm mb-8"
             >
               <GoogleIcon />
               {loading ? 'Redirecting…' : 'Sign in with Google'}

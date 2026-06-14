@@ -174,7 +174,7 @@ export default function CreatorStep3Page() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base font-semibold">Profile Cover</Label>
+                <Label className="text-sm font-semibold">Profile Cover</Label>
                 <p className="text-[13px] text-muted-foreground font-normal mt-0.5">Choose a cover image to add personality to your page.</p>
               </div>
               <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md hidden sm:inline-block">Optional</span>
@@ -221,7 +221,7 @@ export default function CreatorStep3Page() {
           {/* Languages */}
           <div className="space-y-4">
             <div>
-              <Label className="text-base font-semibold">Teaching Languages</Label>
+              <Label className="text-sm font-semibold">Teaching Languages</Label>
               <p className="text-[13px] text-muted-foreground font-normal mt-0.5">Which languages are you comfortable speaking in sessions?</p>
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -233,7 +233,7 @@ export default function CreatorStep3Page() {
                     type="button"
                     onClick={() => toggleLanguage(lang)}
                     className={cn(
-                      'rounded-full border px-4 py-2 text-sm font-semibold transition-all active:scale-95',
+                      'rounded-xl border px-4 py-2 text-sm font-semibold transition-all active:scale-95',
                       active
                         ? 'border-foreground bg-foreground text-background shadow-sm'
                         : 'border-border/60 bg-card hover:border-foreground/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground',
@@ -264,7 +264,7 @@ export default function CreatorStep3Page() {
               Back
             </Button>
 
-            <Button type="submit" size="lg" disabled={isPending} className="font-semibold shadow-sm">
+            <Button type="submit" disabled={isPending} className="font-semibold shadow-sm">
               {isPending ? (
                 <span className="size-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
               ) : (
