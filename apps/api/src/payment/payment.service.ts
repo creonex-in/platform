@@ -18,7 +18,7 @@ export interface RazorpayRefund {
 
 @Injectable()
 export class PaymentService {
-  private readonly rzp: Razorpay
+  private _rzp: Razorpay | null = null
   private readonly keyId: string
   private readonly keySecret: string
   private readonly webhookSecret: string
@@ -27,11 +27,14 @@ export class PaymentService {
     this.keyId = this.config.get<string>('RAZORPAY_KEY_ID', '')
     this.keySecret = this.config.get<string>('RAZORPAY_KEY_SECRET', '')
     this.webhookSecret = this.config.get<string>('RAZORPAY_WEBHOOK_SECRET', '')
+  }
 
-    this.rzp = new Razorpay({
-      key_id: this.keyId,
-      key_secret: this.keySecret,
-    })
+  private get rzp(): Razorpay {
+    if (!this._rzp) {
+      if (!this.keyId) throw new InternalServerErrorException('RAZORPAY_KEY_ID not configured')
+      this._rzp = new Razorpay({ key_id: this.keyId, key_secret: this.keySecret })
+    }
+    return this._rzp
   }
 
   // ── Order creation ────────────────────────────────────────────────────────────
