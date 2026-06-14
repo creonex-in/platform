@@ -17,7 +17,7 @@ import {
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import type { Creator } from '@/types/creator'
 import { ProfilePreview } from './profile-preview'
 import { EditProfileDialog } from './edit-profile-dialog'

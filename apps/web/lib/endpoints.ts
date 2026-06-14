@@ -40,6 +40,11 @@ export const endpoints = {
   availability: {
     slots: (offeringId: string) => `/api/v1/availability/offerings/${offeringId}/slots`,
   },
+  testimonials: {
+    creatorList:       '/api/v1/creator/testimonials',
+    updateVisibility:  (id: string) => `/api/v1/creator/testimonials/${id}/visibility`,
+    submit:            (username: string) => `/api/v1/testimonials/submit/${username}`,
+  },
   schedules: {
     list:      '/api/v1/schedules',
     create:    '/api/v1/schedules',

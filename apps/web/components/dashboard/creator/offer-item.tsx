@@ -43,7 +43,7 @@ import {
 import { offeringsService } from '@/services/offerings.service'
 import { isApiError } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import type { CreatorOffering, OfferStatus } from '@creonex/types'
 import { cn } from '@/lib/utils'
 
@@ -118,17 +118,17 @@ export function OfferItem({ offer, index = 0, username, onChanged }: OfferItemPr
 
   const handleCopyLink = async (): Promise<void> => {
     if (offer.status === 'draft') {
-      toast.error('Cannot share draft', { description: 'Please publish this offering first.' })
+      toast.error('Cannot share draft', 'Please publish this offering first.')
       return
     }
     if (offer.status === 'archived') {
-      toast.error('Offer is archived', { description: 'Archived offerings cannot receive bookings.' })
+      toast.error('Offer is archived', 'Archived offerings cannot receive bookings.')
       return
     }
     try {
       const url = `${window.location.origin}/c/${username}#offerings`
       await navigator.clipboard.writeText(url)
-      toast.success('Booking link copied!', { description: 'Share this link to start getting bookings.' })
+      toast.success('Booking link copied!', 'Share this link to start getting bookings.')
     } catch (e) {
       toast.error('Could not copy link.')
     }

@@ -1,6 +1,5 @@
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/dashboard/shared/app-sidebar'
-import { Toaster } from '@/components/ui/sonner'
 import { requireLearner } from '@/lib/auth-guards'
 import { getInitials } from '@/lib/utils'
 
@@ -16,7 +15,6 @@ export default async function LearnerLayout({ children }: { children: React.Reac
       <SidebarInset className="bg-muted/30 min-h-screen">
         {children}
       </SidebarInset>
-      <Toaster position="bottom-right" />
     </SidebarProvider>
   )
 }
