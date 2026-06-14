@@ -12,7 +12,7 @@ export function ProfileHero({ coverBannerUrl, username, displayName }: ProfileHe
   const isUrl = coverBannerUrl ? isBannerUrl(coverBannerUrl) : false
 
   return (
-    <div className="w-full h-48 sm:h-60 md:h-72 relative overflow-hidden bg-muted border-b border-border">
+    <div className="w-full h-40 sm:h-52 md:h-64 relative overflow-hidden bg-muted border-b border-border">
       {isUrl ? (
         <Image src={coverBannerUrl!} alt="banner" fill className="object-cover animate-fade-in" priority />
       ) : coverBannerUrl ? (

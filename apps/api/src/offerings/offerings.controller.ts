@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -64,5 +65,11 @@ export class OfferingsController {
     @Body() dto: UpdateOfferingStatusDto,
   ) {
     return this.offeringsService.transitionStatus(id, session.user.id, dto.status)
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Hard delete a draft offering (only when it has no bookings)' })
+  deleteOffering(@Session() session: AppUserSession, @Param('id') id: string) {
+    return this.offeringsService.deleteOffering(id, session.user.id)
   }
 }

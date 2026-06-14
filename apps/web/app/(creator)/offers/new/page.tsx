@@ -8,9 +8,9 @@ export default function NewOfferPage(): React.ReactElement {
   return (
     <>
       <DashboardTopbar title="Create Offer" />
-      <div className="p-6 max-w-xl mx-auto">
-        <Card>
-          <CardContent className="pt-6">
+      <div className="p-6 max-w-5xl mx-auto">
+        <Card className="border-none bg-transparent shadow-none">
+          <CardContent className="p-0">
             <OfferForm />
           </CardContent>
         </Card>

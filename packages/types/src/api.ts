@@ -102,6 +102,32 @@ export interface PublicOffering {
   thumbnailUrl: string | null
 }
 
+// ── Creator-owned Offering (full shape, owner dashboard) ──────────────────────
+
+export interface CreatorOffering {
+  id: string
+  type: string
+  title: string
+  description: string | null
+  /** Price in whole INR (rupees), already divided from paise by the API */
+  price: number
+  currency: string
+  durationMinutes: number | null
+  seatsTotal: number | null
+  seatsRemaining: number | null
+  status: string
+  totalBookings: number
+  totalRevenuePaise: number
+  thumbnailUrl: string | null
+  minNoticeMinutes: number | null
+  bookingWindowDays: number | null
+  bufferAfterMinutes: number | null
+  scheduleId: string | null
+  slug: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface PublicTestimonial {
   id: string
   learnerName: string
