@@ -9,6 +9,7 @@ import { CreatorProfileRepository } from '../users/creator-profile.repository'
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/userinfo.email',
 ]
 
 export interface FreeBusyInterval {
@@ -59,15 +60,21 @@ export class CalendarAuthService {
 
     if (!tokens.access_token) throw new UnauthorizedException('No access token returned')
 
-    // Fetch connected Google account email
+    // Fetch connected Google account email (optional — old tokens may lack email scope)
     client.setCredentials(tokens)
-    const oauth2 = google.oauth2({ version: 'v2', auth: client })
-    const { data: userInfo } = await oauth2.userinfo.get()
+    let accountEmail: string | undefined
+    try {
+      const oauth2 = google.oauth2({ version: 'v2', auth: client })
+      const { data: userInfo } = await oauth2.userinfo.get()
+      accountEmail = userInfo.email ?? undefined
+    } catch {
+      // proceed without email — token lacked userinfo.email scope
+    }
 
     await this.calendarRepo.upsert({
       creatorProfileId,
       provider: 'google',
-      accountEmail: userInfo.email ?? undefined,
+      accountEmail,
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token ?? undefined,
       tokenExpiresAt: new Date(tokens.expiry_date ?? Date.now() + 3600_000),

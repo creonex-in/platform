@@ -40,10 +40,14 @@ export class CalendarController {
     @Query('error') error?: string,
   ) {
     if (error || !code) {
-      return { url: 'http://localhost:3001/creator/settings?calendar=error', statusCode: 302 }
+      return { url: 'http://localhost:3001/calendar?calendar=error', statusCode: 302 }
     }
-    await this.calendarAuth.handleCallback(code, state)
-    return { url: 'http://localhost:3001/creator/settings?calendar=connected', statusCode: 302 }
+    try {
+      await this.calendarAuth.handleCallback(code, state)
+    } catch {
+      return { url: 'http://localhost:3001/calendar?calendar=error', statusCode: 302 }
+    }
+    return { url: 'http://localhost:3001/calendar?calendar=connected', statusCode: 302 }
   }
 
   @Get('status')

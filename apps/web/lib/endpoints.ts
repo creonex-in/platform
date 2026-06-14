@@ -23,4 +23,18 @@ export const endpoints = {
   creators: {
     byUsername: (username: string) => `/api/v1/creators/${username}`,
   },
+  calendar: {
+    status:     '/api/v1/calendar/status',
+    connect:    '/api/v1/calendar/google/connect',
+    disconnect: '/api/v1/calendar/disconnect',
+  },
+  schedules: {
+    list:      '/api/v1/schedules',
+    create:    '/api/v1/schedules',
+    byId:      (id: string) => `/api/v1/schedules/${id}`,
+    rules:     (sid: string) => `/api/v1/schedules/${sid}/rules`,
+    rule:      (sid: string, rid: string) => `/api/v1/schedules/${sid}/rules/${rid}`,
+    overrides: (sid: string) => `/api/v1/schedules/${sid}/overrides`,
+    override:  (sid: string, oid: string) => `/api/v1/schedules/${sid}/overrides/${oid}`,
+  },
 }
