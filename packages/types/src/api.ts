@@ -129,6 +129,19 @@ export interface CreatorOffering {
   updatedAt: string
 }
 
+// ── Offer creation eligibility (type gating) ──────────────────────────────────
+
+export interface OfferCreationEligibility {
+  /** 1:1 sessions the creator has already delivered. */
+  completedOneOnOneSessions: number
+  /** Sessions required to unlock the gated offer types. */
+  requiredSessions: number
+  /** True once the creator may create gated types (group / workshop). */
+  unlocked: boolean
+  /** Offer types still locked for this creator. */
+  lockedTypes: string[]
+}
+
 // ── Booking Flow ──────────────────────────────────────────────────────────────
 
 export interface CreateBookingRequest {

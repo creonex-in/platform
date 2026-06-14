@@ -1,7 +1,7 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 import { offeringsService } from '@/services/offerings.service'
-import type { CreatorOffering } from '@creonex/types'
+import type { CreatorOffering, OfferCreationEligibility } from '@creonex/types'
 
 async function getCookieHeader(): Promise<string> {
   const cookieStore = await cookies()
@@ -16,4 +16,9 @@ export async function getMyOfferings(): Promise<CreatorOffering[]> {
 /** Single offering by id (owner-only); null when not found. */
 export async function getOfferingById(id: string): Promise<CreatorOffering> {
   return offeringsService.getOffering(id, await getCookieHeader())
+}
+
+/** Whether the creator may create gated offer types (group / workshop). */
+export async function getOfferingEligibility(): Promise<OfferCreationEligibility> {
+  return offeringsService.getEligibility(await getCookieHeader())
 }

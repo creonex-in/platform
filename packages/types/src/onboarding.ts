@@ -21,6 +21,18 @@ export const OFFER_STATUSES = [
   'draft', 'live', 'paused', 'archived',
 ] as const
 
+// ── Offer-type gating ─────────────────────────────────────────────────────────
+// New creators can only create 1:1 sessions and digital products. Group calls and
+// workshops/webinars unlock once they've delivered enough 1:1 sessions — this
+// keeps quality high and proves the creator before they run group formats.
+export const SESSIONS_TO_UNLOCK_OFFERS = 5
+
+/** Offer types a creator can always create, from day one. */
+export const ALWAYS_UNLOCKED_OFFER_TYPES = ['one_on_one', 'digital'] as const
+
+/** Offer types gated behind completed 1:1 sessions. */
+export const GATED_OFFER_TYPES = ['workshop', 'group'] as const
+
 export const KYC_STATUSES = [
   'not_started', 'pending', 'verified', 'failed',
 ] as const

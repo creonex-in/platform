@@ -7,8 +7,16 @@ import {
 } from '@nestjs/common'
 import { OfferingsRepository } from '../users/offerings.repository'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
-import type { OfferStatus } from '@creonex/types'
+import {
+  GATED_OFFER_TYPES,
+  SESSIONS_TO_UNLOCK_OFFERS,
+  type OfferCreationEligibility,
+  type OfferStatus,
+  type OfferType,
+} from '@creonex/types'
 import type { CreateOfferingDto, UpdateOfferingDto } from './offerings.dto'
+
+const GATED_TYPES = new Set<OfferType>(GATED_OFFER_TYPES)
 
 const VALID_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
   draft: ['live', 'archived'],
@@ -65,8 +73,34 @@ export class OfferingsService {
     return rows.map((o) => this.formatOffering(o)!)
   }
 
+  /**
+   * Whether the creator may create gated offer types yet. Group calls and
+   * workshops unlock after delivering {@link SESSIONS_TO_UNLOCK_OFFERS} 1:1 sessions.
+   */
+  async getCreationEligibility(userId: string): Promise<OfferCreationEligibility> {
+    const profileId = await this.resolveCreatorProfileId(userId)
+    const completed = await this.offeringsRepo.countCompletedOneOnOneSessions(profileId)
+    const unlocked = completed >= SESSIONS_TO_UNLOCK_OFFERS
+    return {
+      completedOneOnOneSessions: completed,
+      requiredSessions: SESSIONS_TO_UNLOCK_OFFERS,
+      unlocked,
+      lockedTypes: unlocked ? [] : [...GATED_OFFER_TYPES],
+    }
+  }
+
   async createOffering(userId: string, dto: CreateOfferingDto) {
     const profileId = await this.resolveCreatorProfileId(userId)
+
+    // Gate group/workshop behind delivered 1:1 sessions.
+    if (GATED_TYPES.has(dto.type)) {
+      const completed = await this.offeringsRepo.countCompletedOneOnOneSessions(profileId)
+      if (completed < SESSIONS_TO_UNLOCK_OFFERS) {
+        throw new ForbiddenException(
+          `Complete ${SESSIONS_TO_UNLOCK_OFFERS} one-on-one sessions to unlock group calls and workshops. You've completed ${completed}.`,
+        )
+      }
+    }
     const id = await this.offeringsRepo.create({
       creatorProfileId: profileId,
       type: dto.type,

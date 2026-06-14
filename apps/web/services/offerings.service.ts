@@ -1,6 +1,6 @@
 import { api } from '@/lib/api'
 import { endpoints } from '@/lib/endpoints'
-import type { CreatorOffering, OfferStatus, OfferType } from '@creonex/types'
+import type { CreatorOffering, OfferCreationEligibility, OfferStatus, OfferType } from '@creonex/types'
 
 export interface CreateOfferingBody {
   type: OfferType
@@ -20,6 +20,9 @@ export type UpdateOfferingBody = Partial<Omit<CreateOfferingBody, 'type'>>
 export const offeringsService = {
   getMyOfferings: (cookieHeader?: string) =>
     api.get<CreatorOffering[]>(endpoints.offerings.me, { cookieHeader }),
+
+  getEligibility: (cookieHeader?: string) =>
+    api.get<OfferCreationEligibility>(endpoints.offerings.eligibility, { cookieHeader }),
 
   getOffering: (id: string, cookieHeader?: string) =>
     api.get<CreatorOffering>(endpoints.offerings.byId(id), { cookieHeader }),
