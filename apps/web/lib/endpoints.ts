@@ -29,8 +29,16 @@ export const endpoints = {
     disconnect: '/api/v1/calendar/disconnect',
   },
   bookings: {
-    creatorList: '/api/v1/creator/bookings',
-    cancelById:  (id: string) => `/api/v1/creator/bookings/${id}/cancel`,
+    creatorList:  '/api/v1/creator/bookings',
+    cancelById:   (id: string) => `/api/v1/creator/bookings/${id}/cancel`,
+    create:       '/api/v1/bookings',
+    createGuest:  '/api/v1/bookings/guest',
+    confirm:      (id: string) => `/api/v1/bookings/${id}/confirm`,
+    confirmGuest: (id: string) => `/api/v1/bookings/guest/${id}/confirm`,
+    myList:       '/api/v1/bookings/me',
+  },
+  availability: {
+    slots: (offeringId: string) => `/api/v1/availability/offerings/${offeringId}/slots`,
   },
   schedules: {
     list:      '/api/v1/schedules',

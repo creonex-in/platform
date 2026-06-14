@@ -8,6 +8,7 @@ interface OfferingsSectionProps {
   activeTabs: [string, PublicOffering[]][]
   showAllTab: boolean
   defaultTab: string
+  onBook?: (o: PublicOffering) => void
 }
 
 export function OfferingsSection({
@@ -15,6 +16,7 @@ export function OfferingsSection({
   activeTabs,
   showAllTab,
   defaultTab,
+  onBook,
 }: OfferingsSectionProps): React.ReactElement | null {
   if (activeTabs.length === 0) return null
 
@@ -63,14 +65,14 @@ export function OfferingsSection({
             {showAllTab && (
               <TabsContent value="all" className="mt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {offerings.map((item) => <OfferingCard key={item.id} item={item} />)}
+                  {offerings.map((item) => <OfferingCard key={item.id} item={item} onBook={onBook ? () => onBook(item) : undefined} />)}
                 </div>
               </TabsContent>
             )}
             {activeTabs.map(([type, items]) => (
               <TabsContent key={type} value={type} className="mt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {items.map((item) => <OfferingCard key={item.id} item={item} />)}
+                  {items.map((item) => <OfferingCard key={item.id} item={item} onBook={onBook ? () => onBook(item) : undefined} />)}
                 </div>
               </TabsContent>
             ))}

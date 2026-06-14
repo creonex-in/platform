@@ -341,8 +341,11 @@ export const bookings = pgTable(
       .notNull()
       .references(() => offerings.id, { onDelete: 'cascade' }),
     learnerProfileId: text('learner_profile_id')
-      .notNull()
       .references(() => learnerProfiles.id, { onDelete: 'cascade' }),
+    // Guest booking fields (null when learner is logged in)
+    guestName: text('guest_name'),
+    guestEmail: text('guest_email'),
+    guestPhone: text('guest_phone'),
     // UTC instants (null for digital). withTimezone keeps storage unambiguous.
     startTime: timestamp('start_time', { withTimezone: true }),
     endTime: timestamp('end_time', { withTimezone: true }),

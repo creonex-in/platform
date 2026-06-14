@@ -1,5 +1,5 @@
 import {
-  IsDateString, IsNotEmpty, IsOptional, IsString, IsTimeZone,
+  IsDateString, IsEmail, IsNotEmpty, IsOptional, IsString, IsTimeZone,
 } from 'class-validator'
 
 export class CreateBookingDto {
@@ -42,4 +42,17 @@ export class CancelBookingDto {
   @IsOptional()
   @IsString()
   reason?: string
+}
+
+export class CreateGuestBookingDto extends CreateBookingDto {
+  @IsString()
+  @IsNotEmpty()
+  guestName!: string
+
+  @IsEmail()
+  guestEmail!: string
+
+  @IsOptional()
+  @IsString()
+  guestPhone?: string
 }

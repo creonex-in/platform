@@ -7,9 +7,11 @@ import { faCalendarCheck } from '@fortawesome/free-solid-svg-icons'
 export function BookSessionBar({
   name,
   price,
+  onBook,
 }: {
   name: string
   price: number | null
+  onBook?: () => void
 }): React.ReactElement {
   const [visible, setVisible] = useState(false)
 
@@ -29,13 +31,13 @@ export function BookSessionBar({
           1:1 Session{price != null ? ` · ₹${price.toLocaleString('en-IN')}` : ''}
         </p>
       </div>
-      <a
-        href="#offerings"
-        className="bg-primary text-primary-foreground rounded-full px-6 py-3 text-sm font-bold hover:bg-primary/90 active:scale-98 transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer"
+      <button
+        onClick={onBook ?? (() => { document.querySelector('#offerings')?.scrollIntoView({ behavior: 'smooth' }) })}
+        className="bg-primary text-primary-foreground rounded-full px-6 py-3 text-sm font-bold hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-2 shrink-0 shadow-sm cursor-pointer"
       >
         <FontAwesomeIcon icon={faCalendarCheck} className="size-3" />
         Book Now
-      </a>
+      </button>
     </div>
   )
 }

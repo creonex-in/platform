@@ -1,55 +1,11 @@
 import { notFound } from 'next/navigation'
-import { ReviewsTab } from './_components/reviews-tab'
 import { creatorsService } from '@/services/creators.service'
 import { isNotFound } from '@/lib/api'
-import { getInitials } from '@/lib/utils'
 import { ProfileHero } from './_components/profile-hero'
-import { ProfileSidebar } from './_components/profile-sidebar'
-import { OverviewTab } from './_components/overview-tab'
-import { OfferingsSection } from './_components/offerings-section'
-import { FaqSection } from './_components/faq-section'
-import { BookSessionBar } from './_components/book-session-bar'
+import { ProfileContent } from './_components/profile-content'
+import { getCreatorAvailabilityDates } from '@/dal/slots.dal'
 import MarketingShell from '@/components/layout/marketing-shell'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { PublicCreatorProfile, PublicOffering } from '@creonex/types'
-
-const MOCK_TESTIMONIALS = [
-  {
-    id: 'u1',
-    name: 'Ananya Joshi',
-    niche: 'Aspiring Product Designer',
-    quote: 'Booked a portfolio review session and got an offer at a product startup the very next week. Worth every rupee.',
-    initials: 'AJ',
-  },
-  {
-    id: 'u2',
-    name: 'Karan Bhatia',
-    niche: 'Software Engineer',
-    quote: 'Cracked my system design round after two 1:1 sessions. The expert explained things my college never did in four years.',
-    initials: 'KB',
-  },
-  {
-    id: 'u3',
-    name: 'Meghna Pillai',
-    niche: 'Marketing Professional',
-    quote: 'I went from zero to running my own freelance campaigns. The personal branding course was exactly what I needed.',
-    initials: 'MP',
-  },
-  {
-    id: 'u4',
-    name: 'Sahil Gupta',
-    niche: 'Computer Science Student',
-    quote: 'The React course was more useful than my entire semester. Practical, fast, and the mentor actually responds to questions.',
-    initials: 'SG',
-  },
-  {
-    id: 'u5',
-    name: 'Riya Malhotra',
-    niche: 'Finance Analyst',
-    quote: 'Booked a career growth session and completely changed my trajectory. Three months later I switched jobs and got a 40% hike.',
-    initials: 'RM',
-  },
-]
 
 export default async function CreatorProfilePage({
   params,
@@ -66,7 +22,8 @@ export default async function CreatorProfilePage({
     throw e
   }
 
-  // Group offerings by type
+  const availableDates = await getCreatorAvailabilityDates(profile)
+
   const grouped = new Map<string, PublicOffering[]>()
   for (const o of profile.offerings) {
     if (!grouped.has(o.type)) grouped.set(o.type, [])
@@ -83,108 +40,21 @@ export default async function CreatorProfilePage({
 
   return (
     <MarketingShell>
-      <div className="min-h-screen bg-background text-foreground pb-20 sm:pb-0 font-sans w-full overflow-x-hidden">
-        {/* Cover Banner */}
+      <div className="min-h-screen bg-background text-foreground pb-20 sm:pb-0 font-sans w-full">
         <ProfileHero
           coverBannerUrl={profile.coverBannerUrl}
           username={profile.username}
           displayName={displayName}
         />
-
-        {/* Content Layout */}
-        <div className="page-container pb-24 pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-            
-            {/* Left Column: Sidebar Profile Card */}
-            <div className="lg:col-span-4 xl:col-span-4 lg:sticky lg:top-6">
-              <ProfileSidebar profile={profile} displayName={displayName} />
-            </div>
-
-            {/* Right Column: Dynamic Tabs & Content */}
-            <div className="lg:col-span-8 xl:col-span-8 flex flex-col gap-6 w-full">
-              <Tabs defaultValue="overview" className="w-full">
-                {/* Custom UNDERLINED styled tab navigation header */}
-                <div className="overflow-x-auto scrollbar-hide border-b border-border/80 mb-8">
-                  <TabsList className="flex justify-start bg-transparent h-auto p-0 gap-6 rounded-none w-fit">
-                    <TabsTrigger
-                      value="overview"
-                      className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      Overview
-                    </TabsTrigger>
-                    
-                    {profile.offerings.length > 0 && (
-                      <TabsTrigger
-                        value="offerings"
-                        className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
-                      >
-                        Offerings ({profile.offerings.length})
-                      </TabsTrigger>
-                    )}
-
-                    <TabsTrigger
-                      value="reviews"
-                      className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      Reviews ({profile.testimonials.length > 0 ? profile.testimonials.length : MOCK_TESTIMONIALS.length})
-                    </TabsTrigger>
-
-
-                  </TabsList>
-                </div>
-
-                {/* Tab content panels */}
-                <TabsContent value="overview" className="mt-0 outline-none">
-                  <OverviewTab profile={profile} displayName={displayName} />
-                </TabsContent>
-
-                {profile.offerings.length > 0 && (
-                  <TabsContent value="offerings" className="mt-0 outline-none">
-                    <div className="bg-card rounded-2xl border border-border p-6 sm:p-8">
-                      <OfferingsSection
-                        offerings={profile.offerings}
-                        activeTabs={activeTabs}
-                        showAllTab={showAllTab}
-                        defaultTab={defaultTab}
-                      />
-                    </div>
-                  </TabsContent>
-                )}
-
-                <TabsContent value="reviews" className="mt-0 outline-none">
-                  <div className="bg-card rounded-2xl border border-border p-6 sm:p-8">
-                    <div className="mb-6">
-                      <h3 className="text-lg font-bold text-foreground font-display">
-                        Reviews for {displayName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground font-medium mt-0.5">
-                        {profile.testimonials.length > 0 
-                          ? `Read what students of ${displayName} have experienced.`
-                          : "Thousands of learners across India use Creonex to upskill, switch careers, and grow."
-                        }
-                      </p>
-                    </div>
-                    <ReviewsTab
-                      testimonials={profile.testimonials.length > 0 ? profile.testimonials.map((t) => ({
-                        id: t.id,
-                        name: t.learnerName,
-                        niche: t.learnerRole ?? '',
-                        quote: t.content,
-                        initials: getInitials(t.learnerName),
-                      })) : MOCK_TESTIMONIALS}
-                    />
-                  </div>
-                </TabsContent>
-
-
-              </Tabs>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Mobile quick-book sticky bar */}
-        <BookSessionBar name={displayName} price={sessionPrice} />
+        <ProfileContent
+          profile={profile}
+          displayName={displayName}
+          availableDates={availableDates}
+          sessionPrice={sessionPrice}
+          activeTabs={activeTabs}
+          showAllTab={showAllTab}
+          defaultTab={defaultTab}
+        />
       </div>
     </MarketingShell>
   )

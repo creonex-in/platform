@@ -19,12 +19,15 @@ export class SlotGenerationService {
     private readonly calendarAuth: CalendarAuthService,
   ) {}
 
-  async generateSlots(params: {
-    offeringId: string
-    learnerTz: string
-    fromDate?: string  // YYYY-MM-DD
-    toDate?: string    // YYYY-MM-DD
-  }): Promise<AvailableSlot[]> {
+  async generateSlots(
+    params: {
+      offeringId: string
+      learnerTz: string
+      fromDate?: string  // YYYY-MM-DD
+      toDate?: string    // YYYY-MM-DD
+    },
+    opts: { ignoreExistingBookings?: boolean } = {},
+  ): Promise<AvailableSlot[]> {
     const data = await this.schedulesRepo.findOfferingWithScheduleData(params.offeringId)
     if (!data) return []
 
@@ -58,12 +61,13 @@ export class SlotGenerationService {
         .map((o) => [o.date, { startTime: o.startTime!, endTime: o.endTime! }]),
     )
 
-    // Existing booked slot start times (UTC ISO strings for fast lookup)
-    const bookedRows = await this.schedulesRepo.findActiveBookings(
-      params.offeringId,
-      effectiveStart,
-      windowEnd,
-    )
+    // Existing booked slot start times (UTC ISO strings for fast lookup).
+    // Skipped during booking validation so a learner's own pending hold (or a
+    // race) doesn't hide an otherwise-valid slot — the DB unique index is the
+    // real double-booking guard.
+    const bookedRows = opts.ignoreExistingBookings
+      ? []
+      : await this.schedulesRepo.findActiveBookings(params.offeringId, effectiveStart, windowEnd)
     const bookedSet = new Set(
       bookedRows.map((b) => b.startTime?.toISOString()).filter(Boolean),
     )
@@ -82,24 +86,31 @@ export class SlotGenerationService {
 
     const slots: AvailableSlot[] = []
 
-    for (const rule of rules) {
-      // Expand RRULE occurrences within the window
-      // DTSTART anchored to creator tz midnight of effectiveStart day
-      const creatorStartDay = formatInTimeZone(effectiveStart, schedule.timezone, 'yyyy-MM-dd')
-      const dtstart = fromZonedTime(`${creatorStartDay}T00:00:00`, schedule.timezone)
-      const dtstartStr = formatInTimeZone(dtstart, 'UTC', "yyyyMMdd'T'HHmmss") + 'Z'
+    // RRULE must expand in the creator's LOCAL wall-clock so BYDAY weekdays line up
+    // with the creator's calendar. rrule matches BYDAY in the DTSTART's own frame, so
+    // we anchor DTSTART to a tz-NAIVE UTC midnight of the creator-local start day:
+    // each occurrence's UTC Y-M-D then IS the creator-local date, which we localize
+    // back to real UTC for the actual slot times. (Anchoring with fromZonedTime shifts
+    // the weekday by the tz offset — e.g. an IST Monday rule would surface on Tuesday.)
+    const creatorStartDay = formatInTimeZone(effectiveStart, schedule.timezone, 'yyyy-MM-dd')
+    const dtstartNaive = new Date(`${creatorStartDay}T00:00:00Z`)
+    const dtstartStr = `${creatorStartDay.replace(/-/g, '')}T000000Z`
+    const windowEndNaive = new Date(
+      `${formatInTimeZone(windowEnd, schedule.timezone, "yyyy-MM-dd'T'HH:mm:ss")}Z`,
+    )
 
+    for (const rule of rules) {
       const rruleText = `DTSTART:${dtstartStr}\nRRULE:${rule.rrule}`
       let occurrences: Date[]
       try {
-        occurrences = rrulestr(rruleText).between(dtstart, windowEnd, true)
+        occurrences = rrulestr(rruleText).between(dtstartNaive, windowEndNaive, true)
       } catch {
         continue
       }
 
       for (const occ of occurrences) {
-        // Local date in creator tz for this occurrence
-        const localDateStr = formatInTimeZone(occ, schedule.timezone, 'yyyy-MM-dd')
+        // occ is tz-naive UTC — its UTC date IS the creator-local date
+        const localDateStr = occ.toISOString().slice(0, 10)
 
         // Skip blocked dates
         if (blockedDates.has(localDateStr)) continue

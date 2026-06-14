@@ -137,12 +137,34 @@ export class SchedulesRepository {
       .where(eq(offerings.id, offeringId))
       .limit(1)
       .then((r) => r[0] ?? null)
-    if (!offering || !offering.scheduleId) return null
+    if (!offering) return null
 
-    const scheduleData = await this.findByIdWithDetails(offering.scheduleId)
+    // Use offering's explicit scheduleId, or fall back to creator's default schedule
+    const scheduleId = offering.scheduleId
+      ?? await this.findDefaultScheduleId(offering.creatorProfileId)
+    if (!scheduleId) return null
+
+    const scheduleData = await this.findByIdWithDetails(scheduleId)
     if (!scheduleData) return null
 
     return { offering, schedule: scheduleData }
+  }
+
+  private async findDefaultScheduleId(creatorProfileId: string): Promise<string | null> {
+    const rows = await this.db
+      .select({ id: schedules.id })
+      .from(schedules)
+      .where(and(eq(schedules.creatorProfileId, creatorProfileId), eq(schedules.isDefault, true)))
+      .limit(1)
+    if (rows[0]) return rows[0].id
+
+    // No default marked — return the first schedule for this creator if any
+    const any = await this.db
+      .select({ id: schedules.id })
+      .from(schedules)
+      .where(eq(schedules.creatorProfileId, creatorProfileId))
+      .limit(1)
+    return any[0]?.id ?? null
   }
 
   async findActiveBookings(offeringId: string, fromUtc: Date, toUtc: Date) {
