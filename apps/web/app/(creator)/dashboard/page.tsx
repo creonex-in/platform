@@ -10,20 +10,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 import { creatorMetrics } from '@/data/mock-earnings'
-import { mockBookings } from '@/data/mock-bookings'
 import { formatCurrency, cn, getInitials } from '@/lib/utils'
 import { getCreatorContext } from '@/dal/users.dal'
+import { getCreatorBookings } from '@/dal/bookings.dal'
 import Link from 'next/link'
 
 export const metadata = { title: 'Dashboard — Creonex' }
 
 export default async function CreatorDashboardPage(): Promise<React.ReactElement> {
-  const { user, profile } = await getCreatorContext()
+  const [{ user, profile }, allBookings] = await Promise.all([
+    getCreatorContext(),
+    getCreatorBookings(),
+  ])
   const displayName = profile?.displayName ?? user?.name ?? 'Creator'
   const avatarImage = profile?.profilePhotoUrl ?? user?.image ?? null
 
-  const upcomingBookings = mockBookings.filter(
-    (b) => b.status === 'upcoming' || b.status === 'confirmed'
+  const upcomingBookings = allBookings.filter(
+    (b) => b.status === 'pending_payment' || b.status === 'confirmed'
   )
 
   return (

@@ -72,6 +72,12 @@ export class BookingsController {
 export class CreatorBookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'List all bookings across all my offerings' })
+  getAll(@Session() session: AppUserSession) {
+    return this.bookingsService.getCreatorAllBookings(session.user.id)
+  }
+
   @Get('offerings/:offeringId')
   @ApiOperation({ summary: 'List all bookings for one of my offerings' })
   getOfferingBookings(

@@ -131,6 +131,27 @@ export interface PublicCreatorProfile {
   testimonials: PublicTestimonial[]
 }
 
+// ── Creator Bookings ──────────────────────────────────────────────────────────
+
+export type CreatorBookingStatus = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled'
+
+export interface CreatorBookingItem {
+  id: string
+  offeringId: string
+  offeringTitle: string
+  offeringType: string
+  learnerProfileId: string
+  learnerName: string
+  startTime: string | null
+  endTime: string | null
+  status: CreatorBookingStatus
+  amountPaise: number
+  topic: string | null
+  meetingUrl: string | null
+  cancelledAt: string | null
+  createdAt: string
+}
+
 // ── Onboarding Responses ──────────────────────────────────────────────────────
 
 export interface OnboardingStepResponse {

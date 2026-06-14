@@ -28,6 +28,10 @@ export const endpoints = {
     connect:    '/api/v1/calendar/google/connect',
     disconnect: '/api/v1/calendar/disconnect',
   },
+  bookings: {
+    creatorList: '/api/v1/creator/bookings',
+    cancelById:  (id: string) => `/api/v1/creator/bookings/${id}/cancel`,
+  },
   schedules: {
     list:      '/api/v1/schedules',
     create:    '/api/v1/schedules',

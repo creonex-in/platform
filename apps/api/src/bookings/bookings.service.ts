@@ -259,4 +259,10 @@ export class BookingsService {
     }
     return this.bookingsRepo.findAllByOffering(offeringId)
   }
+
+  async getCreatorAllBookings(userId: string) {
+    const creatorProfile = await this.creatorProfileRepo.findByUserId(userId)
+    if (!creatorProfile) throw new NotFoundException('Creator profile not found')
+    return this.bookingsRepo.findAllByCreator(creatorProfile.id)
+  }
 }
