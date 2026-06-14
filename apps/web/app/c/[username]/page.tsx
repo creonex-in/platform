@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import TestimonialsDeck from '@/components/landing/shared/testimonials-deck'
+import { ReviewsTab } from './_components/reviews-tab'
 import { creatorsService } from '@/services/creators.service'
 import { isNotFound } from '@/lib/api'
 import { getInitials } from '@/lib/utils'
@@ -83,7 +83,7 @@ export default async function CreatorProfilePage({
 
   return (
     <MarketingShell>
-      <div className="min-h-screen theme-creator bg-background text-foreground pb-20 sm:pb-0 font-sans w-full overflow-x-hidden">
+      <div className="min-h-screen bg-background text-foreground pb-20 sm:pb-0 font-sans w-full overflow-x-hidden">
         {/* Cover Banner */}
         <ProfileHero
           coverBannerUrl={profile.coverBannerUrl}
@@ -108,7 +108,7 @@ export default async function CreatorProfilePage({
                   <TabsList className="flex justify-start bg-transparent h-auto p-0 gap-6 rounded-none w-fit">
                     <TabsTrigger
                       value="overview"
-                      className="border-b-2 border-transparent data-[state=active]:border-cyan-600 rounded-none px-1 py-3 text-[14px] font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                      className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
                     >
                       Overview
                     </TabsTrigger>
@@ -116,7 +116,7 @@ export default async function CreatorProfilePage({
                     {profile.offerings.length > 0 && (
                       <TabsTrigger
                         value="offerings"
-                        className="border-b-2 border-transparent data-[state=active]:border-cyan-600 rounded-none px-1 py-3 text-[14px] font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                        className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
                       >
                         Offerings ({profile.offerings.length})
                       </TabsTrigger>
@@ -124,7 +124,7 @@ export default async function CreatorProfilePage({
 
                     <TabsTrigger
                       value="reviews"
-                      className="border-b-2 border-transparent data-[state=active]:border-cyan-600 rounded-none px-1 py-3 text-[14px] font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                      className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
                     >
                       Reviews ({profile.testimonials.length > 0 ? profile.testimonials.length : MOCK_TESTIMONIALS.length})
                     </TabsTrigger>
@@ -140,7 +140,7 @@ export default async function CreatorProfilePage({
 
                 {profile.offerings.length > 0 && (
                   <TabsContent value="offerings" className="mt-0 outline-none">
-                    <div className="bg-card rounded-[20px] border border-border p-6 sm:p-8">
+                    <div className="bg-card rounded-2xl border border-border p-6 sm:p-8">
                       <OfferingsSection
                         offerings={profile.offerings}
                         activeTabs={activeTabs}
@@ -152,8 +152,19 @@ export default async function CreatorProfilePage({
                 )}
 
                 <TabsContent value="reviews" className="mt-0 outline-none">
-                  <div className="bg-card rounded-[20px] border border-border p-6 sm:p-8">
-                    <TestimonialsDeck
+                  <div className="bg-card rounded-2xl border border-border p-6 sm:p-8">
+                    <div className="mb-6">
+                      <h3 className="text-lg font-bold text-foreground font-display">
+                        Reviews for {displayName}
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-medium mt-0.5">
+                        {profile.testimonials.length > 0 
+                          ? `Read what students of ${displayName} have experienced.`
+                          : "Thousands of learners across India use Creonex to upskill, switch careers, and grow."
+                        }
+                      </p>
+                    </div>
+                    <ReviewsTab
                       testimonials={profile.testimonials.length > 0 ? profile.testimonials.map((t) => ({
                         id: t.id,
                         name: t.learnerName,
@@ -161,17 +172,6 @@ export default async function CreatorProfilePage({
                         quote: t.content,
                         initials: getInitials(t.learnerName),
                       })) : MOCK_TESTIMONIALS}
-                      label="Testimonials"
-                      heading={
-                        <>
-                          What learners say,{' '}
-                          <span className="text-muted-foreground">in their own words.</span>
-                        </>
-                      }
-                      description={profile.testimonials.length > 0 
-                        ? `Read what students of ${displayName} have experienced.`
-                        : "Thousands of learners across India use Creonex to upskill, switch careers, and grow — guided by experts who've been there."
-                      }
                     />
                   </div>
                 </TabsContent>

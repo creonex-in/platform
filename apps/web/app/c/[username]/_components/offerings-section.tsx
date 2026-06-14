@@ -21,10 +21,10 @@ export function OfferingsSection({
   return (
     <div id="offerings" className="w-full">
       <div className="mb-4">
-        <h3 className="text-[15px] font-bold text-foreground font-display">
+        <h3 className="text-base font-bold text-foreground font-display">
           Available Services ({offerings.length})
         </h3>
-        <p className="text-[12.5px] text-muted-foreground font-medium mt-0.5">
+        <p className="text-xs text-muted-foreground font-medium mt-0.5">
           Select a session or product below to proceed.
         </p>
       </div>
@@ -36,7 +36,7 @@ export function OfferingsSection({
                 {showAllTab && (
                   <TabsTrigger
                     value="all"
-                    className="rounded-full px-4 sm:px-5 py-2 text-[12.5px] sm:text-[13px] font-bold text-muted-foreground data-[state=active]:text-background dark:data-[state=active]:text-foreground data-[state=active]:bg-foreground dark:data-[state=active]:bg-background transition-all cursor-pointer whitespace-nowrap"
+                    className="rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold text-muted-foreground data-[state=active]:text-background dark:data-[state=active]:text-foreground data-[state=active]:bg-foreground dark:data-[state=active]:bg-background transition-all cursor-pointer whitespace-nowrap"
                   >
                     All
                     <span className="ml-1.5 text-[10px] opacity-75 font-semibold">({offerings.length})</span>
@@ -48,7 +48,7 @@ export function OfferingsSection({
                     <TabsTrigger
                       key={type}
                       value={type}
-                      className="rounded-full px-4 sm:px-5 py-2 text-[12.5px] sm:text-[13px] font-bold text-muted-foreground data-[state=active]:text-background dark:data-[state=active]:text-foreground data-[state=active]:bg-foreground dark:data-[state=active]:bg-background transition-all cursor-pointer whitespace-nowrap"
+                      className="rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold text-muted-foreground data-[state=active]:text-background dark:data-[state=active]:text-foreground data-[state=active]:bg-foreground dark:data-[state=active]:bg-background transition-all cursor-pointer whitespace-nowrap"
                     >
                       {cfg.tabLabel}
                       <span className="ml-1.5 text-[10px] opacity-75 font-semibold">({items.length})</span>
