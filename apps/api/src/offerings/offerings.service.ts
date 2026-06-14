@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -13,7 +14,10 @@ const VALID_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
   draft: ['live', 'archived'],
   live: ['paused', 'archived'],
   paused: ['live', 'archived'],
-  archived: [],
+  // Archive is reversible: restore brings the offer back as a hidden, editable
+  // draft so the creator can review before republishing. Delete stays the only
+  // permanent path.
+  archived: ['draft'],
 }
 
 @Injectable()
@@ -136,5 +140,35 @@ export class OfferingsService {
 
     await this.offeringsRepo.updateStatus(id, newStatus)
     return { id, status: newStatus }
+  }
+
+  /**
+   * Hard delete an offering. Only permitted for a `draft` with zero bookings —
+   * anything live/paused/archived or with booking history must be archived
+   * instead (preserves payment + booking records). Guarded server-side; the
+   * UI gate is convenience only.
+   */
+  async deleteOffering(id: string, userId: string) {
+    const profileId = await this.resolveCreatorProfileId(userId)
+    const offering = await this.offeringsRepo.findByIdForOwner(id, profileId)
+    if (!offering) throw new NotFoundException('Offering not found')
+
+    if (offering.status !== 'draft') {
+      throw new ConflictException(
+        'Only draft offers can be deleted. Archive live, paused, or archived offers instead.',
+      )
+    }
+
+    // Backstop: never delete an offering that has any booking rows, even if the
+    // cached counter says zero (bookings cascade-delete on the FK).
+    const bookingCount = await this.offeringsRepo.countBookings(id)
+    if (bookingCount > 0) {
+      throw new ConflictException(
+        'This offer has bookings and cannot be deleted. Archive it instead.',
+      )
+    }
+
+    await this.offeringsRepo.delete(id)
+    return { id, deleted: true }
   }
 }

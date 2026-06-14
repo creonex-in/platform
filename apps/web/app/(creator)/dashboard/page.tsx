@@ -48,7 +48,7 @@ export default async function CreatorDashboardPage(): Promise<React.ReactElement
           ]}
           action={
             <>
-              <Link href="/creator/offers/new" className={cn(buttonVariants({ size: 'sm' }))}>
+              <Link href="/offers/new" className={cn(buttonVariants({ size: 'sm' }))}>
                 <FontAwesomeIcon icon={faPlus} className="mr-1 size-4" />
                 New offer
               </Link>

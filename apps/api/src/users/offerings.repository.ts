@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq } from 'drizzle-orm'
 import { DATABASE_CONNECTION, type Database } from '../database/database-connection'
-import { offerings } from '../database/schema'
+import { bookings, offerings } from '../database/schema'
 import { generateId } from '../utils/id'
 
 @Injectable()
@@ -94,6 +94,20 @@ export class OfferingsRepository {
     },
   ) {
     await this.db.update(offerings).set(data).where(eq(offerings.id, id))
+  }
+
+  /** Backstop count of booking rows for an offering (don't trust the cached counter). */
+  async countBookings(offeringId: string): Promise<number> {
+    const result = await this.db
+      .select({ value: count() })
+      .from(bookings)
+      .where(eq(bookings.offeringId, offeringId))
+    return result[0]?.value ?? 0
+  }
+
+  /** Hard delete — caller must enforce it's safe (draft + no bookings). */
+  async delete(id: string) {
+    await this.db.delete(offerings).where(eq(offerings.id, id))
   }
 
   async updateStatus(id: string, status: string) {
