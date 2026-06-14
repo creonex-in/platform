@@ -31,6 +31,13 @@ export class OfferingsController {
     return this.offeringsService.getMyOfferings(session.user.id)
   }
 
+  // NOTE: declared before ':id' so it isn't captured as an id param.
+  @Get('eligibility')
+  @ApiOperation({ summary: 'Whether the creator may create gated offer types (group/workshop)' })
+  getCreationEligibility(@Session() session: AppUserSession) {
+    return this.offeringsService.getCreationEligibility(session.user.id)
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new offering (starts as draft)' })
   createOffering(

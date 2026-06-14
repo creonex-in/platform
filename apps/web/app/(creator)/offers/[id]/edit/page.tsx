@@ -26,7 +26,7 @@ export default async function EditOfferPage({
   return (
     <>
       <DashboardTopbar title="Edit Offer" />
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-6 max-w-6xl mx-auto">
         <Card className="border-none bg-transparent shadow-none">
           <CardContent className="p-0">
             <OfferForm offering={offering} />

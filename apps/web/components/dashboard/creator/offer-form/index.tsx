@@ -18,6 +18,8 @@ import {
   faClock,
   faArrowRight,
   faInfoCircle,
+  faTrophy,
+  faLockOpen,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Button } from '@/components/ui/button'
@@ -36,7 +38,7 @@ import { offeringsService } from '@/services/offerings.service'
 import { isApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { CreatorOffering, OfferType } from '@creonex/types'
+import type { CreatorOffering, OfferCreationEligibility, OfferType } from '@creonex/types'
 
 // ── Offer type metadata ───────────────────────────────────────────────────────
 const TYPE_META: Record<OfferType, { label: string; description: string; icon: IconDefinition }> = {
@@ -99,13 +101,22 @@ export type OfferFormValues = z.infer<typeof offerSchema>
 
 interface OfferFormProps {
   offering?: CreatorOffering
+  eligibility?: OfferCreationEligibility
 }
 
-export function OfferForm({ offering }: OfferFormProps = {}): React.ReactElement {
+export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React.ReactElement {
   const router = useRouter()
   const isEdit = !!offering
   const [submitting, setSubmitting] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+
+  // Type gating — group/workshop unlock after enough completed 1:1 sessions.
+  const lockedTypes = new Set<string>(eligibility?.lockedTypes ?? [])
+  const hasLockedTypes = lockedTypes.size > 0
+  const completedSessions = eligibility?.completedOneOnOneSessions ?? 0
+  const requiredSessions = eligibility?.requiredSessions ?? 0
+  const sessionsLeft = Math.max(requiredSessions - completedSessions, 0)
+  const unlockProgress = requiredSessions > 0 ? Math.min(completedSessions / requiredSessions, 1) : 1
 
   const {
     control,
@@ -217,7 +228,7 @@ export function OfferForm({ offering }: OfferFormProps = {}): React.ReactElement
   const typeStyle = type ? TYPE_META[type] : null
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 items-start">
       {/* ── Left Column: Form Inputs ── */}
       <form onSubmit={handleSubmit((d) => onSubmit(d, true))} className="lg:col-span-7 space-y-8 bg-card border border-border/80 p-6 sm:p-8 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.015)]">
         {/* ── Section: Offer type ── */}
@@ -229,48 +240,149 @@ export function OfferForm({ offering }: OfferFormProps = {}): React.ReactElement
                 <FontAwesomeIcon icon={typeStyle?.icon ?? faFileLines} className="size-4.5" />
               </div>
               <div className="flex-1">
-                <p className="text-base font-medium">{typeStyle?.label ?? type}</p>
+                <p className="text-base font-semibold">{typeStyle?.label ?? type}</p>
                 <p className="text-xs text-muted-foreground">Offer type can't be changed after creation</p>
               </div>
               <FontAwesomeIcon icon={faLock} className="size-4 text-muted-foreground" />
             </div>
           ) : (
             <>
+              {/* Unlocked celebratory banner */}
+              {eligibility?.unlocked && (
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-start gap-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <FontAwesomeIcon icon={faTrophy} className="size-5 animate-bounce" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      🎉 Advanced Formats Unlocked!
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed font-normal">
+                      Outstanding! You've successfully completed {completedSessions} 1:1 sessions. You are now fully eligible to create Workshops and Group Calls!
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/85 leading-normal font-normal">
+                      * All offering formats (1:1, Digital Products, Group Calls, and Workshops) are now available to publish.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Unlock progress — shown while group/workshop are still locked. */}
+              {hasLockedTypes && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5 space-y-4">
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <FontAwesomeIcon icon={faTrophy} className="size-4.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">
+                        Unlock Group Calls & Workshops
+                      </p>
+                      <p className="mt-1 text-xs md:text-sm text-muted-foreground leading-relaxed font-normal">
+                        {sessionsLeft === 1 ? (
+                          <span>Almost there — complete just <span className="font-semibold text-foreground">1 more 1:1 session</span> to unlock group calls & workshops!</span>
+                        ) : (
+                          <span>Complete <span className="font-semibold text-foreground">{sessionsLeft} more 1:1 sessions</span> to unlock group calls & workshops.</span>
+                        )}
+                      </p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground/80 font-normal mt-1.5">
+                        💡 1:1 Sessions and Digital Products are available to create and sell from day one.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-primary/10">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500"
+                        style={{ width: `${unlockProgress * 100}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                      <span>{completedSessions} of {requiredSessions} sessions completed</span>
+                      <span>{Math.round(unlockProgress * 100)}% completed</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {(Object.keys(TYPE_META) as OfferType[]).map((key) => {
                   const item = TYPE_META[key]
-                  const isSelected = type === key
+                  const isLocked = lockedTypes.has(key)
+                  const isSelected = type === key && !isLocked
                   return (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setValue('type', key, { shouldValidate: true })}
+                      aria-disabled={isLocked}
+                      onClick={() => !isLocked && setValue('type', key, { shouldValidate: true })}
                       className={cn(
-                        'flex items-start gap-3 rounded-xl border p-4 text-left transition-all duration-200 outline-none',
-                        isSelected
-                          ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                          : 'border-border bg-card hover:bg-muted/30 hover:border-foreground/15',
+                        'relative flex flex-col items-stretch gap-3 rounded-xl border p-4 text-left transition-all duration-200 outline-none group/locked',
+                        isLocked
+                          ? 'border-dashed border-border/80 bg-muted/20 hover:bg-muted/30 cursor-not-allowed'
+                          : isSelected
+                            ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                            : 'border-border bg-card hover:bg-muted/30 hover:border-foreground/15',
                       )}
                     >
-                      <div
-                        className={cn(
-                          'flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors',
-                          isSelected ? 'bg-primary text-primary-foreground bg-linear-to-br from-primary to-primary/80' : 'bg-muted text-muted-foreground',
-                        )}
-                      >
-                        <FontAwesomeIcon icon={item.icon} className="size-4.5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-base font-semibold">{item.label}</p>
-                          {isSelected && (
-                            <span className="flex size-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">
-                              <FontAwesomeIcon icon={faCheck} className="size-2.5" />
-                            </span>
-                          )}
+                      {/* Floating tooltip above the locked card */}
+                      {isLocked && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 opacity-0 pointer-events-none group-hover/locked:opacity-100 group-hover/locked:pointer-events-auto transition-opacity duration-200 z-30 w-64 bg-popover text-popover-foreground border border-border p-2.5 rounded-lg text-xs leading-normal shadow-md">
+                          <p className="font-semibold mb-0.5">Advanced Format Locked</p>
+                          <p className="text-muted-foreground font-normal">This format requires {requiredSessions} completed 1:1 sessions. Complete {sessionsLeft} more session{sessionsLeft === 1 ? '' : 's'} to unlock.</p>
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-popover border-r border-b border-border rotate-45" />
                         </div>
-                        <p className="mt-1 text-xs text-muted-foreground leading-normal">{item.description}</p>
+                      )}
+
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={cn(
+                            'flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors',
+                            isLocked
+                              ? 'bg-muted text-muted-foreground/60'
+                              : isSelected
+                                ? 'bg-primary text-primary-foreground bg-linear-to-br from-primary to-primary/80'
+                                : 'bg-muted text-muted-foreground',
+                          )}
+                        >
+                          <FontAwesomeIcon icon={isLocked ? faLock : item.icon} className="size-4.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                            <p className={cn('text-base font-semibold', isLocked && 'text-muted-foreground/90')}>
+                              {item.label}
+                            </p>
+                            {isLocked ? (
+                              <span className="rounded-full bg-muted/80 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/80 border border-border">
+                                Locked
+                              </span>
+                            ) : isSelected ? (
+                              <span className="flex size-4.5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">
+                                <FontAwesomeIcon icon={faCheck} className="size-2.5" />
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground leading-normal font-normal">
+                            {isLocked ? `Complete 1:1 sessions to unlock this format.` : item.description}
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Locked progress tracker inside locked cards */}
+                      {isLocked && (
+                        <div className="mt-3.5 space-y-1.5 pt-3 border-t border-border/40 border-dashed w-full">
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold leading-none">
+                            <span>Unlock progress</span>
+                            <span>{completedSessions}/{requiredSessions}</span>
+                          </div>
+                          <div className="h-1 w-full rounded-full bg-muted/60 overflow-hidden">
+                            <div className="h-full bg-muted-foreground/35 rounded-full" style={{ width: `${unlockProgress * 100}%` }} />
+                          </div>
+                          <p className="text-[10px] text-primary/80 font-medium leading-none mt-1">
+                            {sessionsLeft === 1 ? 'Almost there — 1 more session!' : `${sessionsLeft} sessions away`}
+                          </p>
+                        </div>
+                      )}
                     </button>
                   )
                 })}

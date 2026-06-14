@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, lt, or } from 'drizzle-orm'
 import { DATABASE_CONNECTION, type Database } from '../database/database-connection'
 import { bookings, offerings } from '../database/schema'
 import { generateId } from '../utils/id'
@@ -94,6 +94,29 @@ export class OfferingsRepository {
     },
   ) {
     await this.db.update(offerings).set(data).where(eq(offerings.id, id))
+  }
+
+  /**
+   * Count 1:1 sessions a creator has actually delivered. Counts bookings that are
+   * `completed`, or `confirmed` with an end time already in the past (robust even
+   * if a completion job hasn't run yet).
+   */
+  async countCompletedOneOnOneSessions(creatorProfileId: string): Promise<number> {
+    const result = await this.db
+      .select({ value: count() })
+      .from(bookings)
+      .innerJoin(offerings, eq(bookings.offeringId, offerings.id))
+      .where(
+        and(
+          eq(offerings.creatorProfileId, creatorProfileId),
+          eq(offerings.type, 'one_on_one'),
+          or(
+            eq(bookings.status, 'completed'),
+            and(eq(bookings.status, 'confirmed'), lt(bookings.endTime, new Date())),
+          ),
+        ),
+      )
+    return result[0]?.value ?? 0
   }
 
   /** Backstop count of booking rows for an offering (don't trust the cached counter). */
