@@ -10,8 +10,8 @@ const isPublicPath = (pathname: string) =>
 
 const isCreatorPath = (pathname: string) =>
   ['/dashboard', '/analytics', '/bookings', '/calendar', '/collaborate',
-    '/cqs', '/offers', '/payouts', '/edit-profile', '/auto-dm',
-    '/priority-dm', '/testimonials'].some((p) => pathname.startsWith(p))
+    '/cqs', '/offers', '/payouts', '/edit-profile',
+    '/testimonials'].some((p) => pathname.startsWith(p))
 
 const isLearnerPath = (pathname: string) => pathname.startsWith('/learner')
 

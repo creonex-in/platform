@@ -4,15 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faBolt } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faGraduationCap } from '@fortawesome/free-solid-svg-icons'
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 
 const PERKS = [
-  '14-day discovery boost to get your first students',
-  'Offer 1:1s, workshops, group sessions & digital products',
-  'Keep 85% of every booking — lowest fees in the market',
-  'Your own public profile page from day one',
+  'Book 1:1 sessions with verified experts',
+  'Join live workshops & group learning',
+  'Find mentors in 20+ niches',
+  'Cancel or reschedule anytime',
 ]
 
 function mapAuthError(error: { message?: string; status?: number; code?: string }): string {
@@ -21,15 +21,9 @@ function mapAuthError(error: { message?: string; status?: number; code?: string 
   return error.message ?? 'Something went wrong. Please try again.'
 }
 
-interface Props {
-  hasError?: boolean
-}
-
-export default function CreatorSignUpForm({ hasError }: Props): React.ReactElement {
+export default function LearnerSignUpPage(): React.ReactElement {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(
-    hasError ? 'Something went wrong setting up your creator account. Please try again.' : null,
-  )
+  const [error, setError] = useState<string | null>(null)
 
   async function handleGoogleSignUp() {
     setLoading(true)
@@ -37,13 +31,12 @@ export default function CreatorSignUpForm({ hasError }: Props): React.ReactEleme
     try {
       const { error } = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: `${process.env.NEXT_PUBLIC_WEB_URL}/api/post-oauth?intent=creator`,
+        callbackURL: `${process.env.NEXT_PUBLIC_WEB_URL}/api/post-oauth?intent=learner`,
       })
       if (error) {
         setError(mapAuthError(error))
         setLoading(false)
       }
-      // on success: browser redirects — don't reset loading
     } catch {
       setError('Unable to connect. Check your internet and try again.')
       setLoading(false)
@@ -53,32 +46,32 @@ export default function CreatorSignUpForm({ hasError }: Props): React.ReactEleme
   return (
     <div className="flex min-h-screen w-full flex-col lg:flex-row">
       {/* LEFT SIDE */}
-      <div className="relative flex flex-1 flex-col justify-between bg-[linear-gradient(to_bottom_right,hsl(var(--primary)/0.05),hsl(var(--primary)/0.01))] p-8 lg:p-12 xl:p-16 lg:border-r lg:border-border/50">
+      <div className="relative flex flex-1 flex-col justify-between bg-[linear-gradient(to_bottom_right,rgba(59,130,246,0.05),rgba(59,130,246,0.01))] p-8 lg:p-12 xl:p-16 lg:border-r lg:border-border/50">
         <div className="flex items-center gap-2">
-          <Link href="/creators" className="flex items-center gap-2.5 transition-all hover:scale-105">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 p-2 ring-1 ring-primary/20 backdrop-blur-md">
+          <Link href="/" className="flex items-center gap-2.5 transition-all hover:scale-105">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 p-2 ring-1 ring-blue-500/20 backdrop-blur-md">
               <Image src="/logo.webp" alt="Creonex" width={32} height={32} className="size-full object-contain" priority />
             </div>
             <span className="font-display text-xl font-bold tracking-tight text-foreground">Creonex</span>
           </Link>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[500px] flex-col items-center text-center justify-center py-16 lg:py-0">
-          <div className="mb-6 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5">
-            <FontAwesomeIcon icon={faBolt} className="size-3.5 text-primary" />
-            <span className="text-xs font-semibold text-primary">Creator Edition</span>
+        <div className="mx-auto flex w-full max-w-125 flex-col items-center text-center justify-center py-16 lg:py-0">
+          <div className="mb-6 inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1.5">
+            <FontAwesomeIcon icon={faGraduationCap} className="size-3.5 text-blue-500" />
+            <span className="text-xs font-semibold text-blue-500">Learner Edition</span>
           </div>
           <h1 className="mb-10 font-display text-3xl font-medium leading-snug tracking-tight text-foreground sm:text-4xl lg:text-3xl xl:text-4xl">
-            Creonex makes monetizing easy. From quick 1:1s to full digital products, it's fast, smooth, and built for your growth.
+            Learn directly from the world's best experts. Fast, engaging, and personalized just for you.
           </h1>
 
           <div className="flex flex-col items-center gap-3">
             <div className="size-14 overflow-hidden rounded-full ring-2 ring-background shadow-md">
-              <img src="https://i.pravatar.cc/150?u=a042581f4e29026024d" alt="Creator" className="size-full object-cover" />
+              <img src="https://i.pravatar.cc/150?u=4" alt="Learner" className="size-full object-cover" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">Jason Rivera</p>
-              <p className="text-xs text-muted-foreground">Product Designer, NovaByte</p>
+              <p className="text-sm font-semibold text-foreground">Sarah Jenkins</p>
+              <p className="text-xs text-muted-foreground">Product Design Student</p>
             </div>
           </div>
         </div>
@@ -90,17 +83,17 @@ export default function CreatorSignUpForm({ hasError }: Props): React.ReactEleme
 
       {/* RIGHT SIDE */}
       <div className="flex flex-1 items-center justify-center bg-background p-4 sm:p-8 lg:p-12 relative overflow-hidden">
-        <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] hidden lg:block" />
+        <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] hidden lg:block" />
 
-        <div className="w-full max-w-[440px] relative z-10">
-          <div className="rounded-[2rem] border border-border/50 bg-background/80 p-8 shadow-2xl shadow-primary/5 backdrop-blur-2xl sm:p-10 text-center">
+        <div className="w-full max-w-110 relative z-10">
+          <div className="rounded-4xl border border-border/50 bg-background/80 p-8 shadow-2xl shadow-blue-500/5 backdrop-blur-2xl sm:p-10 text-center">
             <div className="mx-auto mb-6 flex items-center justify-center gap-2">
               <Image src="/logo.webp" alt="Creonex" width={28} height={28} className="object-contain" />
               <span className="font-display text-xl font-bold tracking-tight text-foreground">Creonex</span>
             </div>
 
             <h2 className="mb-8 font-display text-2xl font-bold tracking-tight text-foreground">
-              Create and share your very first <span className="text-primary">Creonex</span> in no time!
+              Discover and learn from top experts on <span className="text-blue-500">Creonex</span>!
             </h2>
 
             <Button
@@ -114,12 +107,12 @@ export default function CreatorSignUpForm({ hasError }: Props): React.ReactEleme
             </Button>
 
             <div className="text-left">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Why join as a creator?</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">Why join as a learner?</p>
               <ul className="space-y-3">
                 {PERKS.map((perk) => (
                   <li key={perk} className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <FontAwesomeIcon icon={faCheck} className="size-3 text-primary" />
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
+                      <FontAwesomeIcon icon={faCheck} className="size-3 text-blue-500" />
                     </span>
                     {perk}
                   </li>
@@ -136,7 +129,7 @@ export default function CreatorSignUpForm({ hasError }: Props): React.ReactEleme
 
           <div className="mt-8 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/sign-in" className="font-medium text-foreground transition-colors hover:text-primary hover:underline underline-offset-4">
+            <Link href="/sign-in" className="font-medium text-foreground transition-colors hover:text-blue-500 hover:underline underline-offset-4">
               Sign in
             </Link>
           </div>
