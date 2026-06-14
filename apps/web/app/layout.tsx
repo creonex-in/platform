@@ -3,7 +3,7 @@ import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { QueryProvider } from "@/providers/QueryProvider"
-import { Toaster } from "sonner"
+import { Toaster } from "@/components/ui/toaster"
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -48,7 +48,7 @@ export default function RootLayout({
         >
           <QueryProvider>
             {children}
-            <Toaster richColors position="top-center" />
+            <Toaster />
           </QueryProvider>
         </ThemeProvider>
       </body>

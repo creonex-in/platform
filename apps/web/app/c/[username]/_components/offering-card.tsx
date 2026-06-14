@@ -1,10 +1,10 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight, faClock } from '@fortawesome/free-solid-svg-icons'
+import { faClock } from '@fortawesome/free-solid-svg-icons'
 import { cn } from '@/lib/utils'
 import { getTypeConfig } from './types'
 import type { PublicOffering } from '@creonex/types'
 
-export function OfferingCard({ item }: { item: PublicOffering }): React.ReactElement {
+export function OfferingCard({ item, onBook }: { item: PublicOffering; onBook?: () => void }): React.ReactElement {
   const cfg = getTypeConfig(item.type)
 
   const duration = item.durationMinutes
@@ -20,8 +20,9 @@ export function OfferingCard({ item }: { item: PublicOffering }): React.ReactEle
   return (
     <div className={cn(
       'relative flex flex-col rounded-2xl border border-border bg-card overflow-hidden',
-      'hover:shadow-md hover:border-border/80 transition-all duration-200 cursor-pointer',
+      'transition-all duration-200',
       soldOut && 'opacity-60',
+      onBook && !soldOut && (item.type === 'one_on_one' || item.type === 'group') && 'cursor-pointer hover:shadow-md hover:border-primary/40',
     )}>
       {/* Gradient accent strip */}
       <div className={cn('h-1 w-full bg-linear-to-r', cfg.gradient)} />
@@ -73,12 +74,18 @@ export function OfferingCard({ item }: { item: PublicOffering }): React.ReactEle
               </p>
             )}
           </div>
-          <div className={cn(
-            'flex items-center justify-center size-8 rounded-full bg-linear-to-br shrink-0',
-            cfg.gradient,
-          )}>
-            <FontAwesomeIcon icon={faArrowRight} className="size-3 text-white" />
-          </div>
+          {onBook && !soldOut && (item.type === 'one_on_one' || item.type === 'group') ? (
+            <button
+              onClick={onBook}
+              className="rounded-full bg-primary text-primary-foreground text-xs font-bold px-4 py-2 hover:bg-primary/90 active:scale-95 transition-all"
+            >
+              Book
+            </button>
+          ) : (
+            <span className="text-[10px] font-semibold text-muted-foreground/60 italic">
+              Coming soon
+            </span>
+          )}
         </div>
       </div>
     </div>

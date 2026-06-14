@@ -19,7 +19,6 @@ import {
   faArrowRight,
   faInfoCircle,
   faTrophy,
-  faLockOpen,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Button } from '@/components/ui/button'
@@ -37,7 +36,7 @@ import {
 import { offeringsService } from '@/services/offerings.service'
 import { isApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import type { CreatorOffering, OfferCreationEligibility, OfferType } from '@creonex/types'
 
 // ── Offer type metadata ───────────────────────────────────────────────────────
@@ -202,14 +201,14 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
     try {
       if (isEdit) {
         await offeringsService.updateOffering(offering.id, body)
-        toast.success('Offer updated.', { description: `"${data.title}" saved.` })
+        toast.success('Offer updated.', `"${data.title}" saved.`)
       } else {
         const created = await offeringsService.createOffering({ type: data.type, ...body })
         if (publish) {
           await offeringsService.transitionStatus(created.id, 'live')
-          toast.success('Offer published!', { description: `"${data.title}" is now live.` })
+          toast.success('Offer published!', `"${data.title}" is now live.`)
         } else {
-          toast.success('Draft saved.', { description: `"${data.title}" saved as a draft.` })
+          toast.success('Draft saved.', `"${data.title}" saved as a draft.`)
         }
       }
       router.push('/offers')

@@ -123,9 +123,7 @@ export class SchedulesController {
 // ── Public slot availability ────────────────────────────────────────────────────
 
 @ApiTags('Availability')
-@ApiCookieAuth()
 @Controller('v1/availability')
-@UseGuards(AuthGuard, RolesGuard)
 export class AvailabilityController {
   constructor(private readonly slotService: SlotGenerationService) {}
 

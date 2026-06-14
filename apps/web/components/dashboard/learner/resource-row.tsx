@@ -18,7 +18,7 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Resource, ResourceType } from '@/types/resource'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 const typeIcon: Record<ResourceType, IconDefinition> = {
   pdf: faFilePdf,

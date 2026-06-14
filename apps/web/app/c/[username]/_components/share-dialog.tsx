@@ -63,11 +63,11 @@ export function ShareDialog({ username, displayName, variant = 'icon' }: ShareDi
       {variant === 'banner' ? (
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-black/40 hover:bg-black/55 backdrop-blur-md border border-white/20 text-white text-[12.5px] font-bold transition-all hover:scale-[1.02] active:scale-98 cursor-pointer shadow-md select-none"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-black/40 hover:bg-black/55 backdrop-blur-md border border-white/20 text-white text-[12.5px] font-bold transition-all hover:scale-[1.02] active:scale-98 cursor-pointer shadow-md select-none"
           aria-label="Share profile"
         >
           <FontAwesomeIcon icon={faShareNodes} className="size-3.5" />
-          <span>Share Profile</span>
+          <span className="hidden sm:inline">Share Profile</span>
         </button>
       ) : (
         <button

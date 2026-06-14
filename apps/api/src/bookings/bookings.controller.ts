@@ -10,7 +10,7 @@ import { RolesGuard } from '../auth/roles.guard'
 import type { AppUserSession } from '../auth/types'
 import { BookingsService } from './bookings.service'
 import { PaymentService } from '../payment/payment.service'
-import { CancelBookingDto, ConfirmBookingDto, CreateBookingDto } from './bookings.dto'
+import { CancelBookingDto, ConfirmBookingDto, CreateBookingDto, CreateGuestBookingDto } from './bookings.dto'
 
 // ── Learner booking actions ───────────────────────────────────────────────────
 
@@ -72,6 +72,12 @@ export class BookingsController {
 export class CreatorBookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'List all bookings across all my offerings' })
+  getAll(@Session() session: AppUserSession) {
+    return this.bookingsService.getCreatorAllBookings(session.user.id)
+  }
+
   @Get('offerings/:offeringId')
   @ApiOperation({ summary: 'List all bookings for one of my offerings' })
   getOfferingBookings(
@@ -124,5 +130,25 @@ export class PaymentWebhookController {
     }
 
     return { received: true }
+  }
+}
+
+// ── Guest booking (no auth) ───────────────────────────────────────────────────
+
+@ApiTags('Bookings')
+@Controller('v1/bookings/guest')
+export class GuestBookingsController {
+  constructor(private readonly bookingsService: BookingsService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create booking as guest (no account required)' })
+  createGuest(@Body() dto: CreateGuestBookingDto) {
+    return this.bookingsService.createGuestBooking(dto)
+  }
+
+  @Post(':id/confirm')
+  @ApiOperation({ summary: 'Confirm guest booking after Razorpay payment' })
+  confirmGuest(@Param('id') id: string, @Body() dto: ConfirmBookingDto) {
+    return this.bookingsService.confirmGuestBooking(id, dto)
   }
 }

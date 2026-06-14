@@ -57,7 +57,7 @@ export function ScheduleSettingsCard({ name, timezone, onNameChange, onTimezoneC
 
         <div className="space-y-1.5">
           <Label className="text-xs font-medium text-muted-foreground">Timezone</Label>
-          <Select value={timezone} onValueChange={onTimezoneChange}>
+          <Select value={timezone} onValueChange={(v) => { if (v) onTimezoneChange(v) }}>
             <SelectTrigger className="h-9 text-sm">
               <SelectValue />
             </SelectTrigger>

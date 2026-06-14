@@ -1,5 +1,5 @@
 import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
-import { MetricCard } from '@/components/dashboard/creator/metric-card'
+import { StatPanel } from '@/components/dashboard/creator/stat-panel'
 import { EarningsChart } from '@/components/dashboard/creator/earnings-chart'
 import { InsightBox } from '@/components/dashboard/creator/insight-box'
 import { BookingRow } from '@/components/dashboard/creator/booking-row'
@@ -10,20 +10,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 import { creatorMetrics } from '@/data/mock-earnings'
-import { mockBookings } from '@/data/mock-bookings'
 import { formatCurrency, cn, getInitials } from '@/lib/utils'
 import { getCreatorContext } from '@/dal/users.dal'
+import { getCreatorBookings } from '@/dal/bookings.dal'
+import { getCreatorTestimonials } from '@/dal/testimonials.dal'
 import Link from 'next/link'
 
 export const metadata = { title: 'Dashboard — Creonex' }
 
 export default async function CreatorDashboardPage(): Promise<React.ReactElement> {
-  const { user, profile } = await getCreatorContext()
+  const [{ user, profile }, allBookings, recentReviews] = await Promise.all([
+    getCreatorContext(),
+    getCreatorBookings(),
+    getCreatorTestimonials(),
+  ])
   const displayName = profile?.displayName ?? user?.name ?? 'Creator'
   const avatarImage = profile?.profilePhotoUrl ?? user?.image ?? null
 
-  const upcomingBookings = mockBookings.filter(
-    (b) => b.status === 'upcoming' || b.status === 'confirmed'
+  const upcomingBookings = allBookings.filter(
+    (b) => b.status === 'pending_payment' || b.status === 'confirmed'
   )
 
   return (
@@ -64,34 +69,32 @@ export default async function CreatorDashboardPage(): Promise<React.ReactElement
           }
         />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <MetricCard
-            label="Earnings (this month)"
-            value={formatCurrency(creatorMetrics.earningsThisMonth)}
-            change={creatorMetrics.earningsGrowth}
-            changeLabel="vs last month"
-            index={0}
-          />
-          <MetricCard
-            label="Total bookings"
-            value={creatorMetrics.totalBookings.toString()}
-            changeLabel={`${creatorMetrics.bookingsThisWeek} this week`}
-            index={1}
-          />
-          <MetricCard
-            label="Profile views"
-            value={creatorMetrics.profileViews.toLocaleString()}
-            changeLabel={`${creatorMetrics.conversionRate}% conversion`}
-            index={2}
-          />
-          <MetricCard
-            label="CQS score"
-            value={creatorMetrics.cqsScore.toString()}
-            change={creatorMetrics.cqsChange}
-            changeLabel="this month"
-            index={3}
-          />
-        </div>
+        <StatPanel
+          stats={[
+            {
+              label: 'Earnings (this month)',
+              value: formatCurrency(creatorMetrics.earningsThisMonth),
+              change: creatorMetrics.earningsGrowth,
+              changeLabel: 'vs last month',
+            },
+            {
+              label: 'Total bookings',
+              value: creatorMetrics.totalBookings.toString(),
+              changeLabel: `${creatorMetrics.bookingsThisWeek} this week`,
+            },
+            {
+              label: 'Profile views',
+              value: creatorMetrics.profileViews.toLocaleString(),
+              changeLabel: `${creatorMetrics.conversionRate}% conversion`,
+            },
+            {
+              label: 'CQS score',
+              value: creatorMetrics.cqsScore.toString(),
+              change: creatorMetrics.cqsChange,
+              changeLabel: 'this month',
+            },
+          ]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <Card className="lg:col-span-3">
@@ -121,31 +124,29 @@ export default async function CreatorDashboardPage(): Promise<React.ReactElement
           actionLabel="Edit profile →"
         />
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Recent reviews</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[
-              { name: 'Arjun K.', initials: 'AK', rating: 5, text: '"Meera\'s feedback on my portfolio was incredibly specific and actionable. Booked again already."' },
-              { name: 'Preet R.', initials: 'PR', rating: 5, text: '"Worth every rupee. Totally changed how I approach UX research."' },
-              { name: 'Sanya R.', initials: 'SR', rating: 4, text: '"Great session. Would have loved more time on the case study structure."' },
-            ].map((review, i) => (
-              <div key={i} className="flex gap-3">
-                <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
-                  {review.initials}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-medium">{review.name}</span>
-                    <span className="text-xs text-amber-400">{'★'.repeat(review.rating)}</span>
+        {recentReviews.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Recent reviews</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {recentReviews.slice(0, 3).map((review) => (
+                <div key={review.id} className="flex gap-3">
+                  <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
+                    {getInitials(review.learnerName)}
                   </div>
-                  <p className="text-xs text-muted-foreground">{review.text}</p>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm font-medium">{review.learnerName}</span>
+                      <span className="text-xs text-amber-400">{'★'.repeat(review.rating)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{review.content}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </>
   )

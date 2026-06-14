@@ -92,6 +92,7 @@ export interface PublicOffering {
   id: string
   type: string
   title: string
+  description: string | null
   price: number
   currency: string
   durationMinutes: number | null
@@ -141,6 +142,42 @@ export interface OfferCreationEligibility {
   lockedTypes: string[]
 }
 
+// ── Booking Flow ──────────────────────────────────────────────────────────────
+
+export interface CreateBookingRequest {
+  offeringId: string
+  startTime?: string
+  endTime?: string
+  topic?: string
+  learnerTimezone?: string
+}
+
+export interface CreateGuestBookingRequest extends CreateBookingRequest {
+  guestName: string
+  guestEmail: string
+  guestPhone?: string
+}
+
+export interface ConfirmBookingRequest {
+  razorpayOrderId: string
+  razorpayPaymentId: string
+  razorpaySignature: string
+}
+
+export interface BookingCreatedResponse {
+  bookingId: string
+  razorpayOrderId: string
+  amountPaise: number
+  currency: string
+  razorpayKeyId: string
+}
+
+export interface BookingConfirmedResponse {
+  id: string
+  status: string
+  meetingUrl: string | null
+}
+
 export interface PublicTestimonial {
   id: string
   learnerName: string
@@ -166,8 +203,40 @@ export interface PublicCreatorProfile {
   totalSessions: number
   isVerified: boolean
   tags: string[]
+  email: string
   offerings: PublicOffering[]
   testimonials: PublicTestimonial[]
+}
+
+// ── Creator Bookings ──────────────────────────────────────────────────────────
+
+export type CreatorBookingStatus = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled'
+
+export interface CreatorBookingItem {
+  id: string
+  offeringId: string
+  offeringTitle: string
+  offeringType: string
+  learnerProfileId: string
+  learnerName: string
+  startTime: string | null
+  endTime: string | null
+  status: CreatorBookingStatus
+  amountPaise: number
+  topic: string | null
+  meetingUrl: string | null
+  cancelledAt: string | null
+  createdAt: string
+}
+
+export interface CreatorTestimonialItem {
+  id: string
+  learnerName: string
+  learnerRole: string | null
+  content: string
+  rating: number
+  isPublic: boolean
+  createdAt: string
 }
 
 // ── Onboarding Responses ──────────────────────────────────────────────────────

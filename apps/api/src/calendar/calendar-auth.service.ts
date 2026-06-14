@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { google } from 'googleapis'
-
-type OAuth2Client = InstanceType<typeof google.auth.OAuth2>
+import { auth, calendar } from '@googleapis/calendar'
+import { oauth2 } from '@googleapis/oauth2'
 import { CalendarConnectionsRepository } from './calendar-connections.repository'
+
+type OAuth2Client = InstanceType<typeof auth.OAuth2>
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
 
 const SCOPES = [
@@ -31,7 +32,7 @@ export class CalendarAuthService {
   }
 
   private buildClient(): OAuth2Client {
-    return new google.auth.OAuth2(
+    return new auth.OAuth2(
       this.config.get<string>('GOOGLE_CLIENT_ID'),
       this.config.get<string>('GOOGLE_CLIENT_SECRET'),
       this.redirectUri,
@@ -64,8 +65,8 @@ export class CalendarAuthService {
     client.setCredentials(tokens)
     let accountEmail: string | undefined
     try {
-      const oauth2 = google.oauth2({ version: 'v2', auth: client })
-      const { data: userInfo } = await oauth2.userinfo.get()
+      const oauth2Api = oauth2({ version: 'v2', auth: client })
+      const { data: userInfo } = await oauth2Api.userinfo.get()
       accountEmail = userInfo.email ?? undefined
     } catch {
       // proceed without email — token lacked userinfo.email scope
@@ -143,8 +144,8 @@ export class CalendarAuthService {
     const client = this.buildClient()
     client.setCredentials({ access_token: accessToken })
 
-    const calendar = google.calendar({ version: 'v3', auth: client })
-    const { data } = await calendar.freebusy.query({
+    const cal = calendar({ version: 'v3', auth: client })
+    const { data } = await cal.freebusy.query({
       requestBody: {
         timeMin: timeMin.toISOString(),
         timeMax: timeMax.toISOString(),
@@ -174,8 +175,8 @@ export class CalendarAuthService {
     const client = this.buildClient()
     client.setCredentials({ access_token: accessToken })
 
-    const calendar = google.calendar({ version: 'v3', auth: client })
-    const { data: event } = await calendar.events.insert({
+    const cal = calendar({ version: 'v3', auth: client })
+    const { data: event } = await cal.events.insert({
       calendarId: conn?.calendarId ?? 'primary',
       conferenceDataVersion: 1,
       requestBody: {
@@ -209,8 +210,8 @@ export class CalendarAuthService {
     const client = this.buildClient()
     client.setCredentials({ access_token: accessToken })
 
-    const calendar = google.calendar({ version: 'v3', auth: client })
-    await calendar.events.delete({
+    const cal = calendar({ version: 'v3', auth: client })
+    await cal.events.delete({
       calendarId: conn.calendarId,
       eventId: calendarEventId,
       sendUpdates: 'all', // notify attendees of cancellation

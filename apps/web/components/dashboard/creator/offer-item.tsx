@@ -16,7 +16,6 @@ import {
   faEllipsis,
   faSpinner,
   faCopy,
-  faIndianRupeeSign,
   faTrash,
   faRotateLeft,
 } from '@fortawesome/free-solid-svg-icons'
@@ -43,7 +42,7 @@ import {
 import { offeringsService } from '@/services/offerings.service'
 import { isApiError } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import type { CreatorOffering, OfferStatus } from '@creonex/types'
 import { cn } from '@/lib/utils'
 
@@ -118,18 +117,18 @@ export function OfferItem({ offer, index = 0, username, onChanged }: OfferItemPr
 
   const handleCopyLink = async (): Promise<void> => {
     if (offer.status === 'draft') {
-      toast.error('Cannot share draft', { description: 'Please publish this offering first.' })
+      toast.error('Cannot share draft', 'Please publish this offering first.')
       return
     }
     if (offer.status === 'archived') {
-      toast.error('Offer is archived', { description: 'Archived offerings cannot receive bookings.' })
+      toast.error('Offer is archived', 'Archived offerings cannot receive bookings.')
       return
     }
     try {
       const url = `${window.location.origin}/c/${username}#offerings`
       await navigator.clipboard.writeText(url)
-      toast.success('Booking link copied!', { description: 'Share this link to start getting bookings.' })
-    } catch (e) {
+      toast.success('Booking link copied!', 'Share this link to start getting bookings.')
+    } catch {
       toast.error('Could not copy link.')
     }
   }
@@ -143,13 +142,13 @@ export function OfferItem({ offer, index = 0, username, onChanged }: OfferItemPr
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: Math.min(index, 4) * 0.03 }}
       className={cn(
-        'relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 sm:p-5 transition-all duration-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.01)] hover:border-border/80 border-l-4 border-l-primary/60 hover:border-l-primary',
+        'relative flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-border/70 hover:shadow-sm sm:flex-row sm:items-center sm:p-5',
       )}
     >
       <div className="flex items-start gap-4 flex-1 min-w-0">
         {/* Left Side: Type Icon */}
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-primary shadow-xs">
-          <FontAwesomeIcon icon={typeConf.icon} className="size-5.5" />
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+          <FontAwesomeIcon icon={typeConf.icon} className="size-5" />
         </div>
 
         {/* Middle: Details & Stats */}
@@ -166,10 +165,7 @@ export function OfferItem({ offer, index = 0, username, onChanged }: OfferItemPr
               )}
             >
               {offer.status === 'live' && (
-                <span className="relative flex h-1.5 w-1.5 mr-1 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
-                </span>
+                <span className="mr-1 inline-block size-1.5 shrink-0 rounded-full bg-primary" />
               )}
               {statusConf.label}
             </Badge>
@@ -178,7 +174,7 @@ export function OfferItem({ offer, index = 0, username, onChanged }: OfferItemPr
           {/* Stats Badges Ribbon */}
           <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs md:text-sm text-muted-foreground">
             {/* Price tag */}
-            <span className="font-semibold text-foreground">
+            <span className="font-semibold text-foreground tabular-nums">
               {formatCurrency(offer.price)}
             </span>
 
@@ -192,11 +188,8 @@ export function OfferItem({ offer, index = 0, username, onChanged }: OfferItemPr
             <span className="text-muted-foreground/40 font-light">•</span>
 
             {/* Total Revenue generated */}
-            <span className="flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faIndianRupeeSign} className="size-3 text-primary/70" />
-              <span className="font-semibold text-primary">
-                {earningsRupees.toLocaleString('en-IN')}
-              </span>
+            <span className="flex items-center gap-1">
+              <span className="font-semibold text-foreground tabular-nums">{formatCurrency(earningsRupees)}</span>
               <span>earned</span>
             </span>
 
@@ -230,7 +223,7 @@ export function OfferItem({ offer, index = 0, username, onChanged }: OfferItemPr
             variant="outline"
             size="sm"
             onClick={handleCopyLink}
-            className="h-9 rounded-lg text-xs md:text-sm font-medium px-3 hidden.5 sm:flex hover:bg-muted/50 border-border/60"
+            className="h-9 rounded-lg text-xs md:text-sm font-medium px-3 hidden sm:flex hover:bg-muted/50 border-border/60"
             title="Copy Public Link"
           >
             <FontAwesomeIcon icon={faCopy} className="size-3.5 mr-1.5 text-muted-foreground" />

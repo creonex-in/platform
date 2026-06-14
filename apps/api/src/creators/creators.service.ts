@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
 import { OfferingsRepository } from '../users/offerings.repository'
 import { TestimonialsRepository } from '../users/testimonials.repository'
+import { UsersRepository } from '../users/users.repository'
 
 @Injectable()
 export class CreatorsService {
@@ -9,6 +10,7 @@ export class CreatorsService {
     private readonly creatorProfileRepo: CreatorProfileRepository,
     private readonly offeringsRepo: OfferingsRepository,
     private readonly testimonialsRepo: TestimonialsRepository,
+    private readonly usersRepo: UsersRepository,
   ) {}
 
   async getPublicProfile(username: string) {
@@ -18,9 +20,10 @@ export class CreatorsService {
       throw new NotFoundException(`Creator @${username} not found`)
     }
 
-    const [offerings, testimonials] = await Promise.all([
+    const [offerings, testimonials, user] = await Promise.all([
       this.offeringsRepo.findPublicByCreatorProfileId(profile.id),
       this.testimonialsRepo.findPublicByCreatorProfileId(profile.id),
+      this.usersRepo.findById(profile.userId),
     ])
 
     return {
@@ -40,6 +43,7 @@ export class CreatorsService {
       totalSessions: profile.totalSessions,
       isVerified: profile.isVerified,
       tags: profile.tags,
+      email: user?.email ?? '',
       offerings: offerings.map((o) => ({
         id: o.id,
         type: o.type,
@@ -51,6 +55,7 @@ export class CreatorsService {
         seatsRemaining: o.seatsRemaining ?? null,
         status: o.status,
         totalBookings: o.totalBookings,
+        description: o.description ?? null,
         thumbnailUrl: o.thumbnailUrl ?? null,
       })),
       testimonials: testimonials.map((t) => ({

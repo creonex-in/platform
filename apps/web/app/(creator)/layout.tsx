@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/dashboard/shared/app-sidebar'
-import { Toaster } from '@/components/ui/sonner'
 import { getCreatorContext } from '@/dal/users.dal'
 import { requireCreator } from '@/lib/auth-guards'
 import { getInitials } from '@/lib/utils'
@@ -33,7 +32,6 @@ export default async function CreatorLayout({ children }: { children: React.Reac
       <SidebarInset className="bg-muted/30 min-h-screen">
         {children}
       </SidebarInset>
-      <Toaster position="bottom-right" />
     </SidebarProvider>
   )
 }

@@ -52,7 +52,7 @@ export function DayRow({ row, onToggle, onChangeTime }: Props) {
 
       {row.enabled ? (
         <div className="flex items-center gap-2">
-          <Select value={row.startTime} onValueChange={(v) => onChangeTime('startTime', v)}>
+          <Select value={row.startTime} onValueChange={(v) => { if (v) onChangeTime('startTime', v) }}>
             <SelectTrigger className="h-8 w-[7.5rem] rounded-full text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -67,7 +67,7 @@ export function DayRow({ row, onToggle, onChangeTime }: Props) {
 
           <span className="text-xs text-muted-foreground">—</span>
 
-          <Select value={row.endTime} onValueChange={(v) => onChangeTime('endTime', v)}>
+          <Select value={row.endTime} onValueChange={(v) => { if (v) onChangeTime('endTime', v) }}>
             <SelectTrigger className="h-8 w-[7.5rem] rounded-full text-xs">
               <SelectValue />
             </SelectTrigger>
