@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ReviewsTab } from './reviews-tab'
 import { ProfileSidebar } from './profile-sidebar'
 import { OverviewTab } from './overview-tab'
@@ -31,14 +31,32 @@ export function ProfileContent({
   showAllTab,
   defaultTab,
 }: Props) {
-  const [selectedOffering, setSelectedOffering] = useState<PublicOffering | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Modal open-state lives in the URL (?offering=…) so it survives a round-trip
+  // to /checkout — Back restores the dialog with the same offering/slot/tz.
+  const offeringId = searchParams.get('offering')
+  const selectedOffering = offeringId
+    ? (profile.offerings.find((o) => o.id === offeringId) ?? null)
+    : null
 
   const firstBookable = profile.offerings.find(
     (o) => o.type === 'one_on_one' || o.type === 'group'
   ) ?? null
 
-  const openModal = (offering: PublicOffering) => setSelectedOffering(offering)
-  const closeModal = () => setSelectedOffering(null)
+  const openModal = (offering: PublicOffering) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('offering', offering.id)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+  const closeModal = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    for (const k of ['offering', 'tz', 'start', 'end']) params.delete(k)
+    const qs = params.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+  }
 
   return (
     <>

@@ -2,23 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faXmark, faClock, faIndianRupeeSign, faArrowRight,
   faChevronLeft, faChevronRight, faCircleCheck, faShieldHalved,
-  faVideo, faSun, faMugHot, faCalendarDay, faGlobe, faChevronDown,
+  faVideo, faCalendarDay, faGlobe, faChevronDown, faCheck,
 } from '@fortawesome/free-solid-svg-icons'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { slotsService } from '@/services/slots.service'
 import { getInitials } from '@/lib/utils'
+import { useOfferingSlots } from '../_hooks/use-offering-slots'
 import type { PublicOffering, PublicCreatorProfile } from '@creonex/types'
 import type { SlotItem } from '@/services/slots.service'
-
-interface SlotsByDate {
-  [date: string]: SlotItem[]
-}
 
 interface Props {
   offering: PublicOffering
@@ -28,84 +23,70 @@ interface Props {
 
 export function SlotPickerModal({ offering, profile, onClose }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const restoredRef = useRef(false)
 
-  const [slotsByDate, setSlotsByDate] = useState<SlotsByDate>({})
-  const [availableDates, setAvailableDates] = useState<string[]>([])
-  const [slotsLoading, setSlotsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<SlotItem | null>(null)
-  const [tz, setTz] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone)
+  const [viewMonth, setViewMonth] = useState<Date | null>(null)
+  const [tz, setTz] = useState(() => searchParams.get('tz') ?? Intl.DateTimeFormat().resolvedOptions().timeZone)
   const [navigating, setNavigating] = useState(false)
-  const dateStripRef = useRef<HTMLDivElement>(null)
 
+  const { slots, slotsByDate, availableDates, loading: slotsLoading } = useOfferingSlots(offering.id, tz)
   const isVerified = profile.qualityTier === 'verified' || profile.qualityTier === 'featured'
+  const today = todayInTz(tz)
 
-  // ── Fetch slots ───────────────────────────────────────────────────────────────
+  // ── Initialise selection once slots arrive ──────────────────────────────────────
+  // Runs after every fetch settles: a tz change resets to the first open day. On the
+  // first load it also restores a slot from the URL (back-from-checkout / shared link)
+  // — slot.start is a tz-independent UTC instant, so it matches across any tz.
   useEffect(() => {
-    const today = new Date()
-    const from = today.toISOString().slice(0, 10)
-    const toDate = new Date(today)
-    toDate.setDate(today.getDate() + 28)
-    const to = toDate.toISOString().slice(0, 10)
-
-    setSlotsLoading(true)
-    setSelectedSlot(null)
-    slotsService.getSlots(offering.id, tz, from, to)
-      .then((slots) => {
-        const grouped: SlotsByDate = {}
-        for (const slot of slots) {
-          // Group by the LOCAL date (in the selected tz), read straight from startLocal.
-          const key = slot.startLocal.slice(0, 10)
-          if (!grouped[key]) grouped[key] = []
-          grouped[key].push(slot)
-        }
-        const dates = Object.keys(grouped).sort()
-        setSlotsByDate(grouped)
-        setAvailableDates(dates)
-        setSelectedDate(dates.length > 0 ? dates[0] : null)
-      })
-      .catch(() => {})
-      .finally(() => setSlotsLoading(false))
-  }, [offering.id, tz])
+    if (slotsLoading) return
+    let initialDate = availableDates[0] ?? null
+    let restored: SlotItem | null = null
+    if (!restoredRef.current) {
+      restoredRef.current = true
+      const wanted = searchParams.get('start')
+      const found = wanted ? slots.find((s) => s.start === wanted) : undefined
+      if (found) {
+        restored = found
+        initialDate = found.startLocal.slice(0, 10)
+      }
+    }
+    setSelectedSlot(restored)
+    setSelectedDate(initialDate)
+    setViewMonth(monthStart(initialDate ?? today))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slotsLoading, slots])
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr + 'T00:00:00')
-    return {
-      day: d.toLocaleDateString('en-IN', { weekday: 'short' }),
-      date: d.getDate(),
-      month: d.toLocaleDateString('en-IN', { month: 'short' }),
-    }
-  }
-
-  // startLocal is already wall-clock in the selected tz ("YYYY-MM-DDTHH:mm:ss±zz:zz").
-  // Read it as a string so display stays correct for ANY chosen tz (not the browser's).
-  const localHour = (isoLocal: string) => Number(isoLocal.slice(11, 13))
+  // startLocal is wall-clock in the selected tz ("YYYY-MM-DDTHH:mm:ss±zz:zz"). Read it
+  // as a string so display stays correct for ANY chosen tz (not the browser's).
   const formatSlotTime = (isoLocal: string) => {
-    const h = localHour(isoLocal)
+    const h = Number(isoLocal.slice(11, 13))
     const m = isoLocal.slice(14, 16)
-    const ampm = h >= 12 ? 'PM' : 'AM'
-    return `${h % 12 || 12}:${m} ${ampm}`
+    return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`
   }
 
   const slotsForDate = selectedDate ? (slotsByDate[selectedDate] ?? []) : []
-  const amSlots = slotsForDate.filter((s) => localHour(s.startLocal) < 12)
-  const pmSlots = slotsForDate.filter((s) => localHour(s.startLocal) >= 12)
 
-  const scrollDates = (dir: -1 | 1) =>
-    dateStripRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' })
+  const availableSet = new Set(availableDates)
+  const minMonth = availableDates.length ? monthKey(availableDates[0]) : null
+  const maxMonth = availableDates.length ? monthKey(availableDates[availableDates.length - 1]) : null
+  const vmKey = viewMonth ? viewMonth.getFullYear() * 12 + viewMonth.getMonth() : 0
+  const canPrev = minMonth !== null && vmKey > minMonth
+  const canNext = maxMonth !== null && vmKey < maxMonth
+  const shiftMonth = (delta: number) =>
+    setViewMonth((vm) => (vm ? new Date(vm.getFullYear(), vm.getMonth() + delta, 1) : vm))
 
   const goCheckout = () => {
     if (!selectedSlot) return
     setNavigating(true)
-    const qs = new URLSearchParams({
-      creator: profile.username,
-      offering: offering.id,
-      start: selectedSlot.start,
-      end: selectedSlot.end,
-      tz,
-    }).toString()
-    router.push(`/checkout?${qs}`)
+    const sel = { offering: offering.id, tz, start: selectedSlot.start, end: selectedSlot.end }
+    // Enrich the current history entry so browser Back reopens this dialog restored,
+    // then continue to checkout.
+    router.replace(`/c/${profile.username}?${new URLSearchParams(sel).toString()}`, { scroll: false })
+    router.push(`/checkout?${new URLSearchParams({ creator: profile.username, ...sel }).toString()}`)
   }
 
   // ── Left info panel ─────────────────────────────────────────────────────────────
@@ -182,9 +163,7 @@ export function SlotPickerModal({ offering, profile, onClose }: Props) {
               <p className="text-base font-bold text-foreground leading-tight">
                 {formatSlotTime(selectedSlot.startLocal)}
               </p>
-              <p className="text-sm text-muted-foreground truncate">
-                {(() => { const f = formatDate(selectedDate); return `${f.day}, ${f.date} ${f.month}` })()}
-              </p>
+              <p className="text-sm text-muted-foreground truncate">{longDate(selectedDate)}</p>
             </div>
           </div>
         )}
@@ -200,128 +179,98 @@ export function SlotPickerModal({ offering, profile, onClose }: Props) {
 
   // ── Right selection panel ────────────────────────────────────────────────────────
   const rightPanel = (
-    <section className="md:col-span-3 flex flex-1 md:flex-none flex-col min-h-0">
-      {/* Fixed header: heading + timezone + date strip */}
-      <div className="shrink-0 p-6 md:p-8 pb-4 flex flex-col gap-5 border-b border-border/50">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-display">When should we meet?</h2>
-            <p className="text-sm text-muted-foreground mt-1">Pick a date and time that works for you.</p>
-          </div>
-          <TimezoneSelect value={tz} onChange={setTz} />
+    <section className="flex flex-col md:col-span-3 md:min-h-0">
+      {/* Header */}
+      <div className="shrink-0 px-6 md:px-8 pt-6 md:pt-7 pb-4 flex items-start justify-between gap-3 border-b border-border/50">
+        <div>
+          <h2 className="text-lg md:text-xl font-bold text-foreground font-display">Select a date &amp; time</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">All times shown in your timezone.</p>
         </div>
-
-        {!slotsLoading && availableDates.length > 0 && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => scrollDates(-1)}
-              className="hidden sm:flex size-8 rounded-full border border-border items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all shrink-0"
-              aria-label="Earlier dates"
-            >
-              <FontAwesomeIcon icon={faChevronLeft} className="size-2.5" />
-            </button>
-
-            <div
-              ref={dateStripRef}
-              className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory flex-1 py-1 [touch-action:pan-x]"
-            >
-              {availableDates.map((d) => {
-                const f = formatDate(d)
-                const active = d === selectedDate
-                const count = slotsByDate[d]?.length ?? 0
-                return (
-                  <button
-                    key={d}
-                    onClick={() => { setSelectedDate(d); setSelectedSlot(null) }}
-                    className={`relative flex flex-col items-center justify-center shrink-0 w-13 snap-start rounded-xl py-2.5 px-1 border text-center transition-all ${
-                      active
-                        ? 'bg-linear-to-b from-primary to-primary/85 text-primary-foreground border-primary shadow-md shadow-primary/25'
-                        : 'border-border bg-card text-foreground hover:border-primary/50'
-                    }`}
-                  >
-                    <span className={`text-[9px] font-bold uppercase tracking-wide ${active ? 'opacity-90' : 'text-muted-foreground'}`}>{f.day}</span>
-                    <span className="text-lg font-extrabold leading-none mt-1">{f.date}</span>
-                    <span className={`text-[9px] font-medium mt-1 ${active ? 'opacity-90' : 'text-muted-foreground'}`}>{f.month}</span>
-                    {!active && count > 0 && (
-                      <span className="absolute top-1.5 right-1.5 size-1 rounded-full bg-primary" />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-
-            <button
-              onClick={() => scrollDates(1)}
-              className="hidden sm:flex size-8 rounded-full border border-border items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all shrink-0"
-              aria-label="Later dates"
-            >
-              <FontAwesomeIcon icon={faChevronRight} className="size-2.5" />
-            </button>
-          </div>
-        )}
+        <TimezoneSelect value={tz} onChange={setTz} />
       </div>
 
-      {/* Scroll area: ONLY the time slots */}
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="p-6 md:p-8 pt-5">
-          {slotsLoading ? (
-            <div className="flex flex-col items-center justify-center min-h-64 gap-3 text-muted-foreground">
-              <span className="size-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              <span className="text-sm">Loading availability…</span>
-            </div>
-          ) : availableDates.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-64 gap-2 text-center">
-              <FontAwesomeIcon icon={faClock} className="size-8 text-muted-foreground/40" />
-              <p className="text-base font-semibold text-foreground">No availability right now</p>
-              <p className="text-sm text-muted-foreground max-w-xs">Try a different timezone, or check back soon — no slots opened for the next 4 weeks.</p>
-            </div>
-          ) : slotsForDate.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-10">No slots on this day. Try another date.</p>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {amSlots.length > 0 && (
-                <div>
-                  <p className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-3">
-                    <FontAwesomeIcon icon={faMugHot} className="size-3 text-amber-500" /> Morning
-                  </p>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
-                    {amSlots.map((s, i) => (
-                      <TimeButton key={i} active={selectedSlot?.start === s.start} label={formatSlotTime(s.startLocal)} onClick={() => setSelectedSlot(s)} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {pmSlots.length > 0 && (
-                <div>
-                  <p className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wide mb-3">
-                    <FontAwesomeIcon icon={faSun} className="size-3 text-amber-500" /> Afternoon &amp; Evening
-                  </p>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
-                    {pmSlots.map((s, i) => (
-                      <TimeButton key={i} active={selectedSlot?.start === s.start} label={formatSlotTime(s.startLocal)} onClick={() => setSelectedSlot(s)} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+      {/* Body */}
+      {slotsLoading ? (
+        <CalendarSkeleton />
+      ) : availableDates.length === 0 ? (
+        <div className="flex min-h-[18rem] md:flex-1 flex-col items-center justify-center gap-3 text-center p-8">
+          <div className="size-14 rounded-2xl bg-muted/50 flex items-center justify-center">
+            <FontAwesomeIcon icon={faClock} className="size-6 text-muted-foreground/50" />
+          </div>
+          <div>
+            <p className="text-base font-semibold text-foreground">No availability right now</p>
+            <p className="text-sm text-muted-foreground max-w-xs mt-1">
+              Try a different timezone, or check back soon — no open slots in the next 4 weeks.
+            </p>
+          </div>
         </div>
-      </ScrollArea>
+      ) : (
+        <div className="flex flex-col md:flex-row md:flex-1 md:min-h-0">
+          {/* Calendar */}
+          <div className="shrink-0 md:w-[18.5rem] p-6 md:p-7 border-b md:border-b-0 md:border-r border-border/50">
+            {viewMonth && (
+              <MonthCalendar
+                viewMonth={viewMonth}
+                selectedDate={selectedDate}
+                availableDates={availableSet}
+                today={today}
+                onSelectDate={(d) => { setSelectedDate(d); setSelectedSlot(null) }}
+                onPrev={() => shiftMonth(-1)}
+                onNext={() => shiftMonth(1)}
+                canPrev={canPrev}
+                canNext={canNext}
+              />
+            )}
+          </div>
 
-      {/* Sticky CTA */}
-      <div className="border-t border-border/60 p-5 md:p-6 bg-card/80 backdrop-blur-sm">
+          {/* Times */}
+          <div className="flex flex-col md:flex-1 md:min-h-0">
+            <div className="shrink-0 px-6 md:px-7 pt-5 pb-3">
+              <p className="text-sm font-semibold text-foreground">
+                {selectedDate ? longDate(selectedDate) : 'Select a date'}
+              </p>
+              {selectedDate && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {slotsForDate.length} {slotsForDate.length === 1 ? 'slot' : 'slots'} available
+                </p>
+              )}
+            </div>
+            <div className="md:flex-1 md:min-h-0 md:overflow-y-auto">
+              <div key={selectedDate} className="px-6 md:px-7 pb-6 flex flex-col gap-2 animate-in fade-in duration-200">
+                {slotsForDate.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-10">No slots on this day. Pick another date.</p>
+                ) : (
+                  slotsForDate.map((s) => (
+                    <TimeRow
+                      key={s.start}
+                      active={selectedSlot?.start === s.start}
+                      label={formatSlotTime(s.startLocal)}
+                      onClick={() => setSelectedSlot(s)}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CTA — sticky on mobile so it's always reachable, in-flow on desktop */}
+      <div className="shrink-0 sticky bottom-0 md:static border-t border-border/60 bg-card p-5 md:p-6">
         <button
           onClick={goCheckout}
           disabled={!selectedSlot || navigating}
-          className="w-full h-13 rounded-2xl bg-linear-to-r from-primary to-primary/90 text-primary-foreground text-base font-bold disabled:opacity-40 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+          className="w-full h-12 rounded-xl bg-primary text-primary-foreground text-sm font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/90 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
         >
           {navigating ? (
             <span className="size-5 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
-          ) : (
+          ) : selectedSlot ? (
             <>
-              {selectedSlot ? `Continue · ₹${offering.price.toLocaleString('en-IN')}` : 'Select a time to continue'}
-              {selectedSlot && <FontAwesomeIcon icon={faArrowRight} className="size-4" />}
+              Continue · ₹{offering.price.toLocaleString('en-IN')}
+              <FontAwesomeIcon icon={faArrowRight} className="size-3.5" />
             </>
+          ) : (
+            'Select a time to continue'
           )}
         </button>
       </div>
@@ -332,9 +281,9 @@ export function SlotPickerModal({ offering, profile, onClose }: Props) {
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent
         showCloseButton={false}
-        className="p-0 gap-0 w-[calc(100%-1.5rem)] sm:w-full !max-w-lg md:!max-w-5xl h-[90vh] md:h-[min(86vh,800px)] overflow-hidden rounded-3xl border border-border/70 bg-card shadow-2xl ring-1 ring-foreground/5"
+        className="p-0 gap-0 w-[calc(100%-1.5rem)] sm:w-full !max-w-lg md:!max-w-5xl h-[90vh] md:h-[min(86vh,760px)] overflow-hidden rounded-3xl border border-border/70 bg-card shadow-2xl ring-1 ring-foreground/5 flex flex-col"
       >
-        <div className="flex flex-col md:grid md:grid-cols-5 h-full min-h-0">
+        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:grid md:grid-cols-5 md:grid-rows-1 md:overflow-hidden">
           {leftPanel}
           {rightPanel}
         </div>
@@ -342,12 +291,151 @@ export function SlotPickerModal({ offering, profile, onClose }: Props) {
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 size-9 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          className="absolute top-4 right-4 z-10 size-9 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted active:scale-90 transition-all"
         >
           <FontAwesomeIcon icon={faXmark} className="size-4" />
         </button>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────────
+const pad2 = (n: number) => String(n).padStart(2, '0')
+/** 'YYYY-MM-DD' from a 0-indexed month. */
+const ymd = (y: number, m: number, d: number) => `${y}-${pad2(m + 1)}-${pad2(d)}`
+/** Year*12 + 0-indexed month, from a 'YYYY-MM-DD' string. */
+const monthKey = (dateStr: string) => {
+  const [y, m] = dateStr.split('-').map(Number)
+  return y * 12 + (m - 1)
+}
+/** First-of-month Date from a 'YYYY-MM-DD' string. */
+const monthStart = (dateStr: string) => {
+  const [y, m] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, 1)
+}
+/** Today as 'YYYY-MM-DD' in the given tz (en-CA renders ISO order). */
+const todayInTz = (tz: string) => new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date())
+/** "Thursday, 16 June" from a 'YYYY-MM-DD' string. */
+const longDate = (dateStr: string) =>
+  new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
+
+const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+
+// ── Month calendar ──────────────────────────────────────────────────────────────────
+function MonthCalendar({
+  viewMonth, selectedDate, availableDates, today, onSelectDate, onPrev, onNext, canPrev, canNext,
+}: {
+  viewMonth: Date
+  selectedDate: string | null
+  availableDates: Set<string>
+  today: string
+  onSelectDate: (d: string) => void
+  onPrev: () => void
+  onNext: () => void
+  canPrev: boolean
+  canNext: boolean
+}) {
+  const year = viewMonth.getFullYear()
+  const month = viewMonth.getMonth()
+  const leading = (new Date(year, month, 1).getDay() + 6) % 7 // Monday-first offset
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const cells: (number | null)[] = [
+    ...Array<null>(leading).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ]
+
+  const navBtn = 'size-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground transition-all cursor-pointer hover:text-foreground hover:border-primary/50 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-muted-foreground disabled:hover:border-border disabled:active:scale-100'
+
+  return (
+    <div className="select-none">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm font-bold text-foreground">
+          {viewMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+        </p>
+        <div className="flex items-center gap-1.5">
+          <button onClick={onPrev} disabled={!canPrev} aria-label="Previous month" className={navBtn}>
+            <FontAwesomeIcon icon={faChevronLeft} className="size-3" />
+          </button>
+          <button onClick={onNext} disabled={!canNext} aria-label="Next month" className={navBtn}>
+            <FontAwesomeIcon icon={faChevronRight} className="size-3" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {WEEKDAYS.map((d) => (
+          <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground/60 py-1">{d}</div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((day, i) => {
+          if (day === null) return <div key={`b${i}`} />
+          const dateStr = ymd(year, month, day)
+          const available = availableDates.has(dateStr)
+          const selected = dateStr === selectedDate
+          const isToday = dateStr === today
+          return (
+            <button
+              key={dateStr}
+              onClick={() => available && onSelectDate(dateStr)}
+              disabled={!available}
+              aria-pressed={selected}
+              className={`relative aspect-square rounded-lg text-sm flex items-center justify-center transition-all ${
+                selected
+                  ? 'bg-primary text-primary-foreground font-bold shadow-sm cursor-pointer'
+                  : available
+                    ? 'bg-primary/5 text-foreground font-semibold cursor-pointer hover:bg-primary/15 hover:text-primary hover:scale-105 active:scale-95'
+                    : 'text-muted-foreground/30 font-normal cursor-not-allowed'
+              }`}
+            >
+              {day}
+              {isToday && !selected && (
+                <span className="absolute inset-0 rounded-lg ring-1 ring-primary/50 pointer-events-none" />
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function CalendarSkeleton() {
+  return (
+    <div className="flex flex-1 min-h-0 flex-col md:flex-row">
+      <div className="shrink-0 md:w-[18.5rem] p-6 md:p-7 border-b md:border-b-0 md:border-r border-border/50">
+        <div className="h-5 w-32 rounded bg-muted animate-pulse mb-5" />
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 35 }).map((_, i) => (
+            <div key={i} className="aspect-square rounded-lg bg-muted/50 animate-pulse" />
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 p-6 md:p-7 flex flex-col gap-2.5">
+        <div className="h-4 w-40 rounded bg-muted animate-pulse mb-1" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-12 rounded-xl bg-muted/50 animate-pulse" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TimeRow({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full h-12 rounded-xl border px-4 flex items-center justify-between text-sm font-semibold transition-all cursor-pointer active:scale-[0.98] ${
+        active
+          ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
+          : 'border-border text-foreground hover:border-primary hover:text-primary hover:bg-primary/5'
+      }`}
+    >
+      <span>{label}</span>
+      {active && <FontAwesomeIcon icon={faCheck} className="size-3.5" />}
+    </button>
   )
 }
 
@@ -381,20 +469,5 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
       </select>
       <FontAwesomeIcon icon={faChevronDown} className="absolute right-2.5 top-1/2 -translate-y-1/2 size-2.5 text-muted-foreground pointer-events-none" />
     </div>
-  )
-}
-
-function TimeButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`py-3 px-1 rounded-xl border text-sm font-bold text-center transition-all ${
-        active
-          ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 scale-[1.03]'
-          : 'border-border bg-card text-foreground hover:border-primary/50 hover:bg-primary/5'
-      }`}
-    >
-      {label}
-    </button>
   )
 }

@@ -47,6 +47,8 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
   const [copied, setCopied] = useState(false)
 
   const displayName = profile.displayName ?? `@${profile.username}`
+  // Preserve the selection so Back reopens the slot dialog with the same state.
+  const backHref = `/c/${profile.username}?${new URLSearchParams({ offering: offering.id, tz, start, end }).toString()}`
 
   // ── Auth detection ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -234,7 +236,7 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
     <div>
       {/* Back + heading */}
       <Link
-        href={`/c/${profile.username}`}
+        href={backHref}
         className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-5"
       >
         <FontAwesomeIcon icon={faArrowLeft} className="size-3" />
