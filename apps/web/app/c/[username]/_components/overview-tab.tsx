@@ -31,13 +31,13 @@ export function OverviewTab({ profile, displayName }: OverviewTabProps) {
   // Get current month name
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' })
 
-  // Availability slots with format type (1:1 Call vs Group Call)
+  // Availability slots matching the clean UI grid pattern
   const mockupSlots = [
-    { day: '16', label: '16 Jun', status: '3 slots', urgent: false, isGroup: false },
-    { day: '19', label: '19 Jun', status: '1 slot', urgent: true, isGroup: true },
-    { day: '21', label: '21 Jun', status: '2 slots', urgent: false, isGroup: false },
-    { day: '24', label: '24 Jun', status: '5 slots', urgent: false, isGroup: true },
-    { day: '26', label: '26 Jun', status: '2 slots', urgent: false, isGroup: false },
+    { dayName: 'FRI', date: '8 Feb', slotsStr: '2 Sessions', urgent: false },
+    { dayName: 'WED', date: '13 Feb', slotsStr: '1 Session', urgent: true },
+    { dayName: 'SUN', date: '13 Feb', slotsStr: '2 Sessions', urgent: false },
+    { dayName: 'FRI', date: '17 Feb', slotsStr: '2 Sessions', urgent: false },
+    { dayName: 'WED', date: '19 Feb', slotsStr: '2 Sessions', urgent: false },
   ]
 
   // Expanded slots grid in dialog with format type
@@ -79,9 +79,9 @@ export function OverviewTab({ profile, displayName }: OverviewTabProps) {
     : ['Communication', 'Interpersonal Skills', 'Problem Solving', 'Team work', 'Project Management']
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 lg:gap-12 items-start">
       {/* Left Column: Bio & Community */}
-      <div className="xl:col-span-8 flex flex-col gap-8">
+      <div className="xl:col-span-7 flex flex-col gap-8 sm:gap-10">
         
         {/* Describe Myself (Bio) */}
         <div className="flex flex-col">
@@ -152,62 +152,41 @@ export function OverviewTab({ profile, displayName }: OverviewTabProps) {
       </div>
 
       {/* Right Column: Availability, Skills & Motivations */}
-      <div className="xl:col-span-4 flex flex-col gap-6">
+      <div className="xl:col-span-5 flex flex-col gap-6 sm:gap-8">
         
         {/* Availability Calendar */}
-        <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-extrabold text-foreground font-display flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faCalendar} className="size-4 text-primary" />
-              <span>Availability On {currentMonthName}</span>
-            </h3>
+        <div className="flex flex-col">
+          <h3 className="text-base sm:text-lg font-bold text-foreground font-display mb-1.5">
+            Availability On {currentMonthName}
+          </h3>
+          
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+              {mockupSlots.length * 2 + 3} available slots
+            </span>
             <button
               onClick={() => setIsCalendarOpen(true)}
-              className="text-xs font-bold text-primary hover:underline cursor-pointer bg-transparent border-none outline-none"
+              className="text-xs sm:text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               See More
             </button>
           </div>
 
-          {/* Formats Legend Bar */}
-          <div className="flex flex-wrap gap-1.5 mb-4 mt-1 border-b border-border/40 pb-3">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold border border-primary/20">
-              <span className="size-1.5 rounded-full bg-primary shrink-0" />
-              <span>1:1 Sessions</span>
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[10px] font-bold border border-border">
-              <span className="size-1.5 rounded-full bg-muted-foreground shrink-0" />
-              <span>Group Calls</span>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {mockupSlots.map((slot, i) => (
               <a
                 key={i}
                 href="#offerings"
-                className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border transition-all duration-150 text-center hover:shadow-sm ${
-                  slot.isGroup
-                    ? 'border-border/50 hover:border-border hover:bg-muted/50 bg-muted/20'
-                    : 'border-primary/20 hover:border-primary/50 hover:bg-primary/5 bg-primary/[0.03]'
-                }`}
+                className="group flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-card border border-border/40 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] transition-all dark:shadow-none dark:hover:bg-muted/50"
               >
-                <span className="text-xl font-extrabold text-foreground leading-none mb-2">{slot.day}</span>
-                
-                {/* Format Type Indicator */}
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold mb-1.5 uppercase tracking-wide leading-none ${
-                  slot.isGroup ? 'text-muted-foreground' : 'text-primary'
-                }`}>
-                  <span className={`size-1.5 rounded-full shrink-0 ${slot.isGroup ? 'bg-muted-foreground' : 'bg-primary'}`} />
-                  <span>{slot.isGroup ? 'Group' : '1:1'}</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                  {slot.dayName}
                 </span>
-
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${
-                  slot.urgent 
-                    ? 'bg-destructive/10 text-destructive border border-destructive/20' 
-                    : 'bg-background text-muted-foreground border border-border/50'
-                }`}>
-                  {slot.status}
+                <span className="text-lg sm:text-xl font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors">
+                  {slot.date}
+                </span>
+                <span className={`text-[10px] sm:text-xs font-medium ${slot.urgent ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {slot.slotsStr}
                 </span>
               </a>
             ))}
@@ -227,36 +206,36 @@ export function OverviewTab({ profile, displayName }: OverviewTabProps) {
                 Below are the available dates for bookings in the upcoming weeks. Select any date to view offerings.
               </p>
               
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-72 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
                 {allMockupSlots.map((slot, i) => (
                   <a
                     key={i}
                     href="#offerings"
                     onClick={() => setIsCalendarOpen(false)}
-                    className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border transition-all duration-150 text-center hover:shadow-sm ${
-                      slot.isGroup
-                        ? 'border-border/50 hover:border-border hover:bg-muted/50 bg-muted/20'
-                        : 'border-primary/20 hover:border-primary/50 hover:bg-primary/5 bg-primary/[0.03]'
-                    }`}
+                    className="group flex items-center justify-between p-3 rounded-xl border border-border/60 bg-muted/10 hover:bg-muted/40 hover:border-border transition-all"
                   >
-                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">{slot.month}</span>
-                    <span className="text-xl font-extrabold text-foreground leading-none mb-1.5">{slot.day}</span>
-                    
-                    {/* Format Type Indicator inside Popup */}
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold mb-1.5 uppercase tracking-wide leading-none ${
-                      slot.isGroup ? 'text-muted-foreground' : 'text-primary'
-                    }`}>
-                      <span className={`size-1.5 rounded-full shrink-0 ${slot.isGroup ? 'bg-muted-foreground' : 'bg-primary'}`} />
-                      <span>{slot.isGroup ? 'Group' : '1:1'}</span>
-                    </span>
-
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${
-                      slot.urgent 
-                        ? 'bg-destructive/10 text-destructive border border-destructive/20' 
-                        : 'bg-background text-muted-foreground border border-border/50'
-                    }`}>
-                      {slot.status}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-center justify-center w-11 h-12 rounded-lg bg-background border border-border/50 shadow-sm shrink-0">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                          {slot.month}
+                        </span>
+                        <span className="text-base font-extrabold text-foreground leading-none mt-0.5">
+                          {slot.day}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-bold text-foreground leading-none">
+                          {slot.isGroup ? 'Group Call' : '1:1 Session'}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                          <span className={`size-1.5 rounded-full ${slot.urgent ? 'bg-destructive' : 'bg-primary'}`} />
+                          {slot.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center size-7 rounded-full bg-background border border-border/50 text-muted-foreground group-hover:text-primary group-hover:border-primary/30 transition-colors">
+                      <FontAwesomeIcon icon={faChevronRight} className="size-3" />
+                    </div>
                   </a>
                 ))}
               </div>

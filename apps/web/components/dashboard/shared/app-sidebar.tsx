@@ -164,12 +164,17 @@ export function AppSidebar({
               alt="Creonex"
               width={28}
               height={28}
-              className="size-7 shrink-0 object-contain"
+              className="size-7 shrink-0 object-contain dark:invert"
               priority
             />
-            <span className="truncate text-base font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
-              creo<span className="text-primary">nex</span>
-            </span>
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+              <span className="truncate text-base font-bold tracking-tight leading-none">
+                creo<span className="text-primary">nex</span>
+              </span>
+              <span className="text-[10px] uppercase font-extrabold tracking-widest text-muted-foreground mt-1">
+                {role === 'creator' ? 'Creator' : 'Learner'}
+              </span>
+            </div>
           </Link>
         </SidebarHeader>
 
