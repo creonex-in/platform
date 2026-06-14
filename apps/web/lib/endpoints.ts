@@ -17,6 +17,7 @@ export const endpoints = {
   offerings: {
     me:               '/api/v1/offerings/me',
     eligibility:      '/api/v1/offerings/eligibility',
+    stats:            '/api/v1/offerings/stats',
     create:           '/api/v1/offerings',
     byId:             (id: string) => `/api/v1/offerings/${id}`,
     status:           (id: string) => `/api/v1/offerings/${id}/status`,

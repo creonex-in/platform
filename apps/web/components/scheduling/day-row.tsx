@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { DayRow as DayRowType } from './availability-builder'
+import type { DayRow as DayRowType } from './types'
 
 export interface TimeSlot {
   value: string

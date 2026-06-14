@@ -366,6 +366,11 @@ export class BookingsService {
       cancellationReason: dto.reason,
     })
 
+    // Reverse offering counters only if this booking had been confirmed (counted).
+    if (booking.status === 'confirmed') {
+      void this.bookingsRepo.decrementOfferingCounters(booking.offeringId, booking.amountPaise)
+    }
+
     // Restore seat for group/workshop
     const offering = await this.offeringsRepo.findById(booking.offeringId)
     if (offering && (offering.type === 'group' || offering.type === 'workshop') && offering.seatsTotal !== null) {

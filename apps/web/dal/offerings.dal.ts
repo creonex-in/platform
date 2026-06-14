@@ -1,7 +1,7 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 import { offeringsService } from '@/services/offerings.service'
-import type { CreatorOffering, OfferCreationEligibility } from '@creonex/types'
+import type { CreatorOffering, CreatorOfferStats, OfferCreationEligibility } from '@creonex/types'
 
 async function getCookieHeader(): Promise<string> {
   const cookieStore = await cookies()
@@ -11,6 +11,11 @@ async function getCookieHeader(): Promise<string> {
 /** All offerings owned by the authenticated creator (dashboard list). */
 export async function getMyOfferings(): Promise<CreatorOffering[]> {
   return offeringsService.getMyOfferings(await getCookieHeader())
+}
+
+/** Aggregate offer stats (counts, bookings, revenue) — server-computed. */
+export async function getMyOfferingStats(): Promise<CreatorOfferStats> {
+  return offeringsService.getMyOfferingStats(await getCookieHeader())
 }
 
 /** Single offering by id (owner-only); null when not found. */

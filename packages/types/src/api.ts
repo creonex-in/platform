@@ -142,6 +142,16 @@ export interface OfferCreationEligibility {
   lockedTypes: string[]
 }
 
+/** Aggregate offer stats for the creator's /offers dashboard (server-computed). */
+export interface CreatorOfferStats {
+  totalOffers: number
+  liveOffers: number
+  /** Confirmed + completed bookings across all offerings (net of cancellations). */
+  totalBookings: number
+  /** Gross revenue in whole INR from confirmed + completed bookings. */
+  totalRevenue: number
+}
+
 // ── Booking Flow ──────────────────────────────────────────────────────────────
 
 export interface CreateBookingRequest {

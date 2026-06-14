@@ -4,6 +4,7 @@ import { UsersRepository } from '../users/users.repository'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
 import { LearnerProfileRepository } from '../users/learner-profile.repository'
 import { OfferingsRepository } from '../users/offerings.repository'
+import { SchedulesRepository } from '../availability/schedules.repository'
 import type { LearnerStep1Dto, CreatorStep1Dto, CreatorStep2Dto, CreatorStep3Dto, CreatorStep4Dto } from './onboarding.dto'
 
 const DISCOVERY_BOOST_DAYS = 14
@@ -15,6 +16,7 @@ export class OnboardingService {
     private readonly creatorRepo: CreatorProfileRepository,
     private readonly learnerRepo: LearnerProfileRepository,
     private readonly offeringsRepo: OfferingsRepository,
+    private readonly schedulesRepo: SchedulesRepository,
   ) {}
 
   /** Split a full name into first + (optional) last. */
@@ -145,13 +147,35 @@ export class OnboardingService {
     const boostEndDate = new Date()
     boostEndDate.setDate(boostEndDate.getDate() + DISCOVERY_BOOST_DAYS)
 
+    // Create a default schedule (+ one rule per enabled day) so the offering is
+    // bookable immediately. Slot generation falls back to the creator's default
+    // schedule when an offering has no explicit scheduleId — we link it too.
+    let scheduleId: string | undefined
+    if (dto.availability && dto.availability.days.length > 0) {
+      scheduleId = await this.schedulesRepo.create({
+        creatorProfileId: profile.id,
+        name: 'Working Hours',
+        timezone: dto.availability.timezone,
+        isDefault: true,
+      })
+      for (const day of dto.availability.days) {
+        await this.schedulesRepo.addRule(scheduleId, {
+          rrule: `FREQ=WEEKLY;BYDAY=${day.day}`,
+          startTime: day.startTime,
+          endTime: day.endTime,
+        })
+      }
+    }
+
     const offeringId = await this.offeringsRepo.create({
       creatorProfileId: profile.id,
       type: dto.offerType,
       title: dto.title,
+      description: dto.description,
       priceInPaise,
       durationMinutes: dto.durationMinutes,
       seatsTotal: dto.seatsTotal,
+      scheduleId,
     })
 
     await this.creatorRepo.goLive(userId, username, boostEndDate)
@@ -161,7 +185,7 @@ export class OnboardingService {
       username,
       profileUrl: `/c/${username}`,
       offeringId,
-      redirectTo: '/dashboard',
+      redirectTo: `/dashboard?welcome=1&offer=${offeringId}`,
     }
   }
 }

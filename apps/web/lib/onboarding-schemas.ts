@@ -48,6 +48,7 @@ export const creatorStep3Schema = z.object({
 export const creatorStep4Schema = z.object({
   offerType: z.enum(OFFER_TYPES),
   title: z.string().min(5, 'Title too short').max(80),
+  description: z.string().max(2000, 'Description is too long').optional(),
   price: z.number().min(299, 'Minimum ₹299'),
   durationMinutes: z.union(DURATION_OPTIONS.map((val) => z.literal(val)) as [z.ZodLiteral<30>, z.ZodLiteral<45>, z.ZodLiteral<60>, z.ZodLiteral<90>]).optional(),
 })

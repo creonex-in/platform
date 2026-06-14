@@ -12,6 +12,6 @@ import { RolesGuard } from '../auth/roles.guard'
   imports: [UsersModule, CalendarModule],
   controllers: [SchedulesController, AvailabilityController],
   providers: [SchedulesService, SchedulesRepository, SlotGenerationService, RolesGuard, Reflector],
-  exports: [SlotGenerationService],
+  exports: [SlotGenerationService, SchedulesRepository],
 })
 export class AvailabilityModule {}

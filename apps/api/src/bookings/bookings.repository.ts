@@ -143,6 +143,18 @@ export class BookingsRepository {
       .where(eq(offerings.id, offeringId))
   }
 
+  /** Reverse the counters when a previously-confirmed booking is cancelled/refunded. */
+  async decrementOfferingCounters(offeringId: string, amountPaise: number): Promise<void> {
+    await this.db
+      .update(offerings)
+      .set({
+        totalBookings: sql`greatest(${offerings.totalBookings} - 1, 0)`,
+        totalRevenuePaise: sql`greatest(${offerings.totalRevenuePaise} - ${amountPaise}, 0)`,
+        updatedAt: new Date(),
+      })
+      .where(eq(offerings.id, offeringId))
+  }
+
   async decrementSeats(offeringId: string): Promise<boolean> {
     const result = await this.db
       .update(offerings)

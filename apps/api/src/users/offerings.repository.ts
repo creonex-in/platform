@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, count, desc, eq, lt, or } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, lt, or, sql } from 'drizzle-orm'
 import { DATABASE_CONNECTION, type Database } from '../database/database-connection'
 import { bookings, offerings } from '../database/schema'
 import { generateId } from '../utils/id'
@@ -34,9 +34,11 @@ export class OfferingsRepository {
     creatorProfileId: string
     type: string
     title: string
+    description?: string
     priceInPaise: number
     durationMinutes?: number
     seatsTotal?: number
+    scheduleId?: string
     status?: string
   }) {
     const id = generateId()
@@ -45,10 +47,12 @@ export class OfferingsRepository {
       creatorProfileId: data.creatorProfileId,
       type: data.type as typeof offerings.$inferInsert['type'],
       title: data.title,
+      description: data.description,
       price: data.priceInPaise,
       durationMinutes: data.durationMinutes,
       seatsTotal: data.seatsTotal,
       seatsRemaining: data.seatsTotal,
+      scheduleId: data.scheduleId,
       status: (data.status ?? 'live') as typeof offerings.$inferInsert['status'],
     })
     return id
@@ -60,6 +64,39 @@ export class OfferingsRepository {
       .from(offerings)
       .where(eq(offerings.creatorProfileId, creatorProfileId))
       .orderBy(desc(offerings.createdAt))
+  }
+
+  /**
+   * Aggregate dashboard stats for a creator — computed live from real rows:
+   * offer counts from `offerings`, bookings + revenue from confirmed/completed
+   * bookings (so cancelled/refunded are excluded — net, not gross-cumulative).
+   */
+  async getStats(creatorProfileId: string) {
+    const offerRows = await this.db
+      .select({ status: offerings.status })
+      .from(offerings)
+      .where(eq(offerings.creatorProfileId, creatorProfileId))
+
+    const [agg] = await this.db
+      .select({
+        bookings: count(),
+        revenuePaise: sql<number>`coalesce(sum(${bookings.amountPaise}), 0)`,
+      })
+      .from(bookings)
+      .innerJoin(offerings, eq(bookings.offeringId, offerings.id))
+      .where(
+        and(
+          eq(offerings.creatorProfileId, creatorProfileId),
+          inArray(bookings.status, ['confirmed', 'completed']),
+        ),
+      )
+
+    return {
+      totalOffers: offerRows.length,
+      liveOffers: offerRows.filter((o) => o.status === 'live').length,
+      totalBookings: Number(agg?.bookings ?? 0),
+      totalRevenuePaise: Number(agg?.revenuePaise ?? 0),
+    }
   }
 
   async findById(id: string) {

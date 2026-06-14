@@ -4,6 +4,7 @@ import { EarningsChart } from '@/components/dashboard/creator/earnings-chart'
 import { InsightBox } from '@/components/dashboard/creator/insight-box'
 import { BookingRow } from '@/components/dashboard/creator/booking-row'
 import { WelcomeHero } from '@/components/dashboard/shared/welcome-hero'
+import { WelcomeDialog } from './_components/welcome-dialog'
 import { ProfileLinkButton } from '@/components/dashboard/creator/profile-link-button'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,11 +19,16 @@ import Link from 'next/link'
 
 export const metadata = { title: 'Dashboard — Creonex' }
 
-export default async function CreatorDashboardPage(): Promise<React.ReactElement> {
-  const [{ user, profile }, allBookings, recentReviews] = await Promise.all([
+export default async function CreatorDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string; offer?: string }>
+}): Promise<React.ReactElement> {
+  const [{ user, profile }, allBookings, recentReviews, params] = await Promise.all([
     getCreatorContext(),
     getCreatorBookings(),
     getCreatorTestimonials(),
+    searchParams,
   ])
   const displayName = profile?.displayName ?? user?.name ?? 'Creator'
   const avatarImage = profile?.profilePhotoUrl ?? user?.image ?? null
@@ -37,6 +43,9 @@ export default async function CreatorDashboardPage(): Promise<React.ReactElement
         title="Dashboard"
         action={profile?.username ? <ProfileLinkButton username={profile.username} /> : undefined}
       />
+      {params.welcome === '1' && params.offer && (
+        <WelcomeDialog offerId={params.offer} username={profile?.username ?? undefined} />
+      )}
       <div className="space-y-8 p-4 sm:p-6 lg:p-8">
         <WelcomeHero
           name={displayName}

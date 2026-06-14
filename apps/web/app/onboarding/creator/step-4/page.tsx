@@ -12,9 +12,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   InputGroup, InputGroupAddon, InputGroupText, InputGroupInput,
 } from '@/components/ui/input-group'
+import {
+  AvailabilityScheduleBuilder, defaultAvailability, type AvailabilityValue,
+} from '@/components/scheduling/availability-schedule-builder'
 import { cn } from '@/lib/utils'
 import { creatorStep4Schema, type CreatorStep4Form } from '@/lib/onboarding-schemas'
 import { useSaveCreatorStep4 } from '@/hooks/use-onboarding'
@@ -36,6 +40,8 @@ export default function CreatorStep4Page() {
   const [apiError, setApiError] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const [live, setLive] = useState(false)
+  const [availability, setAvailability] = useState<AvailabilityValue>(defaultAvailability)
+  const [availabilityError, setAvailabilityError] = useState('')
 
   const {
     register,
@@ -49,6 +55,7 @@ export default function CreatorStep4Page() {
     defaultValues: {
       offerType: 'one_on_one',
       title: '',
+      description: '',
       price: undefined,
       durationMinutes: undefined,
     } as unknown as CreatorStep4Form,
@@ -57,19 +64,22 @@ export default function CreatorStep4Page() {
   const price = watch('price')
   const durationMinutes = watch('durationMinutes')
   const title = watch('title')
+  const description = watch('description')
   const earnings = Math.floor((price ?? 0) * 0.85)
 
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY)
       if (saved) {
-        const parsed = JSON.parse(saved) as Partial<CreatorStep4Form>
+        const parsed = JSON.parse(saved) as Partial<CreatorStep4Form> & { availability?: AvailabilityValue }
         reset({
           offerType: 'one_on_one',
           title: parsed.title ?? '',
+          description: parsed.description ?? '',
           price: parsed.price ?? undefined,
           durationMinutes: parsed.durationMinutes ?? undefined,
         } as unknown as CreatorStep4Form)
+        if (parsed.availability?.days?.length) setAvailability(parsed.availability)
       }
     } catch { /* corrupt — start fresh */ }
     setHydrated(true)
@@ -79,17 +89,31 @@ export default function CreatorStep4Page() {
 
   useEffect(() => {
     if (!hydrated) return
-    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ title, price, durationMinutes })) } catch { /* non-fatal */ }
-  }, [title, price, durationMinutes, hydrated])
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ title, description, price, durationMinutes, availability })) } catch { /* non-fatal */ }
+  }, [title, description, price, durationMinutes, availability, hydrated])
 
   const onSubmit = async (data: CreatorStep4Form) => {
     setApiError('')
+    setAvailabilityError('')
+
+    const enabledDays = availability.days.filter((d) => d.enabled)
+    if (enabledDays.length === 0) {
+      setAvailabilityError('Enable at least one day so learners can book you.')
+      return
+    }
+
+    const desc = data.description?.trim()
     try {
       const res = await mutateAsync({
         offerType: 'one_on_one',
         title: data.title.trim(),
         price: data.price,
+        ...(desc ? { description: desc } : {}),
         ...(data.durationMinutes ? { durationMinutes: data.durationMinutes } : {}),
+        availability: {
+          timezone: availability.timezone,
+          days: enabledDays.map((d) => ({ day: d.dayCode, startTime: d.startTime, endTime: d.endTime })),
+        },
       })
       try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* non-fatal */ }
       setLive(true)
@@ -161,19 +185,40 @@ export default function CreatorStep4Page() {
                 placeholder="30-min CAT Quant Doubt Clearing"
                 maxLength={80}
                 autoFocus
-                className="h-12 text-base rounded-xl bg-card shadow-sm"
+                className="h-10 text-sm rounded-lg bg-card shadow-sm"
               />
               {errors.title && (
                 <p className="text-[13px] font-medium text-destructive">{errors.title.message}</p>
               )}
             </div>
 
+            {/* Description (optional) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description" className="text-sm font-semibold">
+                  Description <span className="font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <span className="text-[13px] font-medium text-muted-foreground">{(description ?? '').length}/2000</span>
+              </div>
+              <Textarea
+                id="description"
+                {...register('description')}
+                placeholder="What will learners get from this session? You can polish this later."
+                rows={3}
+                maxLength={2000}
+                className="rounded-lg bg-card shadow-sm resize-none text-sm"
+              />
+              {errors.description && (
+                <p className="text-[13px] font-medium text-destructive">{errors.description.message}</p>
+              )}
+            </div>
+
             {/* Price */}
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm font-semibold">Price per session</Label>
-              <InputGroup className="h-12 rounded-xl bg-card shadow-sm">
+              <InputGroup className="h-10 rounded-lg bg-card shadow-sm">
                 <InputGroupAddon>
-                  <InputGroupText className="text-base font-semibold select-none text-muted-foreground">₹</InputGroupText>
+                  <InputGroupText className="text-sm font-semibold select-none text-muted-foreground">₹</InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
                   id="price"
@@ -181,18 +226,18 @@ export default function CreatorStep4Page() {
                   {...register('price', { valueAsNumber: true })}
                   placeholder="499"
                   min={299}
-                  className="text-base font-semibold"
+                  className="text-sm font-semibold"
                 />
               </InputGroup>
               {errors.price ? (
                 <p className="text-[13px] font-medium text-destructive">{errors.price.message}</p>
               ) : (price ?? 0) >= 299 ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-muted/60 px-4 py-3 animate-in fade-in duration-200 border border-border/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg bg-muted/60 px-4 py-2 animate-in fade-in duration-200 border border-border/50">
                   <span className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
                     <FontAwesomeIcon icon={faClock} className="size-3.5" />
                     15% platform fee
                   </span>
-                  <p className="text-[15px] font-bold text-green-600 dark:text-green-500">
+                  <p className="text-sm font-bold text-green-600 dark:text-green-500">
                     You earn ₹{earnings.toLocaleString('en-IN')}
                   </p>
                 </div>
@@ -209,7 +254,7 @@ export default function CreatorStep4Page() {
                     type="button"
                     onClick={() => setValue('durationMinutes', d, { shouldValidate: true })}
                     className={cn(
-                      'px-5 py-2.5 rounded-xl border text-sm font-bold transition-all active:scale-[0.97]',
+                      'px-4 py-2 rounded-lg border text-sm font-bold transition-all active:scale-[0.97]',
                       durationMinutes === d
                         ? 'border-foreground bg-foreground text-background shadow-md'
                         : 'border-border/60 bg-card hover:border-foreground/30 text-muted-foreground hover:text-foreground shadow-sm',
@@ -224,6 +269,20 @@ export default function CreatorStep4Page() {
               )}
             </div>
 
+            {/* Weekly availability — pre-filled so the offering is bookable immediately */}
+            <div className="space-y-3">
+              <div>
+                <Label className="text-sm font-semibold">Your weekly availability</Label>
+                <p className="text-[13px] text-muted-foreground mt-0.5">
+                  Learners can only book during these hours. Pre-filled Mon–Fri 9–5 — adjust anytime.
+                </p>
+              </div>
+              <AvailabilityScheduleBuilder value={availability} onChange={setAvailability} />
+              {availabilityError && (
+                <p className="text-[13px] font-medium text-destructive">{availabilityError}</p>
+              )}
+            </div>
+
             {apiError && (
               <p className="text-[13px] font-medium text-destructive animate-in fade-in duration-200">{apiError}</p>
             )}
@@ -232,7 +291,7 @@ export default function CreatorStep4Page() {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="group relative w-full h-14 font-bold text-base shadow-xl shadow-primary/25 gap-2 overflow-hidden transition-all hover:scale-[1.01] hover:shadow-primary/40 active:scale-[0.98] rounded-xl"
+                className="group relative w-full h-11 font-bold text-sm shadow-lg shadow-primary/25 gap-2 overflow-hidden transition-all hover:scale-[1.01] hover:shadow-primary/40 active:scale-[0.98] rounded-lg"
               >
                 <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out" />
                 {isPending ? (

@@ -15,7 +15,7 @@ import {
   faIndianRupeeSign,
 } from '@fortawesome/free-solid-svg-icons'
 import { formatCurrency } from '@/lib/utils'
-import type { CreatorOffering } from '@creonex/types'
+import type { CreatorOffering, CreatorOfferStats } from '@creonex/types'
 
 const categories = [
   { label: 'All', value: 'all' },
@@ -28,18 +28,15 @@ const categories = [
 interface OffersListProps {
   offerings: CreatorOffering[]
   username: string
+  stats: CreatorOfferStats
 }
 
-export function OffersList({ offerings, username }: OffersListProps): React.ReactElement {
+export function OffersList({ offerings, username, stats }: OffersListProps): React.ReactElement {
   const router = useRouter()
   const [category, setCategory] = useState('all')
 
   // Re-fetch the server component's data after a mutation (status change, etc).
   const onChanged = (): void => router.refresh()
-
-  const liveCount = offerings.filter((o) => o.status === 'live').length
-  const totalBookings = offerings.reduce((sum, o) => sum + o.totalBookings, 0)
-  const totalRevenue = offerings.reduce((sum, o) => sum + o.totalRevenuePaise / 100, 0)
 
   const filtered = category === 'all' ? offerings : offerings.filter((o) => o.type === category)
 
@@ -48,10 +45,10 @@ export function OffersList({ offerings, username }: OffersListProps): React.Reac
       {/* Stats — shared divided panel (same as the dashboard) */}
       <StatPanel
         stats={[
-          { label: 'Total offers', value: offerings.length.toString(), icon: faBox },
-          { label: 'Live & active', value: liveCount.toString(), changeLabel: 'published', icon: faCircleCheck },
-          { label: 'Total bookings', value: totalBookings.toLocaleString('en-IN'), icon: faCalendarCheck },
-          { label: 'Total revenue', value: formatCurrency(totalRevenue), icon: faIndianRupeeSign },
+          { label: 'Total offers', value: stats.totalOffers.toString(), icon: faBox },
+          { label: 'Live & active', value: stats.liveOffers.toString(), changeLabel: 'published', icon: faCircleCheck },
+          { label: 'Total bookings', value: stats.totalBookings.toLocaleString('en-IN'), icon: faCalendarCheck },
+          { label: 'Total revenue', value: formatCurrency(stats.totalRevenue), icon: faIndianRupeeSign },
         ]}
       />
 

@@ -43,6 +43,8 @@ export const ONBOARDING_STATUSES = [
 
 export const DURATION_OPTIONS = [30, 45, 60, 90] as const
 
+export const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as const
+
 // ── Username (creator handle) ─────────────────────────────────────────────────
 
 export const USERNAME_MIN = 3
@@ -100,6 +102,7 @@ export type OfferStatus = typeof OFFER_STATUSES[number]
 export type KycStatus = typeof KYC_STATUSES[number]
 export type OnboardingStatus = typeof ONBOARDING_STATUSES[number]
 export type DurationOption = typeof DURATION_OPTIONS[number]
+export type Weekday = typeof WEEKDAYS[number]
 export type CredentialType = typeof CREDENTIAL_TYPES[number]
 export type AudienceType = typeof AUDIENCE_TYPES[number]
 export type PlatformType = typeof PLATFORM_TYPES[number]
@@ -145,11 +148,25 @@ export interface CreatorStep3Request {
   languages: string[]
 }
 
+/** One weekday's hours in the onboarding availability grid (local to schedule tz). */
+export interface CreatorAvailabilityDay {
+  day: Weekday
+  startTime: string // 'HH:MM'
+  endTime: string // 'HH:MM'
+}
+
+export interface CreatorAvailabilityInput {
+  timezone: string // IANA
+  days: CreatorAvailabilityDay[] // enabled days only
+}
+
 export interface CreatorStep4Request {
   offerType: OfferType
   title: string
   price: number
   durationMinutes?: DurationOption
+  description?: string
+  availability?: CreatorAvailabilityInput
 }
 
 // Aliases — web app uses "Data" suffix

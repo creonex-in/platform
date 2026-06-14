@@ -3,11 +3,12 @@ import { Reflector } from '@nestjs/core'
 import { OnboardingController } from './onboarding.controller'
 import { OnboardingService } from './onboarding.service'
 import { UsersModule } from '../users/users.module'
+import { AvailabilityModule } from '../availability/availability.module'
 import { OfferingsRepository } from '../users/offerings.repository'
 import { RolesGuard } from '../auth/roles.guard'
 
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, AvailabilityModule],
   controllers: [OnboardingController],
   providers: [OnboardingService, OfferingsRepository, RolesGuard, Reflector],
 })

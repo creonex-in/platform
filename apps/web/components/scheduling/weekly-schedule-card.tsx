@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { DayRow } from './day-row'
-import type { DayRow as DayRowType, DayCode } from './availability-builder'
+import type { DayRow as DayRowType, DayCode } from './types'
 
 interface Props {
   days: DayRowType[]
@@ -23,7 +23,7 @@ export function WeeklyScheduleCard({ days, isNew, onToggleDay, onChangeTime }: P
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Set the times you're typically available each week
+          Set the times you&apos;re typically available each week
         </p>
       </CardHeader>
       <CardContent className="divide-y divide-border pt-0">

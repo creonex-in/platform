@@ -9,42 +9,13 @@ import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
 import { scheduleService } from '@/services/schedule.service'
 import type { Schedule, ScheduleOverride } from '@/types/schedule'
 import type { CalendarStatus } from '@/services/calendar.service'
-import { WeeklyScheduleCard } from './weekly-schedule-card'
+import { WeeklyScheduleCard } from '@/components/scheduling/weekly-schedule-card'
+import { buildDayRows, type DayCode, type DayRow } from '@/components/scheduling/types'
 import { ScheduleSettingsCard } from './schedule-settings-card'
 import { BlockedDatesCard } from './blocked-dates-card'
 import { CalendarConnectCard } from './calendar-connect-card'
 
-export type DayCode = 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU'
 type SaveState = 'idle' | 'saving' | 'saved'
-
-export interface DayRow {
-  dayCode: DayCode
-  label: string
-  enabled: boolean
-  startTime: string
-  endTime: string
-  ruleId: string | null
-}
-
-const DAY_ORDER: DayCode[] = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
-const DAY_LABELS: Record<DayCode, string> = {
-  MO: 'Monday', TU: 'Tuesday', WE: 'Wednesday', TH: 'Thursday',
-  FR: 'Friday', SA: 'Saturday', SU: 'Sunday',
-}
-
-export function buildDayRows(schedule: Schedule | null): DayRow[] {
-  return DAY_ORDER.map((dayCode) => {
-    const rule = schedule?.rules?.find((r) => r.rrule.includes(`BYDAY=${dayCode}`))
-    return {
-      dayCode,
-      label: DAY_LABELS[dayCode],
-      enabled: !!rule,
-      startTime: rule?.startTime ?? '09:00',
-      endTime: rule?.endTime ?? '17:00',
-      ruleId: rule?.id ?? null,
-    }
-  })
-}
 
 function daysEqual(a: DayRow[], b: DayRow[]): boolean {
   return a.every((row, i) =>

@@ -27,6 +27,7 @@ import {
   AUDIENCE_TYPES,
   PLATFORM_TYPES,
   CREATOR_GOALS,
+  WEEKDAYS,
   USERNAME_MIN,
   USERNAME_MAX,
   USERNAME_REGEX,
@@ -38,6 +39,7 @@ import {
   type AudienceType,
   type PlatformType,
   type CreatorGoal,
+  type Weekday,
 } from '@creonex/types'
 
 export class LearnerStep1Dto {
@@ -175,6 +177,38 @@ export class CreatorStep3Dto {
   languages!: string[]
 }
 
+const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/ // HH:MM
+
+export class AvailabilityDayDto {
+  @ApiProperty({ enum: WEEKDAYS })
+  @IsIn([...WEEKDAYS])
+  day!: Weekday
+
+  @ApiProperty({ example: '09:00' })
+  @IsString()
+  @Matches(TIME_REGEX, { message: 'startTime must be HH:MM' })
+  startTime!: string
+
+  @ApiProperty({ example: '17:00' })
+  @IsString()
+  @Matches(TIME_REGEX, { message: 'endTime must be HH:MM' })
+  endTime!: string
+}
+
+export class AvailabilityDto {
+  @ApiProperty({ example: 'Asia/Kolkata', description: 'IANA timezone' })
+  @IsString()
+  @IsNotEmpty()
+  timezone!: string
+
+  @ApiProperty({ type: [AvailabilityDayDto] })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => AvailabilityDayDto)
+  days!: AvailabilityDayDto[]
+}
+
 export class CreatorStep4Dto {
   @ApiProperty({ enum: OFFER_TYPES })
   @IsEnum(OFFER_TYPES)
@@ -202,4 +236,16 @@ export class CreatorStep4Dto {
   @Min(2)
   @Max(100)
   seatsTotal?: number
+
+  @ApiPropertyOptional({ maxLength: 2000 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  description?: string
+
+  @ApiPropertyOptional({ type: AvailabilityDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AvailabilityDto)
+  availability?: AvailabilityDto
 }

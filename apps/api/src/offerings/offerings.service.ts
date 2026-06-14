@@ -10,6 +10,7 @@ import { CreatorProfileRepository } from '../users/creator-profile.repository'
 import {
   GATED_OFFER_TYPES,
   SESSIONS_TO_UNLOCK_OFFERS,
+  type CreatorOfferStats,
   type OfferCreationEligibility,
   type OfferStatus,
   type OfferType,
@@ -71,6 +72,18 @@ export class OfferingsService {
     const profileId = await this.resolveCreatorProfileId(userId)
     const rows = await this.offeringsRepo.findAllByCreatorProfileId(profileId)
     return rows.map((o) => this.formatOffering(o)!)
+  }
+
+  /** Aggregate stats for the /offers dashboard — server-computed from real rows. */
+  async getOfferingStats(userId: string): Promise<CreatorOfferStats> {
+    const profileId = await this.resolveCreatorProfileId(userId)
+    const s = await this.offeringsRepo.getStats(profileId)
+    return {
+      totalOffers: s.totalOffers,
+      liveOffers: s.liveOffers,
+      totalBookings: s.totalBookings,
+      totalRevenue: Math.round(s.totalRevenuePaise / 100),
+    }
   }
 
   /**

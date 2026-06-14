@@ -38,6 +38,13 @@ export class OfferingsController {
     return this.offeringsService.getCreationEligibility(session.user.id)
   }
 
+  // NOTE: declared before ':id' so it isn't captured as an id param.
+  @Get('stats')
+  @ApiOperation({ summary: 'Aggregate offer stats (counts, bookings, revenue) for the creator' })
+  getOfferingStats(@Session() session: AppUserSession) {
+    return this.offeringsService.getOfferingStats(session.user.id)
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new offering (starts as draft)' })
   createOffering(
