@@ -30,7 +30,7 @@ export function isNetworkError(e: unknown): boolean {
   return isApiError(e) && e.status === 0
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3000'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -87,7 +87,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
+  const text = await res.text()
+  if (!text.trim()) return undefined as T
+  return JSON.parse(text) as T
 }
 
 export const api = {

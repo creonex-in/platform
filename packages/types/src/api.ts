@@ -152,6 +152,16 @@ export interface CreatorBookingItem {
   createdAt: string
 }
 
+export interface CreatorTestimonialItem {
+  id: string
+  learnerName: string
+  learnerRole: string | null
+  content: string
+  rating: number
+  isPublic: boolean
+  createdAt: string
+}
+
 // ── Onboarding Responses ──────────────────────────────────────────────────────
 
 export interface OnboardingStepResponse {

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 interface ToggleRow {
   id: string

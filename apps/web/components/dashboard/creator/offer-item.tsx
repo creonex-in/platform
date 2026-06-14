@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { Offer, OfferDisplayType, OfferStatus } from '@/types/offer'
 import { formatCurrency } from '@/lib/utils'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 const offerTypeConfig: Record<OfferDisplayType, { icon: IconDefinition; label: string }> = {
   one_on_one: { icon: faPhone, label: '1:1 Call' },

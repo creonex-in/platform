@@ -13,7 +13,7 @@ import { Step2Details } from './step2-details'
 import { Step3Pricing } from './step3-pricing'
 import { Step4Review } from './step4-review'
 import type { OfferDisplayType as OfferType } from '@/types/offer'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 const offerSchema = z.object({
   type: z.enum(['one_on_one', 'workshop', 'group', 'digital', 'community', 'coaching_plan'] as const),
@@ -52,7 +52,7 @@ export function OfferForm(): React.ReactElement {
 
   function onSubmit(data: OfferFormValues) {
     console.log('New offer:', data)
-    toast.success('Offer published!', { description: `"${data.title}" is now live.` })
+    toast.success('Offer published!', `"${data.title}" is now live.`)
   }
 
   const canProceed = [

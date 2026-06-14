@@ -13,43 +13,6 @@ import MarketingShell from '@/components/layout/marketing-shell'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { PublicCreatorProfile, PublicOffering } from '@creonex/types'
 
-const MOCK_TESTIMONIALS = [
-  {
-    id: 'u1',
-    name: 'Ananya Joshi',
-    niche: 'Aspiring Product Designer',
-    quote: 'Booked a portfolio review session and got an offer at a product startup the very next week. Worth every rupee.',
-    initials: 'AJ',
-  },
-  {
-    id: 'u2',
-    name: 'Karan Bhatia',
-    niche: 'Software Engineer',
-    quote: 'Cracked my system design round after two 1:1 sessions. The expert explained things my college never did in four years.',
-    initials: 'KB',
-  },
-  {
-    id: 'u3',
-    name: 'Meghna Pillai',
-    niche: 'Marketing Professional',
-    quote: 'I went from zero to running my own freelance campaigns. The personal branding course was exactly what I needed.',
-    initials: 'MP',
-  },
-  {
-    id: 'u4',
-    name: 'Sahil Gupta',
-    niche: 'Computer Science Student',
-    quote: 'The React course was more useful than my entire semester. Practical, fast, and the mentor actually responds to questions.',
-    initials: 'SG',
-  },
-  {
-    id: 'u5',
-    name: 'Riya Malhotra',
-    niche: 'Finance Analyst',
-    quote: 'Booked a career growth session and completely changed my trajectory. Three months later I switched jobs and got a 40% hike.',
-    initials: 'RM',
-  },
-]
 
 export default async function CreatorProfilePage({
   params,
@@ -126,7 +89,7 @@ export default async function CreatorProfilePage({
                       value="reviews"
                       className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
                     >
-                      Reviews ({profile.testimonials.length > 0 ? profile.testimonials.length : MOCK_TESTIMONIALS.length})
+                      Reviews ({profile.testimonials.length})
                     </TabsTrigger>
 
 
@@ -158,20 +121,19 @@ export default async function CreatorProfilePage({
                         Reviews for {displayName}
                       </h3>
                       <p className="text-sm text-muted-foreground font-medium mt-0.5">
-                        {profile.testimonials.length > 0 
+                        {profile.testimonials.length > 0
                           ? `Read what students of ${displayName} have experienced.`
-                          : "Thousands of learners across India use Creonex to upskill, switch careers, and grow."
-                        }
+                          : `${displayName} hasn't received any reviews yet.`}
                       </p>
                     </div>
                     <ReviewsTab
-                      testimonials={profile.testimonials.length > 0 ? profile.testimonials.map((t) => ({
+                      testimonials={profile.testimonials.map((t) => ({
                         id: t.id,
                         name: t.learnerName,
                         niche: t.learnerRole ?? '',
                         quote: t.content,
                         initials: getInitials(t.learnerName),
-                      })) : MOCK_TESTIMONIALS}
+                      }))}
                     />
                   </div>
                 </TabsContent>

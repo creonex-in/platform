@@ -1,6 +1,6 @@
 'use client'
 
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { Button } from '@/components/ui/button'

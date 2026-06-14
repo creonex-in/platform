@@ -32,6 +32,11 @@ export const endpoints = {
     creatorList: '/api/v1/creator/bookings',
     cancelById:  (id: string) => `/api/v1/creator/bookings/${id}/cancel`,
   },
+  testimonials: {
+    creatorList:       '/api/v1/creator/testimonials',
+    updateVisibility:  (id: string) => `/api/v1/creator/testimonials/${id}/visibility`,
+    submit:            (username: string) => `/api/v1/testimonials/submit/${username}`,
+  },
   schedules: {
     list:      '/api/v1/schedules',
     create:    '/api/v1/schedules',

@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 
 interface ProfileLinkButtonProps {
   username: string
