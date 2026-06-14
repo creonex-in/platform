@@ -8,8 +8,7 @@ import { CalendarAuthService, type FreeBusyInterval } from '../calendar/calendar
 export interface AvailableSlot {
   start: string       // ISO 8601 UTC
   end: string         // ISO 8601 UTC
-  startLocal: string  // ISO 8601 in learner tz
-  endLocal: string    // ISO 8601 in learner tz
+  startLocal: string  // ISO 8601 in learner tz (for display in the picker)
 }
 
 @Injectable()
@@ -139,7 +138,6 @@ export class SlotGenerationService {
                 start: startIso,
                 end: slotEnd.toISOString(),
                 startLocal: formatInTimeZone(cursor, params.learnerTz, "yyyy-MM-dd'T'HH:mm:ssxxx"),
-                endLocal: formatInTimeZone(slotEnd, params.learnerTz, "yyyy-MM-dd'T'HH:mm:ssxxx"),
               })
             }
           }

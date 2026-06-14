@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { toNodeHandler } from 'better-auth/node'
 import { AuthService } from '@mguay/nestjs-better-auth'
 import cookieParser from 'cookie-parser'
+import compression from 'compression'
 import { AppModule } from './app.module'
 import { AllExceptionsFilter } from './utils/all-exceptions.filter'
 
@@ -21,6 +22,7 @@ async function bootstrap() {
   expressApp.all(/^\/api\/auth\/.*/, toNodeHandler(authService.instance.handler))
 
   app.use(cookieParser())
+  app.use(compression()) // gzip responses — large slot payloads compress ~85%
 
   app.setGlobalPrefix('api')
 

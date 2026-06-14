@@ -5,7 +5,6 @@ export interface SlotItem {
   start: string
   end: string
   startLocal: string
-  endLocal: string
 }
 
 export const slotsService = {
