@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common'
-import { eq, and, inArray, sql } from 'drizzle-orm'
+import { eq, and, inArray, sql, desc } from 'drizzle-orm'
 import { DATABASE_CONNECTION, type Database } from '../database/database-connection'
-import { bookings, offerings, creatorProfiles } from '../database/schema'
+import { bookings, offerings, creatorProfiles, learnerProfiles, user } from '../database/schema'
 import { generateId } from '../utils/id'
 
 type BookingInsert = typeof bookings.$inferInsert
@@ -58,6 +58,33 @@ export class BookingsRepository {
       .from(bookings)
       .where(eq(bookings.offeringId, offeringId))
       .orderBy(sql`${bookings.startTime} asc`)
+  }
+
+  async findAllByCreator(creatorProfileId: string) {
+    return this.db
+      .select({
+        id: bookings.id,
+        offeringId: bookings.offeringId,
+        offeringTitle: offerings.title,
+        offeringType: offerings.type,
+        learnerProfileId: bookings.learnerProfileId,
+        learnerName: user.name,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        status: bookings.status,
+        amountPaise: bookings.amountPaise,
+        topic: bookings.topic,
+        meetingUrl: bookings.meetingUrl,
+        cancelledAt: bookings.cancelledAt,
+        createdAt: bookings.createdAt,
+      })
+      .from(bookings)
+      .innerJoin(offerings, eq(bookings.offeringId, offerings.id))
+      .innerJoin(creatorProfiles, eq(offerings.creatorProfileId, creatorProfiles.id))
+      .innerJoin(learnerProfiles, eq(bookings.learnerProfileId, learnerProfiles.id))
+      .innerJoin(user, eq(learnerProfiles.userId, user.id))
+      .where(eq(creatorProfiles.id, creatorProfileId))
+      .orderBy(desc(bookings.startTime))
   }
 
   async confirm(
