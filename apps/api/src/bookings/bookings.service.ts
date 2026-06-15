@@ -416,4 +416,10 @@ export class BookingsService {
     if (!creatorProfile) throw new NotFoundException('Creator profile not found')
     return this.bookingsRepo.findAllByCreator(creatorProfile.id)
   }
+
+  /** Whether a user has a confirmed/completed booking with a creator — drives the
+   *  "verified booking" flag on testimonials. */
+  hasConfirmedBookingByUser(userId: string, creatorProfileId: string): Promise<boolean> {
+    return this.bookingsRepo.hasConfirmedBookingByUser(userId, creatorProfileId)
+  }
 }

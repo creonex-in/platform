@@ -194,6 +194,7 @@ export interface PublicTestimonial {
   learnerRole: string | null
   content: string
   rating: number
+  isVerified: boolean
 }
 
 export interface PublicCreatorProfile {
@@ -245,6 +246,7 @@ export interface CreatorTestimonialItem {
   learnerRole: string | null
   content: string
   rating: number
+  isVerified: boolean
   isPublic: boolean
   createdAt: string
 }

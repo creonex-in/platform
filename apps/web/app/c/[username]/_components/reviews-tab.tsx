@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faQuoteLeft, faStar } from '@fortawesome/free-solid-svg-icons'
+import { faQuoteLeft, faStar, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 
 export interface TestimonialItem {
   id: string
@@ -7,6 +7,7 @@ export interface TestimonialItem {
   niche: string
   quote: string
   initials: string
+  isVerified?: boolean
 }
 
 interface ReviewsTabProps {
@@ -37,7 +38,18 @@ export function ReviewsTab({ testimonials }: ReviewsTabProps) {
               {t.initials}
             </div>
             <div>
-              <h4 className="text-sm font-bold text-foreground leading-none">{t.name}</h4>
+              <div className="flex items-center gap-1.5">
+                <h4 className="text-sm font-bold text-foreground leading-none">{t.name}</h4>
+                {t.isVerified && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400"
+                    title="This reviewer booked a session with this creator"
+                  >
+                    <FontAwesomeIcon icon={faCircleCheck} className="size-2.5" />
+                    Verified booking
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground mt-1 font-medium">{t.niche}</p>
             </div>
             <div className="ml-auto flex gap-0.5 text-amber-400">

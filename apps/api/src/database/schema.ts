@@ -393,15 +393,18 @@ export const testimonials = pgTable(
     creatorProfileId: text('creator_profile_id')
       .notNull()
       .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
     learnerName: text('learner_name').notNull(),
     learnerRole: text('learner_role'),
     content: text('content').notNull(),
     rating: integer('rating').default(5).notNull(),
+    isVerified: boolean('is_verified').default(false).notNull(),
     isPublic: boolean('is_public').default(true).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (t) => ({
     creatorIdx: index('idx_testimonials_creator').on(t.creatorProfileId),
     publicIdx: index('idx_testimonials_public').on(t.isPublic),
+    userCreatorUnique: uniqueIndex('uq_testimonial_user_creator').on(t.userId, t.creatorProfileId),
   }),
 )

@@ -64,6 +64,7 @@ export class CreatorsService {
         learnerRole: t.learnerRole ?? null,
         content: t.content,
         rating: t.rating,
+        isVerified: t.isVerified,
       })),
     }
   }

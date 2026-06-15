@@ -31,22 +31,37 @@ export class TestimonialsRepository {
 
   async create(data: {
     creatorProfileId: string
+    userId: string
     learnerName: string
     learnerRole?: string
     content: string
     rating: number
+    isVerified: boolean
   }): Promise<string> {
     const id = generateId()
     await this.db.insert(testimonials).values({
       id,
       creatorProfileId: data.creatorProfileId,
+      userId: data.userId,
       learnerName: data.learnerName,
       learnerRole: data.learnerRole ?? null,
       content: data.content,
       rating: data.rating,
+      isVerified: data.isVerified,
       isPublic: true,
     })
     return id
+  }
+
+  /** True if this user already reviewed this creator (pre-check before insert; the
+   *  unique index is the hard guard). */
+  async existsForUser(userId: string, creatorProfileId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: testimonials.id })
+      .from(testimonials)
+      .where(and(eq(testimonials.userId, userId), eq(testimonials.creatorProfileId, creatorProfileId)))
+      .limit(1)
+    return rows.length > 0
   }
 
   async updateVisibility(id: string, creatorProfileId: string, isPublic: boolean): Promise<void> {

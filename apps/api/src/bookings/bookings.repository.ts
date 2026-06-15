@@ -52,6 +52,25 @@ export class BookingsRepository {
       .orderBy(sql`${bookings.createdAt} desc`)
   }
 
+  /** True if the user has at least one confirmed/completed booking with this creator.
+   *  Used to mark a testimonial as a verified-booking review. */
+  async hasConfirmedBookingByUser(userId: string, creatorProfileId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: bookings.id })
+      .from(bookings)
+      .innerJoin(offerings, eq(bookings.offeringId, offerings.id))
+      .innerJoin(learnerProfiles, eq(bookings.learnerProfileId, learnerProfiles.id))
+      .where(
+        and(
+          eq(learnerProfiles.userId, userId),
+          eq(offerings.creatorProfileId, creatorProfileId),
+          inArray(bookings.status, ['confirmed', 'completed']),
+        ),
+      )
+      .limit(1)
+    return rows.length > 0
+  }
+
   async findAllByOffering(offeringId: string): Promise<BookingRow[]> {
     return this.db
       .select()

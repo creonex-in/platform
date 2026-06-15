@@ -35,17 +35,23 @@ export class CreatorTestimonialsController {
   }
 }
 
-// ── Public testimonial submission (no auth) ───────────────────────────────────
+// ── Authenticated testimonial submission ──────────────────────────────────────
 
 @ApiTags('Testimonials')
+@ApiCookieAuth()
 @Controller('v1/testimonials')
+@UseGuards(AuthGuard)
 export class PublicTestimonialsController {
   constructor(private readonly testimonialsService: TestimonialsService) {}
 
   @Post('submit/:username')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Submit a testimonial for a creator (public — no auth required)' })
-  async submit(@Param('username') username: string, @Body() dto: SubmitTestimonialDto) {
-    await this.testimonialsService.submitTestimonial(username, dto)
+  @ApiOperation({ summary: 'Submit a testimonial for a creator (requires a signed-in user)' })
+  async submit(
+    @Session() session: AppUserSession,
+    @Param('username') username: string,
+    @Body() dto: SubmitTestimonialDto,
+  ) {
+    await this.testimonialsService.submitTestimonial(username, session.user.id, dto)
   }
 }
