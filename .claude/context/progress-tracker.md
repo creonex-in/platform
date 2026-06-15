@@ -2,8 +2,10 @@
 
 ## Phase
 
-Web booking flow live end-to-end. Creator dashboard UI consolidated.
-Next: learner-side history + replace remaining mocked dashboard data.
+Offering taxonomy finalized (`one_on_one | live_event | digital`) with per-type
+create + book/buy flows end-to-end. Booking flow live. Creator dashboard UI consolidated.
+**Next: creator payouts + KYC + Razorpay Route money-split** (see
+`docs/payouts-kyc-routing.md`). Uploads/S3 still stubbed.
 
 ## Done
 
@@ -30,6 +32,23 @@ Next: learner-side history + replace remaining mocked dashboard data.
   order → pay → confirm → success with Meet link
 - Default tz = device tz; full IANA list via `Intl.supportedValuesOf`
 - Responsive: whole modal scrolls on mobile, slots-only scroll on desktop (`grid-rows-1`), sticky CTA
+
+**Offering Types — all 3, end-to-end** ✅ (2026-06-16)
+
+- Taxonomy finalized: `one_on_one | live_event | digital`. `workshop`/`group` **removed**
+  entirely (code + DB enum recreated); `live_event` carries `metadata.format: group|webinar`.
+  `course` parked as a future separate type. See `docs/offerings-type-flows.md`.
+- Create: offer-form per-type fields — 1:1 (duration + booking window), live_event
+  (`scheduledAt` + format preset + seats), digital (delivery editor: files + external link
+  + instructions). API DTO/service persist `scheduledAt` + `metadata`.
+- Book/buy: offering-card per-type CTA (Book / Register / Get access) + sold-out; 1:1 → slot
+  picker, live_event/digital → straight to `/checkout`. Checkout branches per type (copy +
+  payload + summary). Bookings API: live_event (fixed time + atomic seats), digital (instant,
+  no meeting).
+- **Uploads = STUB** (`apps/api/src/uploads`): presign/confirm/delete/digital-access return
+  correctly-shaped placeholders, **no AWS yet**. Web `storage.service` records the presigned
+  key but skips the real S3 PUT. Wire S3 + CloudFront per `docs/s3-cloudfront-setup.md`
+  before digital file delivery actually works.
 
 **Testimonials** ✅ (merged from `feature/testimonals`, 2026-06-14)
 
@@ -68,13 +87,12 @@ Next: learner-side history + replace remaining mocked dashboard data.
 
 ## Open / To Clarify (decide before building)
 
-1. **Per-type checkout flow** — only `one_on_one` tested. Make checkout dynamic per offer
-   type: `group`/`workshop` (seat counter + fixed `scheduled_at`, no slot math), `digital`
-   - `courses` (instant access, no scheduling). Lock the final type set + each buy flow.
-3. **Creator payouts + KYC** — funds currently land in the platform Razorpay account, not the
-   creator's. Need split to creator (Razorpay Route / transfers), creator bank + KYC capture,
-   real `(creator)/payouts/page.tsx` UI + endpoints (page is mock). Secure + audited (ledger,
-   idempotent, reconciliation).
+1. ~~Per-type checkout flow~~ ✅ DONE — 3 types built end-to-end (see Done above).
+3. **Creator payouts + KYC** ← **NEXT FOCUS.** Funds currently land in the platform Razorpay
+   account, not the creator's. Need: split to creator (Razorpay Route / transfers), creator
+   bank + KYC capture, platform-fee % decision, real `(creator)/payouts/page.tsx` UI +
+   endpoints (page is mock). Secure + audited (ledger, idempotent, reconciliation).
+   **Design doc: `docs/payouts-kyc-routing.md`.**
 4. **Auth gaps** — sign-in shows email+password but only Google OAuth works → wire password
    auth or drop the form. Capture phone for creator + learner at signup. Guest checkout:
    verify phone? + sync a guest's prior bookings to their account when they later sign up

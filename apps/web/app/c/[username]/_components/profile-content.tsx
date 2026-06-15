@@ -55,7 +55,7 @@ export function ProfileContent({
   const closing = isPending && !!selectedOffering
 
   const firstBookable = profile.offerings.find(
-    (o) => o.type === 'one_on_one' || o.type === 'group'
+    (o) => o.type === 'one_on_one'
   ) ?? null
 
   const openModal = (offering: PublicOffering) => {

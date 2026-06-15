@@ -7,7 +7,7 @@ import {
   faRobot, faGamepad, faUtensils, faBriefcase,
   faLeaf, faRocket, faStar, faArrowTrendUp,
   faLaptop, faSackDollar, faHeartPulse,
-  faPhone, faUsers, faPeopleGroup, faFileArrowDown,
+  faPhone, faUsers, faFileArrowDown,
 } from '@fortawesome/free-solid-svg-icons'
 
 export interface NicheOption {
@@ -66,8 +66,7 @@ export const GOAL_OPTIONS: GoalOption[] = [
 
 export const OFFER_TYPE_OPTIONS: OfferTypeOption[] = [
   { value: 'one_on_one', label: '1:1 Call',        icon: faPhone,         description: 'Personal one-on-one session', recommended: true },
-  { value: 'workshop',   label: 'Workshop',         icon: faUsers,         description: 'Live group session for multiple learners'        },
-  { value: 'group',      label: 'Group Session',    icon: faPeopleGroup,   description: 'Small group interactive session (max 20)'        },
+  { value: 'live_event', label: 'Live Event',       icon: faUsers,         description: 'Scheduled group call or webinar at a fixed time'  },
   { value: 'digital',    label: 'Digital Product',  icon: faFileArrowDown, description: 'PDF, template, or recorded resource'             },
 ]
 

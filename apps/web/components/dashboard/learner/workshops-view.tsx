@@ -23,8 +23,7 @@ export function WorkshopsView({ offers, creators }: WorkshopsViewProps): React.R
   const [filter, setFilter] = useState('all')
 
   const workshops = offers.filter((o) => {
-    const isGroupType = o.type === 'workshop' || o.type === 'group'
-    if (!isGroupType) return false
+    if (o.type !== 'live_event') return false
     if (filter === 'all') return true
     return o.type === filter
   })

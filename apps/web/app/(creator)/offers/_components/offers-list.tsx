@@ -20,8 +20,7 @@ import type { CreatorOffering, CreatorOfferStats } from '@creonex/types'
 const categories = [
   { label: 'All', value: 'all' },
   { label: '1:1 Sessions', value: 'one_on_one' },
-  { label: 'Workshops', value: 'workshop' },
-  { label: 'Group Calls', value: 'group' },
+  { label: 'Live Events', value: 'live_event' },
   { label: 'Digital', value: 'digital' },
 ]
 

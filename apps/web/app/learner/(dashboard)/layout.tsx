@@ -12,7 +12,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
   return (
     <SidebarProvider>
       <AppSidebar role="learner" userName={displayName} userInitials={getInitials(displayName)} />
-      <SidebarInset className="bg-muted/30 min-h-screen">
+      <SidebarInset className="bg-background min-h-screen">
         {children}
       </SidebarInset>
     </SidebarProvider>

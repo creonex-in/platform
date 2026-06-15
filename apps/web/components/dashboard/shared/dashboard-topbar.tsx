@@ -38,7 +38,7 @@ export function DashboardTopbar({
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background px-3 sm:gap-3 sm:px-4">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card px-3 sm:gap-3 sm:px-4">
       <SidebarTrigger className="-ml-1" />
       <h1 className="shrink-0 font-display text-base font-semibold tracking-tight">{title}</h1>
 

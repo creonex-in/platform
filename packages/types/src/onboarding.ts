@@ -13,15 +13,13 @@ export const GOAL_TYPES = [
   'freelancing', 'investing', 'fitness', 'other',
 ] as const
 
-// `workshop` and `group` are LEGACY values kept only so existing rows/enum stay
-// valid; new offerings use `live_event` (with a `metadata.format` of group|webinar).
-// See docs/offerings-type-flows.md.
+// The three offering types. See docs/offerings-type-flows.md.
+//   one_on_one — 1:1 session (learner picks a slot)
+//   live_event — fixed-time group call / webinar (metadata.format)
+//   digital    — async downloadable product
 export const OFFER_TYPES = [
-  'one_on_one', 'workshop', 'group', 'live_event', 'digital',
+  'one_on_one', 'live_event', 'digital',
 ] as const
-
-/** The offer types a creator can actually create today (drives the UI selector). */
-export const CREATABLE_OFFER_TYPES = ['one_on_one', 'live_event', 'digital'] as const
 
 /** Live-event presentation + seat preset — a label on `live_event`, not its own type. */
 export const LIVE_EVENT_FORMATS = ['group', 'webinar'] as const
@@ -113,7 +111,6 @@ export const CREATOR_GOALS = [
 export type Niche = typeof NICHES[number]
 export type GoalType = typeof GOAL_TYPES[number]
 export type OfferType = typeof OFFER_TYPES[number]
-export type CreatableOfferType = typeof CREATABLE_OFFER_TYPES[number]
 export type LiveEventFormat = typeof LIVE_EVENT_FORMATS[number]
 export type OfferStatus = typeof OFFER_STATUSES[number]
 export type KycStatus = typeof KYC_STATUSES[number]

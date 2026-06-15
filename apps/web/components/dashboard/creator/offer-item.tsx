@@ -53,8 +53,7 @@ interface OfferTypeConfig {
 
 const offerTypeConfig: Record<string, OfferTypeConfig> = {
   one_on_one: { icon: faPhone, label: '1:1 Session' },
-  workshop: { icon: faCalendarDays, label: 'Workshop' },
-  group: { icon: faUsers, label: 'Group Call' },
+  live_event: { icon: faCalendarDays, label: 'Live Event' },
   digital: { icon: faFileLines, label: 'Digital Product' },
 }
 

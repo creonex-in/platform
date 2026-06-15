@@ -27,10 +27,9 @@ export class BookingsService {
     private readonly slotService: SlotGenerationService,
   ) {}
 
-  /** Types that consume a seat (atomic decrement). live_event is canonical;
-   *  group/workshop are legacy values kept for existing rows. */
+  /** Types that consume a seat (atomic decrement). */
   private isSeatedType(type: string): boolean {
-    return type === 'live_event' || type === 'group' || type === 'workshop'
+    return type === 'live_event'
   }
 
   /**
@@ -50,20 +49,16 @@ export class BookingsService {
     if (offering.type === 'digital') {
       return {} // async — no scheduled time, no meeting
     }
-    // live_event (+ legacy group/workshop): a single fixed event time
-    if (offering.scheduledAt) {
-      const start = offering.scheduledAt
-      if (start.getTime() <= Date.now()) {
-        throw new BadRequestException('This event has already started')
-      }
-      const durationMin = offering.durationMinutes ?? 60
-      return { startTime: start, endTime: new Date(start.getTime() + durationMin * 60_000) }
+    // live_event: a single fixed event time set by the creator
+    if (!offering.scheduledAt) {
+      throw new BadRequestException('This event has no scheduled time')
     }
-    // Legacy slot-based group fallback (rows created before live_event)
-    return {
-      startTime: dto.startTime ? new Date(dto.startTime) : undefined,
-      endTime: dto.endTime ? new Date(dto.endTime) : undefined,
+    const start = offering.scheduledAt
+    if (start.getTime() <= Date.now()) {
+      throw new BadRequestException('This event has already started')
     }
+    const durationMin = offering.durationMinutes ?? 60
+    return { startTime: start, endTime: new Date(start.getTime() + durationMin * 60_000) }
   }
 
   // ── Slot validation ──────────────────────────────────────────────────────────
@@ -118,7 +113,7 @@ export class BookingsService {
     // Per-type start/end resolution (1:1 slot, live_event fixed time, digital none)
     const { startTime, endTime } = await this.resolveBookingTimes(offering, dto)
 
-    // Seat check for seated types (live_event + legacy group/workshop)
+    // Seat check for seated types (live_event)
     if (this.isSeatedType(offering.type) && offering.seatsTotal !== null) {
       if ((offering.seatsRemaining ?? 0) <= 0) {
         throw new ConflictException('No seats remaining')
@@ -405,7 +400,7 @@ export class BookingsService {
       void this.bookingsRepo.decrementOfferingCounters(booking.offeringId, booking.amountPaise)
     }
 
-    // Restore seat for seated types (live_event + legacy group/workshop)
+    // Restore seat for seated types (live_event)
     const offering = await this.offeringsRepo.findById(booking.offeringId)
     if (offering && this.isSeatedType(offering.type) && offering.seatsTotal !== null) {
       void this.bookingsRepo.restoreSeats(booking.offeringId)

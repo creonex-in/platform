@@ -42,13 +42,13 @@ import { isApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { toast } from '@/lib/toast'
 import {
-  CREATABLE_OFFER_TYPES, LIVE_EVENT_FORMATS,
-  type CreatorOffering, type OfferCreationEligibility, type CreatableOfferType,
+  OFFER_TYPES, LIVE_EVENT_FORMATS,
+  type CreatorOffering, type OfferCreationEligibility, type OfferType,
   type LiveEventFormat, type DigitalDeliveryFile,
 } from '@creonex/types'
 
-// ── Offer type metadata (only the 3 creatable types) ──────────────────────────
-const TYPE_META: Record<CreatableOfferType, { label: string; description: string; icon: IconDefinition }> = {
+// ── Offer type metadata ───────────────────────────────────────────────────────
+const TYPE_META: Record<OfferType, { label: string; description: string; icon: IconDefinition }> = {
   one_on_one: {
     label: '1:1 Session',
     description: 'Private 1-on-1 coaching video call',
@@ -76,12 +76,12 @@ const SUGGESTED_PRICES = [199, 299, 499, 799, 999, 1499]
 
 const asNumber = { setValueAs: (v: string): number | undefined => (v === '' || v == null ? undefined : Number(v)) }
 
-const needsDuration = (t?: CreatableOfferType): boolean => t === 'one_on_one' || t === 'live_event'
-const needsSeats = (t?: CreatableOfferType): boolean => t === 'live_event'
-const isLiveEvent = (t?: CreatableOfferType): boolean => t === 'live_event'
-const isDigital = (t?: CreatableOfferType): boolean => t === 'digital'
+const needsDuration = (t?: OfferType): boolean => t === 'one_on_one' || t === 'live_event'
+const needsSeats = (t?: OfferType): boolean => t === 'live_event'
+const isLiveEvent = (t?: OfferType): boolean => t === 'live_event'
+const isDigital = (t?: OfferType): boolean => t === 'digital'
 /** Booking-window/notice/buffer config only applies to learner-picks-a-slot (1:1). */
-const isBookable = (t?: CreatableOfferType): boolean => t === 'one_on_one'
+const isBookable = (t?: OfferType): boolean => t === 'one_on_one'
 
 /** ISO -> datetime-local input value (naive local wall time). */
 const isoToLocalInput = (iso?: string | null): string => {
@@ -94,7 +94,7 @@ const isoToLocalInput = (iso?: string | null): string => {
 // ── Schema (mirrors API CreateOfferingDto) ────────────────────────────────────
 const offerSchema = z
   .object({
-    type: z.enum(CREATABLE_OFFER_TYPES, { message: 'Choose an offer type' }),
+    type: z.enum(OFFER_TYPES, { message: 'Choose an offer type' }),
     title: z.string().min(5, 'Title must be at least 5 characters').max(80, 'Keep the title under 80 characters'),
     description: z.string().min(20, 'Description must be at least 20 characters').max(2000, 'Description is too long'),
     price: z.number({ message: 'Enter a price' }).min(99, 'Minimum price is ₹99').max(500000, 'Price is too high'),
@@ -176,7 +176,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
     mode: 'onChange',
     defaultValues: offering
       ? {
-          type: offering.type as CreatableOfferType,
+          type: offering.type as OfferType,
           title: offering.title,
           description: offering.description ?? '',
           price: offering.price,
@@ -394,7 +394,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
               )}
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {(Object.keys(TYPE_META) as CreatableOfferType[]).map((key) => {
+                {(Object.keys(TYPE_META) as OfferType[]).map((key) => {
                   const item = TYPE_META[key]
                   const isLocked = lockedTypes.has(key)
                   const isSelected = type === key && !isLocked

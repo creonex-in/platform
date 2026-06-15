@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 import { getTypeConfig } from './types'
 import type { PublicOffering } from '@creonex/types'
 
-/** Every current type is purchasable; legacy/unknown types fall back to "coming soon". */
-const BOOKABLE_TYPES = new Set(['one_on_one', 'live_event', 'group', 'digital'])
+/** Every offering type is purchasable; unknown types fall back to "coming soon". */
+const BOOKABLE_TYPES = new Set(['one_on_one', 'live_event', 'digital'])
 
 const ctaLabel = (type: string): string =>
   type === 'digital' ? 'Get access' : type === 'live_event' ? 'Register' : 'Book'
