@@ -1,9 +1,35 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
-  IsEnum, IsInt, IsNumber, IsOptional, IsString,
-  Max, MaxLength, Min, MinLength,
+  ArrayMaxSize, IsArray, IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsString, IsUrl,
+  Max, MaxLength, Min, MinLength, ValidateNested,
 } from 'class-validator'
-import { OFFER_TYPES, OFFER_STATUSES, type OfferType, type OfferStatus } from '@creonex/types'
+import {
+  OFFER_TYPES, OFFER_STATUSES, LIVE_EVENT_FORMATS,
+  type OfferType, type OfferStatus, type LiveEventFormat,
+} from '@creonex/types'
+
+/** One uploaded digital file, referenced by its S3 key (set via the uploads flow). */
+export class DigitalFileDto {
+  @ApiProperty()
+  @IsString()
+  key!: string
+
+  @ApiProperty()
+  @IsString()
+  @MaxLength(200)
+  name!: string
+
+  @ApiProperty()
+  @IsInt()
+  @Min(0)
+  sizeBytes!: number
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  contentType?: string
+}
 
 export class CreateOfferingDto {
   @ApiProperty({ enum: OFFER_TYPES })
@@ -61,6 +87,37 @@ export class CreateOfferingDto {
   @Min(0)
   @Max(120)
   bufferAfterMinutes?: number
+
+  // ── live_event ──────────────────────────────────────────────────────────────
+  @ApiPropertyOptional({ description: 'Fixed event datetime (UTC ISO) — live_event only' })
+  @IsOptional()
+  @IsDateString()
+  scheduledAt?: string
+
+  @ApiPropertyOptional({ enum: LIVE_EVENT_FORMATS, description: 'group | webinar — live_event only' })
+  @IsOptional()
+  @IsEnum(LIVE_EVENT_FORMATS)
+  format?: LiveEventFormat
+
+  // ── digital ───────────────────────────────────────────────────────────────--
+  @ApiPropertyOptional({ type: [DigitalFileDto], description: 'Uploaded files — digital only' })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => DigitalFileDto)
+  deliveryFiles?: DigitalFileDto[]
+
+  @ApiPropertyOptional({ description: 'External delivery link — digital only' })
+  @IsOptional()
+  @IsUrl()
+  externalUrl?: string
+
+  @ApiPropertyOptional({ description: 'Post-purchase instructions — digital only' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  deliveryInstructions?: string
 }
 
 export class UpdateOfferingDto {
@@ -117,6 +174,35 @@ export class UpdateOfferingDto {
   @Min(0)
   @Max(120)
   bufferAfterMinutes?: number
+
+  @ApiPropertyOptional({ description: 'Fixed event datetime (UTC ISO) — live_event only' })
+  @IsOptional()
+  @IsDateString()
+  scheduledAt?: string
+
+  @ApiPropertyOptional({ enum: LIVE_EVENT_FORMATS })
+  @IsOptional()
+  @IsEnum(LIVE_EVENT_FORMATS)
+  format?: LiveEventFormat
+
+  @ApiPropertyOptional({ type: [DigitalFileDto] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => DigitalFileDto)
+  deliveryFiles?: DigitalFileDto[]
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUrl()
+  externalUrl?: string
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  deliveryInstructions?: string
 }
 
 export class UpdateOfferingStatusDto {

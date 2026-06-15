@@ -17,7 +17,7 @@ export default async function CheckoutPage({
 }): Promise<React.ReactElement> {
   const { creator, offering: offeringId, start, end, tz } = await searchParams
 
-  if (!creator || !offeringId || !start || !end) notFound()
+  if (!creator || !offeringId) notFound()
 
   let profile: PublicCreatorProfile
   try {
@@ -30,12 +30,16 @@ export default async function CheckoutPage({
   const offering = profile.offerings.find((o) => o.id === offeringId)
   if (!offering) notFound()
 
+  // Only 1:1 carries a learner-picked slot; live events use the fixed event time and
+  // digital products have none.
+  if (offering.type === 'one_on_one' && (!start || !end)) notFound()
+
   return (
     <CheckoutClient
       profile={profile}
       offering={offering}
-      start={start}
-      end={end}
+      start={start ?? null}
+      end={end ?? null}
       tz={tz ?? 'Asia/Kolkata'}
     />
   )

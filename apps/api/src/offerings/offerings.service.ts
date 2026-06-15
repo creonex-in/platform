@@ -12,12 +12,26 @@ import {
   SESSIONS_TO_UNLOCK_OFFERS,
   type CreatorOfferStats,
   type OfferCreationEligibility,
+  type OfferingMetadata,
   type OfferStatus,
   type OfferType,
 } from '@creonex/types'
 import type { CreateOfferingDto, UpdateOfferingDto } from './offerings.dto'
 
 const GATED_TYPES = new Set<OfferType>(GATED_OFFER_TYPES)
+
+/** Build the `metadata` jsonb from the per-type DTO fields (format / digital delivery). */
+function buildMetadata(
+  dto: CreateOfferingDto | UpdateOfferingDto,
+  base: OfferingMetadata = {},
+): OfferingMetadata {
+  const m: OfferingMetadata = { ...base }
+  if (dto.format !== undefined) m.format = dto.format
+  if (dto.deliveryFiles !== undefined) m.files = dto.deliveryFiles
+  if (dto.externalUrl !== undefined) m.externalUrl = dto.externalUrl
+  if (dto.deliveryInstructions !== undefined) m.instructions = dto.deliveryInstructions
+  return m
+}
 
 const VALID_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
   draft: ['live', 'archived'],
@@ -62,6 +76,8 @@ export class OfferingsService {
       bookingWindowDays: o.bookingWindowDays,
       bufferAfterMinutes: o.bufferAfterMinutes,
       scheduleId: o.scheduleId,
+      scheduledAt: o.scheduledAt,
+      metadata: (o.metadata ?? {}) as OfferingMetadata,
       slug: o.slug,
       createdAt: o.createdAt,
       updatedAt: o.updatedAt,
@@ -105,12 +121,12 @@ export class OfferingsService {
   async createOffering(userId: string, dto: CreateOfferingDto) {
     const profileId = await this.resolveCreatorProfileId(userId)
 
-    // Gate group/workshop behind delivered 1:1 sessions.
+    // Gate live events (group calls / webinars) behind delivered 1:1 sessions.
     if (GATED_TYPES.has(dto.type)) {
       const completed = await this.offeringsRepo.countCompletedOneOnOneSessions(profileId)
       if (completed < SESSIONS_TO_UNLOCK_OFFERS) {
         throw new ForbiddenException(
-          `Complete ${SESSIONS_TO_UNLOCK_OFFERS} one-on-one sessions to unlock group calls and workshops. You've completed ${completed}.`,
+          `Complete ${SESSIONS_TO_UNLOCK_OFFERS} one-on-one sessions to unlock live events (group calls & webinars). You've completed ${completed}.`,
         )
       }
     }
@@ -121,6 +137,8 @@ export class OfferingsService {
       priceInPaise: dto.price * 100,
       durationMinutes: dto.durationMinutes,
       seatsTotal: dto.seatsTotal,
+      scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : undefined,
+      metadata: buildMetadata(dto) as Record<string, unknown>,
       status: 'draft',
     })
 
@@ -158,6 +176,13 @@ export class OfferingsService {
       throw new ForbiddenException('Archived offerings cannot be modified')
     }
 
+    // Merge metadata fields onto the existing jsonb so partial updates don't clobber it.
+    const metadataTouched =
+      dto.format !== undefined ||
+      dto.deliveryFiles !== undefined ||
+      dto.externalUrl !== undefined ||
+      dto.deliveryInstructions !== undefined
+
     await this.offeringsRepo.update(id, {
       ...(dto.title !== undefined && { title: dto.title }),
       ...(dto.description !== undefined && { description: dto.description }),
@@ -167,6 +192,10 @@ export class OfferingsService {
       ...(dto.minNoticeMinutes !== undefined && { minNoticeMinutes: dto.minNoticeMinutes }),
       ...(dto.bookingWindowDays !== undefined && { bookingWindowDays: dto.bookingWindowDays }),
       ...(dto.bufferAfterMinutes !== undefined && { bufferAfterMinutes: dto.bufferAfterMinutes }),
+      ...(dto.scheduledAt !== undefined && { scheduledAt: new Date(dto.scheduledAt) }),
+      ...(metadataTouched && {
+        metadata: buildMetadata(dto, (offering.metadata ?? {}) as OfferingMetadata) as Record<string, unknown>,
+      }),
     })
 
     const updated = await this.offeringsRepo.findById(id)

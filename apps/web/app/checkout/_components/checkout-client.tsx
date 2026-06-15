@@ -7,13 +7,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowLeft, faClock, faVideo, faCircleCheck, faCalendarDay,
   faLock, faShieldHalved, faLink, faCalendarCheck, faIndianRupeeSign,
-  faUserCheck, faCreditCard,
+  faUserCheck, faCreditCard, faDownload, faBolt,
 } from '@fortawesome/free-solid-svg-icons'
 import { bookingsService } from '@/services/bookings.service'
 import { api } from '@/lib/api'
 import { endpoints } from '@/lib/endpoints'
 import { getInitials } from '@/lib/utils'
-import type { PublicOffering, PublicCreatorProfile, UserContext } from '@creonex/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import type {
+  PublicOffering, PublicCreatorProfile, UserContext, CreateBookingRequest,
+} from '@creonex/types'
 
 declare global {
   interface Window {
@@ -25,8 +30,9 @@ declare global {
 interface Props {
   profile: PublicCreatorProfile
   offering: PublicOffering
-  start: string
-  end: string
+  /** 1:1 only — the learner-picked slot (UTC ISO). Null for live_event / digital. */
+  start: string | null
+  end: string | null
   tz: string
 }
 
@@ -46,9 +52,32 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
   const [done, setDone] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  // ── Type flavour ──────────────────────────────────────────────────────────────
+  const isOneOnOne = offering.type === 'one_on_one'
+  const isLiveEvent = offering.type === 'live_event'
+  const isDigital = offering.type === 'digital'
+  const isTimed = isOneOnOne || isLiveEvent
+
+  // Event time: 1:1 from the picked slot; live_event from the fixed scheduledAt.
+  const eventStart = isOneOnOne ? start : offering.scheduledAt
+  const eventEnd = isOneOnOne
+    ? end
+    : isLiveEvent && offering.scheduledAt
+      ? new Date(new Date(offering.scheduledAt).getTime() + (offering.durationMinutes ?? 60) * 60_000).toISOString()
+      : null
+
   const displayName = profile.displayName ?? `@${profile.username}`
-  // Preserve the selection so Back reopens the slot dialog with the same state.
-  const backHref = `/c/${profile.username}?${new URLSearchParams({ offering: offering.id, tz, start, end }).toString()}`
+  // Preserve the 1:1 selection so Back reopens the slot dialog; others just go to profile.
+  const backHref = isOneOnOne && start && end
+    ? `/c/${profile.username}?${new URLSearchParams({ offering: offering.id, tz, start, end }).toString()}`
+    : `/c/${profile.username}`
+
+  // Per-type copy
+  const copy = isDigital
+    ? { heading: 'Complete your purchase', sub: "You're one step away from instant access.", cta: 'Pay & get access', successTitle: 'Purchase complete!' }
+    : isLiveEvent
+      ? { heading: 'Confirm your spot', sub: "You're one step away from registering.", cta: 'Pay & register', successTitle: "You're registered!" }
+      : { heading: 'Complete your booking', sub: "You're one step away from your session.", cta: 'Pay & book', successTitle: 'Booking confirmed!' }
 
   // ── Auth detection ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -58,14 +87,12 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
   }, [])
 
   // ── Formatting (render the UTC instant in the chosen tz) ──────────────────────────
-  const dateLabel = new Date(start).toLocaleDateString('en-IN', {
-    timeZone: tz, weekday: 'long', day: 'numeric', month: 'long',
-  })
-  const timeLabel = `${new Date(start).toLocaleTimeString('en-IN', {
-    timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true,
-  })} – ${new Date(end).toLocaleTimeString('en-IN', {
-    timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true,
-  })}`.replace(/am/g, 'AM').replace(/pm/g, 'PM')
+  const dateLabel = eventStart
+    ? new Date(eventStart).toLocaleDateString('en-IN', { timeZone: tz, weekday: 'long', day: 'numeric', month: 'long' })
+    : null
+  const timeLabel = eventStart && eventEnd
+    ? `${new Date(eventStart).toLocaleTimeString('en-IN', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true })} – ${new Date(eventEnd).toLocaleTimeString('en-IN', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true })}`.replace(/am/g, 'AM').replace(/pm/g, 'PM')
+    : null
 
   // ── Razorpay ──────────────────────────────────────────────────────────────────────
   const loadRazorpay = () =>
@@ -85,12 +112,11 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
       const loaded = await loadRazorpay()
       if (!loaded) throw new Error('Payment gateway failed to load. Check your connection.')
 
-      const payload = {
+      // 1:1 sends the picked slot; live_event/digital let the server resolve the time.
+      const payload: CreateBookingRequest = {
         offeringId: offering.id,
-        startTime: start,
-        endTime: end,
-        learnerTimezone: tz,
-        topic: topic || undefined,
+        ...(isOneOnOne && start ? { startTime: start, endTime: end ?? undefined, topic: topic || undefined } : {}),
+        ...(isTimed ? { learnerTimezone: tz } : {}),
       }
 
       const created = isLoggedIn
@@ -151,7 +177,7 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
       setIsLoading(false)
       setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
     }
-  }, [offering, start, end, tz, topic, isLoggedIn, loggedInUser, guestName, guestEmail, guestPhone, displayName])
+  }, [offering, start, end, tz, topic, isLoggedIn, loggedInUser, guestName, guestEmail, guestPhone, displayName, isOneOnOne, isTimed])
 
   const detailsValid = isLoggedIn === true
     ? true
@@ -166,10 +192,12 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
             <FontAwesomeIcon icon={faCalendarCheck} className="size-9 text-emerald-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground font-display">Booking confirmed!</h1>
+            <h1 className="text-2xl font-bold text-foreground font-display">{copy.successTitle}</h1>
             <p className="text-sm text-muted-foreground mt-1.5 max-w-sm">
               {isLoggedIn
-                ? 'Your session is booked. Find it anytime in your sessions.'
+                ? isDigital
+                  ? 'Your purchase is complete. Access it anytime from your library.'
+                  : 'You’re all set. Find this anytime in your bookings.'
                 : `A confirmation has been sent to ${guestEmail}.`}
             </p>
           </div>
@@ -177,15 +205,21 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
           {/* Summary chip */}
           <div className="w-full rounded-2xl border border-border bg-muted/20 p-4 flex items-center gap-3 text-left">
             <div className="size-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <FontAwesomeIcon icon={faCalendarDay} className="size-4.5 text-primary" />
+              <FontAwesomeIcon icon={isDigital ? faDownload : faCalendarDay} className="size-4.5 text-primary" />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-bold text-foreground truncate">{offering.title}</p>
-              <p className="text-xs text-muted-foreground">{dateLabel} · {timeLabel}</p>
+              <p className="text-xs text-muted-foreground">
+                {isDigital ? 'Digital product' : `${dateLabel} · ${timeLabel}`}
+              </p>
             </div>
           </div>
 
-          {meetUrl ? (
+          {isDigital ? (
+            <div className="w-full rounded-2xl bg-muted/40 border border-border p-4 text-sm text-muted-foreground">
+              Your download links and access details {isLoggedIn ? 'are available in your library' : 'have been emailed to you'}.
+            </div>
+          ) : meetUrl ? (
             <div className="w-full flex flex-col gap-2.5">
               <a
                 href={meetUrl}
@@ -196,24 +230,25 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
                 <FontAwesomeIcon icon={faVideo} className="size-4" />
                 Join Google Meet
               </a>
-              <button
+              <Button
+                variant="outline"
                 onClick={() => { navigator.clipboard.writeText(meetUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-                className="w-full h-11 rounded-2xl border border-border bg-card text-foreground text-xs font-semibold flex items-center justify-center gap-2 hover:bg-muted/50 transition-all"
+                className="w-full h-11 rounded-2xl text-xs font-semibold"
               >
-                <FontAwesomeIcon icon={faLink} className="size-3" />
+                <FontAwesomeIcon icon={faLink} className="size-3 mr-1.5" />
                 {copied ? 'Link copied!' : 'Copy Meet link'}
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="w-full rounded-2xl bg-muted/40 border border-border p-4 text-sm text-muted-foreground">
-              {displayName} will share the session details with you over email before the call.
+              {displayName} will share the {isLiveEvent ? 'event' : 'session'} details with you over email beforehand.
             </div>
           )}
 
           {!isLoggedIn && bookingId && (
             <div className="w-full rounded-2xl bg-primary/5 border border-primary/20 p-4 text-left">
-              <p className="text-xs font-bold text-primary mb-1">Track your bookings</p>
-              <p className="text-xs text-muted-foreground mb-3">Create a free account to manage and reschedule sessions easily.</p>
+              <p className="text-xs font-bold text-primary mb-1">Track your purchases</p>
+              <p className="text-xs text-muted-foreground mb-3">Create a free account to manage everything in one place.</p>
               <Link href="/sign-up" className="inline-flex items-center text-xs font-bold text-primary hover:underline">
                 Create free account →
               </Link>
@@ -243,8 +278,8 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
         Back to {displayName}
       </Link>
 
-      <h1 className="text-2xl md:text-3xl font-bold text-foreground font-display mb-1">Complete your booking</h1>
-      <p className="text-sm text-muted-foreground mb-8">You’re one step away from your session.</p>
+      <h1 className="text-2xl md:text-3xl font-bold text-foreground font-display mb-1">{copy.heading}</h1>
+      <p className="text-sm text-muted-foreground mb-8">{copy.sub}</p>
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-6 lg:gap-10 items-start">
 
@@ -277,31 +312,14 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
               <div className="flex flex-col gap-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <Field label="Full name" required>
-                    <input
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      placeholder="Your name"
-                      className={inputCls}
-                    />
+                    <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Your name" className="h-11" />
                   </Field>
                   <Field label="Email" required>
-                    <input
-                      type="email"
-                      value={guestEmail}
-                      onChange={(e) => setGuestEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className={inputCls}
-                    />
+                    <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="you@example.com" className="h-11" />
                   </Field>
                 </div>
                 <Field label="Phone" optional>
-                  <input
-                    type="tel"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className={inputCls}
-                  />
+                  <Input type="tel" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+91 98765 43210" className="h-11" />
                 </Field>
                 <p className="text-xs text-muted-foreground">
                   Already have an account?{' '}
@@ -313,7 +331,7 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
           </section>
 
           {/* Topic (1:1 only) */}
-          {offering.type === 'one_on_one' && (
+          {isOneOnOne && (
             <section className="rounded-3xl border border-border bg-card shadow-sm p-6 md:p-7">
               <div className="flex items-center gap-2.5 mb-5">
                 <span className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">2</span>
@@ -321,12 +339,12 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
                   What would you like to discuss? <span className="text-muted-foreground/50 font-normal text-sm">(optional)</span>
                 </h2>
               </div>
-              <textarea
+              <Textarea
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="Share some context about your goals or questions so the session is more useful…"
                 rows={4}
-                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
+                className="resize-none"
               />
             </section>
           )}
@@ -338,20 +356,20 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
           )}
 
           {/* Desktop pay button */}
-          <button
+          <Button
             onClick={handlePay}
             disabled={!detailsValid || isLoading || isLoggedIn === null}
-            className="hidden lg:flex w-full h-13 rounded-2xl bg-linear-to-r from-primary to-primary/90 text-primary-foreground text-base font-bold disabled:opacity-40 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.99] transition-all items-center justify-center gap-2"
+            className="hidden lg:flex w-full h-13 rounded-2xl text-base font-bold"
           >
             {isLoading ? (
               <span className="size-5 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
             ) : (
               <>
-                <FontAwesomeIcon icon={faLock} className="size-3.5" />
-                Pay ₹{offering.price.toLocaleString('en-IN')} securely
+                <FontAwesomeIcon icon={faLock} className="size-3.5 mr-1" />
+                {copy.cta} · ₹{offering.price.toLocaleString('en-IN')}
               </>
             )}
-          </button>
+          </Button>
         </div>
 
         {/* ── Order summary (right on desktop, top on mobile) ── */}
@@ -380,14 +398,21 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
 
             {/* details */}
             <div className="p-6 flex flex-col gap-4">
-              <SummaryRow icon={faCalendarDay} label="Date" value={dateLabel} />
-              <SummaryRow icon={faClock} label="Time" value={`${timeLabel}`} sub={tz} />
-              <SummaryRow icon={faVideo} label="Where" value="Google Meet (link after booking)" />
+              {isTimed && dateLabel && (
+                <>
+                  <SummaryRow icon={faCalendarDay} label="Date" value={dateLabel} />
+                  <SummaryRow icon={faClock} label="Time" value={timeLabel ?? ''} sub={tz} />
+                  <SummaryRow icon={faVideo} label="Where" value="Google Meet (link after payment)" />
+                </>
+              )}
+              {isDigital && (
+                <SummaryRow icon={faBolt} label="Delivery" value="Instant access after payment" />
+              )}
 
               <div className="border-t border-dashed border-border my-1" />
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Session fee</span>
+                <span className="text-muted-foreground">{isDigital ? 'Product price' : 'Price'}</span>
                 <span className="font-semibold text-foreground">₹{offering.price.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex items-center justify-between">
@@ -401,20 +426,20 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
 
             {/* Mobile pay button */}
             <div className="lg:hidden p-6 pt-0">
-              <button
+              <Button
                 onClick={handlePay}
                 disabled={!detailsValid || isLoading || isLoggedIn === null}
-                className="w-full h-13 rounded-2xl bg-linear-to-r from-primary to-primary/90 text-primary-foreground text-base font-bold disabled:opacity-40 hover:shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                className="w-full h-13 rounded-2xl text-base font-bold"
               >
                 {isLoading ? (
                   <span className="size-5 border-2 border-primary-foreground/40 border-t-primary-foreground rounded-full animate-spin" />
                 ) : (
                   <>
-                    <FontAwesomeIcon icon={faLock} className="size-3.5" />
-                    Pay ₹{offering.price.toLocaleString('en-IN')}
+                    <FontAwesomeIcon icon={faLock} className="size-3.5 mr-1" />
+                    {copy.cta}
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -422,7 +447,7 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
           <div className="mt-4 flex flex-col gap-2 px-1">
             <TrustLine icon={faShieldHalved} text="Secured by Razorpay · SSL encrypted" />
             <TrustLine icon={faCreditCard} text="UPI, cards & net banking accepted" />
-            <TrustLine icon={faCircleCheck} text="Free reschedule up to 24h before" />
+            {!isDigital && <TrustLine icon={faCircleCheck} text="Free reschedule up to 24h before" />}
           </div>
         </aside>
       </div>
@@ -431,9 +456,6 @@ export function CheckoutClient({ profile, offering, start, end, tz }: Props) {
 }
 
 // ── Small pieces ──────────────────────────────────────────────────────────────────
-const inputCls =
-  'w-full h-11 rounded-xl border border-border bg-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all'
-
 function Field({ label, required, optional, children }: {
   label: string; required?: boolean; optional?: boolean; children: React.ReactNode
 }) {

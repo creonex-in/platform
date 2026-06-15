@@ -63,6 +63,24 @@ export const TYPE_CONFIG: Record<string, TypeConfig> = {
     accentRing: 'ring-primary/20',
     gradient: 'from-primary to-primary/80',
   },
+  live_event: {
+    label: 'Live Event',
+    tabLabel: 'Live Events',
+    icon: faChalkboard,
+    accentBg: 'bg-primary/10',
+    accentText: 'text-primary',
+    accentRing: 'ring-primary/20',
+    gradient: 'from-primary to-primary/80',
+  },
+  digital: {
+    label: 'Digital Product',
+    tabLabel: 'Digital Products',
+    icon: faFile,
+    accentBg: 'bg-primary/10',
+    accentText: 'text-primary',
+    accentRing: 'ring-primary/20',
+    gradient: 'from-primary to-primary/80',
+  },
 }
 
 export const getTypeConfig = (type: string): TypeConfig =>

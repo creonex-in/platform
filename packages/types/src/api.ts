@@ -1,5 +1,5 @@
 import type { UserRole } from './roles'
-import type { Niche, GoalType, SocialLinks } from './onboarding'
+import type { Niche, GoalType, SocialLinks, LiveEventFormat } from './onboarding'
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -84,6 +84,30 @@ export interface AddCreatorRoleResponse {
   alreadyCreator?: boolean
 }
 
+// ── Offering metadata (jsonb on `offerings.metadata`) ─────────────────────────
+
+/** A single digital-product file stored privately in S3. The `key` is the bucket
+ *  object key; download URLs are minted on demand (never stored). */
+export interface DigitalDeliveryFile {
+  key: string
+  name: string
+  sizeBytes: number
+  contentType?: string
+}
+
+/** Free-form per-type extras. `format` is set on `live_event`; the digital fields
+ *  on `digital`. NEVER expose the digital delivery payload on public endpoints. */
+export interface OfferingMetadata {
+  /** live_event presentation/seat preset */
+  format?: LiveEventFormat
+  /** digital: uploaded files (private) */
+  files?: DigitalDeliveryFile[]
+  /** digital: external link (private until purchased) */
+  externalUrl?: string
+  /** digital: post-purchase instructions */
+  instructions?: string
+}
+
 // ── Public Creator Profile ────────────────────────────────────────────────────
 
 export type { SocialLinks }
@@ -101,6 +125,10 @@ export interface PublicOffering {
   status: string
   totalBookings: number
   thumbnailUrl: string | null
+  /** live_event: the single fixed event datetime (UTC ISO). Null for other types. */
+  scheduledAt: string | null
+  /** live_event: 'group' | 'webinar' (from metadata.format). Drives label + seats. */
+  format: LiveEventFormat | null
 }
 
 // ── Creator-owned Offering (full shape, owner dashboard) ──────────────────────
@@ -124,6 +152,10 @@ export interface CreatorOffering {
   bookingWindowDays: number | null
   bufferAfterMinutes: number | null
   scheduleId: string | null
+  /** live_event: the single fixed event datetime (UTC ISO). */
+  scheduledAt: string | null
+  /** Per-type extras: live_event `format`, digital `files`/`externalUrl`/`instructions`. */
+  metadata: OfferingMetadata
   slug: string | null
   createdAt: string
   updatedAt: string
@@ -265,6 +297,71 @@ export interface CreatorTestimonialItem {
   isVerified: boolean
   isPublic: boolean
   createdAt: string
+}
+
+// ── Uploads / Storage (S3 + CloudFront) ───────────────────────────────────────
+// NOTE: the API endpoints backing these are STUBS until AWS is provisioned — they
+// return placeholder URLs in the correct shape so the frontend can integrate now.
+// See docs/s3-cloudfront-setup.md and docs/offerings-type-flows.md (§5 Storage).
+
+/** What the upload is for — drives bucket (public vs private) + key prefix.
+ *  (Offering thumbnails are intentionally out of scope for now.) */
+export type UploadScope = 'profile' | 'banner' | 'digital_asset'
+
+export interface PresignUploadRequest {
+  scope: UploadScope
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  /** Required for `digital_asset` — the offering the file belongs to (ownership-checked). */
+  offeringId?: string
+}
+
+export interface PresignUploadResponse {
+  /** Presigned URL the browser PUTs the file to (direct to S3). */
+  uploadUrl: string
+  /** S3 object key the API will reference after confirm. */
+  key: string
+  /** Public CDN URL (public scopes only); null for private `digital_asset`. */
+  publicUrl: string | null
+  /** HTTP method for the direct upload. */
+  method: 'PUT'
+  /** Headers the browser must send with the PUT (e.g. Content-Type). */
+  headers: Record<string, string>
+  expiresInSeconds: number
+}
+
+export interface ConfirmUploadRequest {
+  key: string
+  /** For `digital_asset`: attach the confirmed file to this offering. */
+  offeringId?: string
+}
+
+export interface ConfirmUploadResponse {
+  key: string
+  /** Final stored URL — CDN URL for public scopes, key echo for private. */
+  url: string
+}
+
+export interface DeleteUploadResponse {
+  key: string
+  deleted: boolean
+}
+
+/** A purchased digital file with a short-lived signed download URL. */
+export interface DigitalAssetLink {
+  name: string
+  url: string
+  sizeBytes: number
+}
+
+/** Buyer-gated digital delivery payload (only after a confirmed booking). */
+export interface DigitalAccessResponse {
+  offeringId: string
+  files: DigitalAssetLink[]
+  externalUrl: string | null
+  instructions: string | null
+  expiresInSeconds: number
 }
 
 // ── Onboarding Responses ──────────────────────────────────────────────────────

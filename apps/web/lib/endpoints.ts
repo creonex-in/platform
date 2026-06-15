@@ -42,6 +42,12 @@ export const endpoints = {
   availability: {
     slots: (offeringId: string) => `/api/v1/availability/offerings/${offeringId}/slots`,
   },
+  uploads: {
+    presign:       '/api/v1/uploads/presign',
+    confirm:       '/api/v1/uploads/confirm',
+    delete:        '/api/v1/uploads/delete',
+    digitalAccess: (bookingId: string) => `/api/v1/uploads/digital/${bookingId}`,
+  },
   testimonials: {
     creatorList:       '/api/v1/creator/testimonials',
     updateVisibility:  (id: string) => `/api/v1/creator/testimonials/${id}/visibility`,

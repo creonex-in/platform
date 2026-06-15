@@ -13,17 +13,32 @@ export const GOAL_TYPES = [
   'freelancing', 'investing', 'fitness', 'other',
 ] as const
 
+// `workshop` and `group` are LEGACY values kept only so existing rows/enum stay
+// valid; new offerings use `live_event` (with a `metadata.format` of group|webinar).
+// See docs/offerings-type-flows.md.
 export const OFFER_TYPES = [
-  'one_on_one', 'workshop', 'group', 'digital',
+  'one_on_one', 'workshop', 'group', 'live_event', 'digital',
 ] as const
+
+/** The offer types a creator can actually create today (drives the UI selector). */
+export const CREATABLE_OFFER_TYPES = ['one_on_one', 'live_event', 'digital'] as const
+
+/** Live-event presentation + seat preset — a label on `live_event`, not its own type. */
+export const LIVE_EVENT_FORMATS = ['group', 'webinar'] as const
+
+/** Default seat range per live-event format (UI guidance only). */
+export const LIVE_EVENT_SEAT_PRESETS: Record<LiveEventFormat, { min: number; max: number }> = {
+  group: { min: 2, max: 20 },
+  webinar: { min: 20, max: 500 },
+}
 
 export const OFFER_STATUSES = [
   'draft', 'live', 'paused', 'archived',
 ] as const
 
 // ── Offer-type gating ─────────────────────────────────────────────────────────
-// New creators can only create 1:1 sessions and digital products. Group calls and
-// workshops/webinars unlock once they've delivered enough 1:1 sessions — this
+// New creators can only create 1:1 sessions and digital products. Live events
+// (group calls / webinars) unlock once they've delivered enough 1:1 sessions — this
 // keeps quality high and proves the creator before they run group formats.
 export const SESSIONS_TO_UNLOCK_OFFERS = 5
 
@@ -31,7 +46,7 @@ export const SESSIONS_TO_UNLOCK_OFFERS = 5
 export const ALWAYS_UNLOCKED_OFFER_TYPES = ['one_on_one', 'digital'] as const
 
 /** Offer types gated behind completed 1:1 sessions. */
-export const GATED_OFFER_TYPES = ['workshop', 'group'] as const
+export const GATED_OFFER_TYPES = ['live_event'] as const
 
 export const KYC_STATUSES = [
   'not_started', 'pending', 'verified', 'failed',
@@ -98,6 +113,8 @@ export const CREATOR_GOALS = [
 export type Niche = typeof NICHES[number]
 export type GoalType = typeof GOAL_TYPES[number]
 export type OfferType = typeof OFFER_TYPES[number]
+export type CreatableOfferType = typeof CREATABLE_OFFER_TYPES[number]
+export type LiveEventFormat = typeof LIVE_EVENT_FORMATS[number]
 export type OfferStatus = typeof OFFER_STATUSES[number]
 export type KycStatus = typeof KYC_STATUSES[number]
 export type OnboardingStatus = typeof ONBOARDING_STATUSES[number]

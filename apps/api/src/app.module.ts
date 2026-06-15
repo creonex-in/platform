@@ -16,6 +16,7 @@ import { MeetingModule } from './meeting/meeting.module'
 import { PaymentModule } from './payment/payment.module'
 import { BookingsModule } from './bookings/bookings.module'
 import { TestimonialsModule } from './testimonials/testimonials.module'
+import { UploadsModule } from './uploads/uploads.module'
 import { DATABASE_CONNECTION, type Database } from './database/database-connection'
 
 @Module({
@@ -58,6 +59,7 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
     PaymentModule,
     BookingsModule,
     TestimonialsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
 })

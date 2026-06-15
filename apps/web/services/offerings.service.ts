@@ -1,6 +1,9 @@
 import { api } from '@/lib/api'
 import { endpoints } from '@/lib/endpoints'
-import type { CreatorOffering, CreatorOfferStats, OfferCreationEligibility, OfferStatus, OfferType } from '@creonex/types'
+import type {
+  CreatorOffering, CreatorOfferStats, OfferCreationEligibility, OfferStatus, OfferType,
+  LiveEventFormat, DigitalDeliveryFile,
+} from '@creonex/types'
 
 export interface CreateOfferingBody {
   type: OfferType
@@ -13,6 +16,13 @@ export interface CreateOfferingBody {
   minNoticeMinutes?: number
   bookingWindowDays?: number
   bufferAfterMinutes?: number
+  /** live_event */
+  scheduledAt?: string
+  format?: LiveEventFormat
+  /** digital */
+  deliveryFiles?: DigitalDeliveryFile[]
+  externalUrl?: string
+  deliveryInstructions?: string
 }
 
 export type UpdateOfferingBody = Partial<Omit<CreateOfferingBody, 'type'>>

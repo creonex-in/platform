@@ -410,7 +410,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps): React.ReactE
                   value={values.primaryNiche} 
                   onValueChange={(v) => v && setValue('primaryNiche', v as EditProfileForm['primaryNiche'], { shouldValidate: true, shouldDirty: true })}
                 >
-                  <SelectTrigger id="primaryNiche" className="h-11 w-full"><SelectValue placeholder="Select niche" /></SelectTrigger>
+                  <SelectTrigger id="primaryNiche" className="!h-11 w-full"><SelectValue placeholder="Select niche" /></SelectTrigger>
                   <SelectContent>
                     {NICHES.map((n) => <SelectItem key={n} value={n}>{formatNiche(n)}</SelectItem>)}
                   </SelectContent>

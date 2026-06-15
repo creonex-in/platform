@@ -8,7 +8,6 @@ import { z } from 'zod'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faPhone,
-  faCalendarDays,
   faUsers,
   faFileLines,
   faCheck,
@@ -19,6 +18,10 @@ import {
   faArrowRight,
   faInfoCircle,
   faTrophy,
+  faCalendarDay,
+  faLink,
+  faPaperclip,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Button } from '@/components/ui/button'
@@ -34,26 +37,26 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { offeringsService } from '@/services/offerings.service'
+import { storageService } from '@/services/storage.service'
 import { isApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { toast } from '@/lib/toast'
-import type { CreatorOffering, OfferCreationEligibility, OfferType } from '@creonex/types'
+import {
+  CREATABLE_OFFER_TYPES, LIVE_EVENT_FORMATS,
+  type CreatorOffering, type OfferCreationEligibility, type CreatableOfferType,
+  type LiveEventFormat, type DigitalDeliveryFile,
+} from '@creonex/types'
 
-// ── Offer type metadata ───────────────────────────────────────────────────────
-const TYPE_META: Record<OfferType, { label: string; description: string; icon: IconDefinition }> = {
+// ── Offer type metadata (only the 3 creatable types) ──────────────────────────
+const TYPE_META: Record<CreatableOfferType, { label: string; description: string; icon: IconDefinition }> = {
   one_on_one: {
     label: '1:1 Session',
     description: 'Private 1-on-1 coaching video call',
     icon: faPhone,
   },
-  workshop: {
-    label: 'Workshop',
-    description: 'Live interactive class or lecture for groups',
-    icon: faCalendarDays,
-  },
-  group: {
-    label: 'Group Call',
-    description: 'Mentorship, Q&As, or mastermind discussions',
+  live_event: {
+    label: 'Live Event',
+    description: 'A scheduled group call or webinar at a fixed time',
     icon: faUsers,
   },
   digital: {
@@ -63,21 +66,35 @@ const TYPE_META: Record<OfferType, { label: string; description: string; icon: I
   },
 }
 
+const FORMAT_META: Record<LiveEventFormat, { label: string; hint: string }> = {
+  group: { label: 'Group call', hint: 'Small interactive cohort (2–20 seats)' },
+  webinar: { label: 'Webinar', hint: 'Large broadcast session (20–500 seats)' },
+}
+
 const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120]
 const SUGGESTED_PRICES = [199, 299, 499, 799, 999, 1499]
 
 const asNumber = { setValueAs: (v: string): number | undefined => (v === '' || v == null ? undefined : Number(v)) }
 
-const needsDuration = (t?: OfferType): boolean => t === 'one_on_one' || t === 'workshop' || t === 'group'
-const needsSeats = (t?: OfferType): boolean => t === 'workshop' || t === 'group'
-const isBookable = (t?: OfferType): boolean => t === 'one_on_one' || t === 'group'
+const needsDuration = (t?: CreatableOfferType): boolean => t === 'one_on_one' || t === 'live_event'
+const needsSeats = (t?: CreatableOfferType): boolean => t === 'live_event'
+const isLiveEvent = (t?: CreatableOfferType): boolean => t === 'live_event'
+const isDigital = (t?: CreatableOfferType): boolean => t === 'digital'
+/** Booking-window/notice/buffer config only applies to learner-picks-a-slot (1:1). */
+const isBookable = (t?: CreatableOfferType): boolean => t === 'one_on_one'
+
+/** ISO -> datetime-local input value (naive local wall time). */
+const isoToLocalInput = (iso?: string | null): string => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 // ── Schema (mirrors API CreateOfferingDto) ────────────────────────────────────
 const offerSchema = z
   .object({
-    type: z.enum(['one_on_one', 'workshop', 'group', 'digital'] as const, {
-      message: 'Choose an offer type',
-    }),
+    type: z.enum(CREATABLE_OFFER_TYPES, { message: 'Choose an offer type' }),
     title: z.string().min(5, 'Title must be at least 5 characters').max(80, 'Keep the title under 80 characters'),
     description: z.string().min(20, 'Description must be at least 20 characters').max(2000, 'Description is too long'),
     price: z.number({ message: 'Enter a price' }).min(99, 'Minimum price is ₹99').max(500000, 'Price is too high'),
@@ -86,6 +103,18 @@ const offerSchema = z
     minNoticeMinutes: z.number().min(0).max(10080).optional(),
     bookingWindowDays: z.number().min(1).max(365).optional(),
     bufferAfterMinutes: z.number().min(0).max(120).optional(),
+    // live_event
+    scheduledAt: z.string().optional(),
+    format: z.enum(LIVE_EVENT_FORMATS).optional(),
+    // digital
+    externalUrl: z.string().url('Enter a valid URL').or(z.literal('')).optional(),
+    deliveryInstructions: z.string().max(2000).optional(),
+    deliveryFiles: z.array(z.object({
+      key: z.string(),
+      name: z.string(),
+      sizeBytes: z.number(),
+      contentType: z.string().optional(),
+    })).optional(),
   })
   .superRefine((val, ctx) => {
     if (needsDuration(val.type) && !val.durationMinutes) {
@@ -93,6 +122,23 @@ const offerSchema = z
     }
     if (needsSeats(val.type) && !val.seatsTotal) {
       ctx.addIssue({ code: 'custom', path: ['seatsTotal'], message: 'Seat count is required' })
+    }
+    if (isLiveEvent(val.type)) {
+      if (!val.scheduledAt) {
+        ctx.addIssue({ code: 'custom', path: ['scheduledAt'], message: 'Pick the event date & time' })
+      } else if (new Date(val.scheduledAt).getTime() <= Date.now()) {
+        ctx.addIssue({ code: 'custom', path: ['scheduledAt'], message: 'Event must be in the future' })
+      }
+      if (!val.format) {
+        ctx.addIssue({ code: 'custom', path: ['format'], message: 'Choose a format' })
+      }
+    }
+    if (isDigital(val.type)) {
+      const hasFile = (val.deliveryFiles?.length ?? 0) > 0
+      const hasLink = !!val.externalUrl && val.externalUrl.trim() !== ''
+      if (!hasFile && !hasLink) {
+        ctx.addIssue({ code: 'custom', path: ['externalUrl'], message: 'Add a file or an external link' })
+      }
     }
   })
 
@@ -108,8 +154,9 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
   const isEdit = !!offering
   const [submitting, setSubmitting] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [uploadingFile, setUploadingFile] = useState(false)
 
-  // Type gating — group/workshop unlock after enough completed 1:1 sessions.
+  // Type gating — live events unlock after enough completed 1:1 sessions.
   const lockedTypes = new Set<string>(eligibility?.lockedTypes ?? [])
   const hasLockedTypes = lockedTypes.size > 0
   const completedSessions = eligibility?.completedOneOnOneSessions ?? 0
@@ -129,7 +176,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
     mode: 'onChange',
     defaultValues: offering
       ? {
-          type: offering.type as OfferType,
+          type: offering.type as CreatableOfferType,
           title: offering.title,
           description: offering.description ?? '',
           price: offering.price,
@@ -138,8 +185,13 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
           minNoticeMinutes: offering.minNoticeMinutes ?? undefined,
           bookingWindowDays: offering.bookingWindowDays ?? undefined,
           bufferAfterMinutes: offering.bufferAfterMinutes ?? undefined,
+          scheduledAt: isoToLocalInput(offering.scheduledAt),
+          format: offering.metadata?.format,
+          externalUrl: offering.metadata?.externalUrl ?? '',
+          deliveryInstructions: offering.metadata?.instructions ?? '',
+          deliveryFiles: offering.metadata?.files ?? [],
         }
-      : { type: undefined, title: '', description: '', price: undefined, durationMinutes: 45 },
+      : { type: undefined, title: '', description: '', price: undefined, durationMinutes: 45, deliveryFiles: [] },
   })
 
   const type = watch('type')
@@ -151,6 +203,10 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
   const minNoticeMinutes = watch('minNoticeMinutes')
   const bookingWindowDays = watch('bookingWindowDays')
   const bufferAfterMinutes = watch('bufferAfterMinutes')
+  const scheduledAt = watch('scheduledAt')
+  const format = watch('format')
+  const externalUrl = watch('externalUrl')
+  const deliveryFiles = watch('deliveryFiles') ?? []
 
   // Helper notice translations
   const getNoticeText = (mins?: number): string | null => {
@@ -183,6 +239,30 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
   const descLength = description?.length ?? 0
   const descColor = descLength > 1850 ? 'text-destructive font-medium' : descLength > 1500 ? 'text-amber-500 font-medium' : 'text-muted-foreground font-normal'
 
+  // ── Digital file uploads (presigned via storageService — stub records the key) ──
+  async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
+    const picked = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (picked.length === 0) return
+    setUploadingFile(true)
+    try {
+      const added: DigitalDeliveryFile[] = []
+      for (const f of picked) {
+        added.push(await storageService.uploadDigitalFile(f, offering?.id))
+      }
+      setValue('deliveryFiles', [...deliveryFiles, ...added], { shouldValidate: true })
+    } catch (err) {
+      toast.error(isApiError(err) ? err.message : 'Upload failed — try again')
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+  function removeFile(key: string): void {
+    setValue('deliveryFiles', deliveryFiles.filter((f) => f.key !== key), { shouldValidate: true })
+  }
+  const formatBytes = (n: number): string =>
+    n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`
+
   // `publish` only applies to create: true → go live immediately, false → keep
   // as an editable (and deletable) draft. Editing never changes status here.
   async function onSubmit(data: OfferFormValues, publish: boolean): Promise<void> {
@@ -196,6 +276,15 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
       minNoticeMinutes: isBookable(data.type) ? data.minNoticeMinutes : undefined,
       bookingWindowDays: isBookable(data.type) ? data.bookingWindowDays : undefined,
       bufferAfterMinutes: isBookable(data.type) ? data.bufferAfterMinutes : undefined,
+      // live_event
+      scheduledAt: isLiveEvent(data.type) && data.scheduledAt
+        ? new Date(data.scheduledAt).toISOString()
+        : undefined,
+      format: isLiveEvent(data.type) ? data.format : undefined,
+      // digital
+      deliveryFiles: isDigital(data.type) ? data.deliveryFiles : undefined,
+      externalUrl: isDigital(data.type) ? (data.externalUrl || undefined) : undefined,
+      deliveryInstructions: isDigital(data.type) ? (data.deliveryInstructions || undefined) : undefined,
     }
 
     try {
@@ -257,10 +346,10 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                       🎉 Advanced Formats Unlocked!
                     </p>
                     <p className="text-xs text-muted-foreground leading-relaxed font-normal">
-                      Outstanding! You've successfully completed {completedSessions} 1:1 sessions. You are now fully eligible to create Workshops and Group Calls!
+                      Outstanding! You've successfully completed {completedSessions} 1:1 sessions. You are now fully eligible to create Live Events!
                     </p>
                     <p className="text-[10px] text-muted-foreground/85 leading-normal font-normal">
-                      * All offering formats (1:1, Digital Products, Group Calls, and Workshops) are now available to publish.
+                      * All offering formats (1:1, Digital Products, and Live Events) are now available to publish.
                     </p>
                   </div>
                 </div>
@@ -275,13 +364,13 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">
-                        Unlock Group Calls & Workshops
+                        Unlock Live Events
                       </p>
                       <p className="mt-1 text-xs md:text-sm text-muted-foreground leading-relaxed font-normal">
                         {sessionsLeft === 1 ? (
-                          <span>Almost there — complete just <span className="font-semibold text-foreground">1 more 1:1 session</span> to unlock group calls & workshops!</span>
+                          <span>Almost there — complete just <span className="font-semibold text-foreground">1 more 1:1 session</span> to unlock live events!</span>
                         ) : (
-                          <span>Complete <span className="font-semibold text-foreground">{sessionsLeft} more 1:1 sessions</span> to unlock group calls & workshops.</span>
+                          <span>Complete <span className="font-semibold text-foreground">{sessionsLeft} more 1:1 sessions</span> to unlock live events.</span>
                         )}
                       </p>
                       <p className="text-[10px] md:text-xs text-muted-foreground/80 font-normal mt-1.5">
@@ -305,7 +394,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
               )}
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {(Object.keys(TYPE_META) as OfferType[]).map((key) => {
+                {(Object.keys(TYPE_META) as CreatableOfferType[]).map((key) => {
                   const item = TYPE_META[key]
                   const isLocked = lockedTypes.has(key)
                   const isSelected = type === key && !isLocked
@@ -412,16 +501,14 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
               placeholder={
                 type === 'one_on_one'
                   ? 'e.g. 1:1 Portfolio Review & Feedback'
-                  : type === 'workshop'
-                    ? 'e.g. Intro to Figma Variable Systems'
-                    : type === 'group'
-                      ? 'e.g. Weekly Design Mastermind & Critique'
-                      : 'e.g. Ultimate Tailwind UI Starter Kit'
+                  : type === 'live_event'
+                    ? 'e.g. Live Masterclass: Figma Variable Systems'
+                    : 'e.g. Ultimate Tailwind UI Starter Kit'
               }
               maxLength={80}
               aria-invalid={!!errors.title}
               {...register('title')}
-              className="bg-muted/10 focus-visible:bg-background transition-colors rounded-lg text-sm md:text-base h-11"
+              className="bg-muted/10 focus-visible:bg-background transition-colors rounded-lg text-sm md:text-base !h-11"
             />
           </Field>
 
@@ -472,7 +559,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                   type="number"
                   inputMode="numeric"
                   placeholder="499"
-                  className="pl-7 bg-muted/10 focus-visible:bg-background transition-colors rounded-lg font-medium text-sm md:text-base h-11"
+                  className="pl-7 bg-muted/10 focus-visible:bg-background transition-colors rounded-lg font-medium text-sm md:text-base !h-11"
                   aria-invalid={!!errors.price}
                   {...register('price', asNumber)}
                 />
@@ -490,7 +577,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                       value={field.value != null ? String(field.value) : undefined}
                       onValueChange={(v) => field.onChange(v != null ? Number(v) : undefined)}
                     >
-                      <SelectTrigger id="durationMinutes" className="w-full bg-muted/10 transition-colors rounded-lg text-sm md:text-base h-11" aria-invalid={!!errors.durationMinutes}>
+                      <SelectTrigger id="durationMinutes" className="w-full bg-muted/10 transition-colors rounded-lg text-sm md:text-base !h-11" aria-invalid={!!errors.durationMinutes}>
                         <SelectValue placeholder="Select duration" />
                       </SelectTrigger>
                       <SelectContent>
@@ -509,7 +596,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
               </Field>
             )}
 
-            {/* Seats — group / workshop */}
+            {/* Seats — live event */}
             {needsSeats(type) && (
               <Field label="Total seats available" htmlFor="seatsTotal" error={errors.seatsTotal?.message}>
                 <div className="relative">
@@ -521,7 +608,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                     type="number"
                     inputMode="numeric"
                     placeholder="e.g. 20"
-                    className="pl-9 bg-muted/10 focus-visible:bg-background transition-colors rounded-lg text-sm md:text-base h-11"
+                    className="pl-9 bg-muted/10 focus-visible:bg-background transition-colors rounded-lg text-sm md:text-base !h-11"
                     aria-invalid={!!errors.seatsTotal}
                     {...register('seatsTotal', asNumber)}
                   />
@@ -553,6 +640,130 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
           </div>
         </section>
 
+        {/* ── Section: Live event schedule (live_event only) ── */}
+        {isLiveEvent(type) && (
+          <>
+            <Separator className="opacity-60" />
+            <section className="space-y-5">
+              <SectionHeading title="Event schedule" subtitle="Set the fixed date, time, and format. Learners register for this one occurrence." />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <Field label="Date & time" htmlFor="scheduledAt" error={errors.scheduledAt?.message}>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80">
+                      <FontAwesomeIcon icon={faCalendarDay} className="size-4" />
+                    </span>
+                    <Input
+                      id="scheduledAt"
+                      type="datetime-local"
+                      className="pl-9 bg-muted/10 focus-visible:bg-background transition-colors rounded-lg text-sm md:text-base !h-11"
+                      aria-invalid={!!errors.scheduledAt}
+                      {...register('scheduledAt')}
+                    />
+                  </div>
+                </Field>
+                <Field label="Format" htmlFor="format" error={errors.format?.message}>
+                  <Controller
+                    control={control}
+                    name="format"
+                    render={({ field }) => (
+                      <Select value={field.value ?? undefined} onValueChange={field.onChange}>
+                        <SelectTrigger id="format" className="w-full bg-muted/10 rounded-lg text-sm md:text-base !h-11" aria-invalid={!!errors.format}>
+                          <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LIVE_EVENT_FORMATS.map((f) => (
+                            <SelectItem key={f} value={f}>{FORMAT_META[f].label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </Field>
+              </div>
+              {format && (
+                <p className="flex items-center gap-2.5 text-xs md:text-sm text-muted-foreground">
+                  <FontAwesomeIcon icon={faInfoCircle} className="size-3.5 text-primary/75" />
+                  <span>{FORMAT_META[format].hint}</span>
+                </p>
+              )}
+            </section>
+          </>
+        )}
+
+        {/* ── Section: Digital delivery (digital only) ── */}
+        {isDigital(type) && (
+          <>
+            <Separator className="opacity-60" />
+            <section className="space-y-5">
+              <SectionHeading title="Delivery" subtitle="What the buyer gets after payment. Add files, an external link, or both." />
+
+              {/* Files */}
+              <Field label="Files" htmlFor="files" error={undefined}>
+                <div className="space-y-3">
+                  {deliveryFiles.length > 0 && (
+                    <ul className="space-y-2">
+                      {deliveryFiles.map((f) => (
+                        <li key={f.key} className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+                          <FontAwesomeIcon icon={faPaperclip} className="size-3.5 text-muted-foreground shrink-0" />
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{f.name}</span>
+                          <span className="text-xs text-muted-foreground shrink-0">{formatBytes(f.sizeBytes)}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(f.key)}
+                            className="flex size-6 items-center justify-center rounded-full hover:bg-muted transition-colors"
+                            aria-label={`Remove ${f.name}`}
+                          >
+                            <FontAwesomeIcon icon={faXmark} className="size-3 text-muted-foreground" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <label
+                    htmlFor="files"
+                    className={cn(
+                      'flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted/20',
+                      uploadingFile && 'pointer-events-none opacity-60',
+                    )}
+                  >
+                    <FontAwesomeIcon icon={uploadingFile ? faSpinner : faPaperclip} className={cn('size-3.5', uploadingFile && 'animate-spin')} />
+                    {uploadingFile ? 'Uploading…' : 'Add files'}
+                  </label>
+                  <input id="files" type="file" multiple className="hidden" onChange={onPickFiles} disabled={uploadingFile} />
+                </div>
+              </Field>
+
+              {/* External link */}
+              <Field label="External link" htmlFor="externalUrl" error={errors.externalUrl?.message} hint="e.g. a Notion page, Google Drive folder, or hosted course.">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80">
+                    <FontAwesomeIcon icon={faLink} className="size-4" />
+                  </span>
+                  <Input
+                    id="externalUrl"
+                    type="url"
+                    placeholder="https://…"
+                    className="pl-9 bg-muted/10 focus-visible:bg-background transition-colors rounded-lg text-sm md:text-base !h-11"
+                    aria-invalid={!!errors.externalUrl}
+                    {...register('externalUrl')}
+                  />
+                </div>
+              </Field>
+
+              {/* Instructions */}
+              <Field label="Access instructions" htmlFor="deliveryInstructions" hint="Optional — shown to the buyer after purchase.">
+                <Textarea
+                  id="deliveryInstructions"
+                  rows={3}
+                  placeholder="How to access or use the product…"
+                  className="bg-muted/10 focus-visible:bg-background transition-colors rounded-lg resize-none text-sm md:text-base p-3 font-normal"
+                  {...register('deliveryInstructions')}
+                />
+              </Field>
+            </section>
+          </>
+        )}
+
         {/* ── Section: Advanced booking (collapsible, bookable types only) ── */}
         {isBookable(type) && (
           <>
@@ -580,7 +791,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                         value={minNoticeMinutes !== undefined && minNoticeMinutes !== null ? String(minNoticeMinutes) : '120'}
                         onValueChange={(v) => setValue('minNoticeMinutes', Number(v), { shouldValidate: true })}
                       >
-                        <SelectTrigger id="minNoticeMinutes" className="w-full bg-muted/10 rounded-lg text-sm md:text-base h-11">
+                        <SelectTrigger id="minNoticeMinutes" className="w-full bg-muted/10 rounded-lg text-sm md:text-base !h-11">
                           <SelectValue placeholder="Notice period" />
                         </SelectTrigger>
                         <SelectContent>
@@ -599,7 +810,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                         value={bookingWindowDays !== undefined && bookingWindowDays !== null ? String(bookingWindowDays) : '30'}
                         onValueChange={(v) => setValue('bookingWindowDays', Number(v), { shouldValidate: true })}
                       >
-                        <SelectTrigger id="bookingWindowDays" className="w-full bg-muted/10 rounded-lg text-sm md:text-base h-11">
+                        <SelectTrigger id="bookingWindowDays" className="w-full bg-muted/10 rounded-lg text-sm md:text-base !h-11">
                           <SelectValue placeholder="Booking window" />
                         </SelectTrigger>
                         <SelectContent>
@@ -617,7 +828,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
                         value={bufferAfterMinutes !== undefined && bufferAfterMinutes !== null ? String(bufferAfterMinutes) : '0'}
                         onValueChange={(v) => setValue('bufferAfterMinutes', Number(v), { shouldValidate: true })}
                       >
-                        <SelectTrigger id="bufferAfterMinutes" className="w-full bg-muted/10 rounded-lg text-sm md:text-base h-11">
+                        <SelectTrigger id="bufferAfterMinutes" className="w-full bg-muted/10 rounded-lg text-sm md:text-base !h-11">
                           <SelectValue placeholder="Buffer break" />
                         </SelectTrigger>
                         <SelectContent>

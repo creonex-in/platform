@@ -57,6 +57,9 @@ export class CreatorsService {
         totalBookings: o.totalBookings,
         description: o.description ?? null,
         thumbnailUrl: o.thumbnailUrl ?? null,
+        scheduledAt: o.scheduledAt ? o.scheduledAt.toISOString() : null,
+        // Only `format` is public; never expose the digital delivery payload.
+        format: (o.metadata as { format?: 'group' | 'webinar' } | null)?.format ?? null,
       })),
       testimonials: testimonials.map((t) => ({
         id: t.id,

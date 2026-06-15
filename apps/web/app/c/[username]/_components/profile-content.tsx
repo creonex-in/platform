@@ -64,6 +64,19 @@ export function ProfileContent({
     params.set('offering', offering.id)
     startTransition(() => router.push(`${pathname}?${params.toString()}`, { scroll: false }))
   }
+
+  // Route each offering to the right flow: 1:1 (and legacy group) pick a slot here;
+  // live events + digital products have no slot, so go straight to checkout.
+  const handleOffer = (offering: PublicOffering) => {
+    if (preview) return
+    if (offering.type === 'live_event' || offering.type === 'digital') {
+      startTransition(() =>
+        router.push(`/checkout?creator=${profile.username}&offering=${offering.id}`),
+      )
+      return
+    }
+    openModal(offering)
+  }
   const closeModal = () => {
     const params = new URLSearchParams(searchParams.toString())
     for (const k of ['offering', 'tz', 'start', 'end']) params.delete(k)
@@ -133,7 +146,7 @@ export function ProfileContent({
                       activeTabs={activeTabs}
                       showAllTab={showAllTab}
                       defaultTab={defaultTab}
-                      onBook={openModal}
+                      onBook={handleOffer}
                     />
                   </div>
                 </TabsContent>

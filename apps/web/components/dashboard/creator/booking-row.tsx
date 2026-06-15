@@ -21,6 +21,7 @@ const offerTypeIcon: Record<OfferDisplayType, IconDefinition> = {
   one_on_one: faPhone,
   workshop: faCalendarDays,
   group: faUsers,
+  live_event: faCalendarDays,
   digital: faFileLines,
   community: faUsers,
   coaching_plan: faBullseye,

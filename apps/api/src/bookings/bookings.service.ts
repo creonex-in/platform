@@ -27,6 +27,45 @@ export class BookingsService {
     private readonly slotService: SlotGenerationService,
   ) {}
 
+  /** Types that consume a seat (atomic decrement). live_event is canonical;
+   *  group/workshop are legacy values kept for existing rows. */
+  private isSeatedType(type: string): boolean {
+    return type === 'live_event' || type === 'group' || type === 'workshop'
+  }
+
+  /**
+   * Resolve the booking's start/end per offering type:
+   * - one_on_one: learner picks a slot → validate it, derive end from duration
+   * - live_event: fixed event → use the offering's `scheduledAt` (ignore client time)
+   * - digital: async purchase → no times
+   */
+  private async resolveBookingTimes(
+    offering: { id: string; type: string; durationMinutes: number | null; scheduledAt: Date | null },
+    dto: { startTime?: string; endTime?: string; learnerTimezone?: string },
+  ): Promise<{ startTime?: Date; endTime?: Date }> {
+    if (offering.type === 'one_on_one') {
+      if (!dto.startTime) throw new BadRequestException('startTime is required for 1:1 bookings')
+      return this.validateSlot(offering, dto.startTime, dto.learnerTimezone)
+    }
+    if (offering.type === 'digital') {
+      return {} // async — no scheduled time, no meeting
+    }
+    // live_event (+ legacy group/workshop): a single fixed event time
+    if (offering.scheduledAt) {
+      const start = offering.scheduledAt
+      if (start.getTime() <= Date.now()) {
+        throw new BadRequestException('This event has already started')
+      }
+      const durationMin = offering.durationMinutes ?? 60
+      return { startTime: start, endTime: new Date(start.getTime() + durationMin * 60_000) }
+    }
+    // Legacy slot-based group fallback (rows created before live_event)
+    return {
+      startTime: dto.startTime ? new Date(dto.startTime) : undefined,
+      endTime: dto.endTime ? new Date(dto.endTime) : undefined,
+    }
+  }
+
   // ── Slot validation ──────────────────────────────────────────────────────────
 
   /**
@@ -76,21 +115,11 @@ export class BookingsService {
     if (!offering) throw new NotFoundException('Offering not found')
     if (offering.status !== 'live') throw new BadRequestException('Offering is not available for booking')
 
-    // Slot validation + server-derived times for one_on_one
-    let startTime: Date | undefined
-    let endTime: Date | undefined
-    if (offering.type === 'one_on_one') {
-      if (!dto.startTime) {
-        throw new BadRequestException('startTime is required for 1:1 bookings')
-      }
-      ;({ startTime, endTime } = await this.validateSlot(offering, dto.startTime, dto.learnerTimezone))
-    } else {
-      startTime = dto.startTime ? new Date(dto.startTime) : undefined
-      endTime = dto.endTime ? new Date(dto.endTime) : undefined
-    }
+    // Per-type start/end resolution (1:1 slot, live_event fixed time, digital none)
+    const { startTime, endTime } = await this.resolveBookingTimes(offering, dto)
 
-    // Seat check for group/workshop
-    if ((offering.type === 'group' || offering.type === 'workshop') && offering.seatsTotal !== null) {
+    // Seat check for seated types (live_event + legacy group/workshop)
+    if (this.isSeatedType(offering.type) && offering.seatsTotal !== null) {
       if ((offering.seatsRemaining ?? 0) <= 0) {
         throw new ConflictException('No seats remaining')
       }
@@ -122,8 +151,8 @@ export class BookingsService {
       throw err
     }
 
-    // Atomic seat decrement for group types
-    if ((offering.type === 'group' || offering.type === 'workshop') && offering.seatsTotal !== null) {
+    // Atomic seat decrement for seated types
+    if (this.isSeatedType(offering.type) && offering.seatsTotal !== null) {
       const decremented = await this.bookingsRepo.decrementSeats(dto.offeringId)
       if (!decremented) {
         // Another booking consumed the last seat between our check and insert
@@ -148,16 +177,12 @@ export class BookingsService {
     if (!offering) throw new NotFoundException('Offering not found')
     if (offering.status !== 'live') throw new BadRequestException('Offering is not available for booking')
 
-    let startTime: Date | undefined
-    let endTime: Date | undefined
-    if (offering.type === 'one_on_one') {
-      if (!dto.startTime) {
-        throw new BadRequestException('startTime is required for 1:1 bookings')
+    const { startTime, endTime } = await this.resolveBookingTimes(offering, dto)
+
+    if (this.isSeatedType(offering.type) && offering.seatsTotal !== null) {
+      if ((offering.seatsRemaining ?? 0) <= 0) {
+        throw new ConflictException('No seats remaining')
       }
-      ;({ startTime, endTime } = await this.validateSlot(offering, dto.startTime, dto.learnerTimezone))
-    } else {
-      startTime = dto.startTime ? new Date(dto.startTime) : undefined
-      endTime = dto.endTime ? new Date(dto.endTime) : undefined
     }
 
     const receipt = `bk_${Date.now()}`
@@ -187,7 +212,7 @@ export class BookingsService {
       throw err
     }
 
-    if ((offering.type === 'group' || offering.type === 'workshop') && offering.seatsTotal !== null) {
+    if (this.isSeatedType(offering.type) && offering.seatsTotal !== null) {
       const decremented = await this.bookingsRepo.decrementSeats(dto.offeringId)
       if (!decremented) {
         await this.bookingsRepo.cancel(bookingId, { cancelledBy: 'system', cancellationReason: 'No seats remaining' })
@@ -221,16 +246,19 @@ export class BookingsService {
     const offering = await this.offeringsRepo.findById(booking.offeringId)
     if (!offering) throw new NotFoundException('Offering not found')
 
-    const meeting = await this.meetingService.createMeeting(
-      this.meetingService.getDefaultProvider(),
-      {
-        creatorProfileId: offering.creatorProfileId,
-        title: offering.title,
-        startTime: booking.startTime!,
-        endTime: booking.endTime!,
-        description: booking.topic ?? undefined,
-      },
-    ).catch(() => null)
+    // Only timed bookings (1:1, live_event) get a meeting; digital has no start time.
+    const meeting = booking.startTime && booking.endTime
+      ? await this.meetingService.createMeeting(
+          this.meetingService.getDefaultProvider(),
+          {
+            creatorProfileId: offering.creatorProfileId,
+            title: offering.title,
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+            description: booking.topic ?? undefined,
+          },
+        ).catch(() => null)
+      : null
 
     await this.bookingsRepo.confirm(bookingId, {
       razorpayPaymentId: dto.razorpayPaymentId,
@@ -271,16 +299,19 @@ export class BookingsService {
     if (!offering) throw new NotFoundException('Offering not found')
 
     // Create Google Meet — gracefully null if calendar not connected
-    const meeting = await this.meetingService.createMeeting(
-      this.meetingService.getDefaultProvider(),
-      {
-        creatorProfileId: offering.creatorProfileId,
-        title: offering.title,
-        startTime: booking.startTime!,
-        endTime: booking.endTime!,
-        description: booking.topic ?? undefined,
-      },
-    ).catch(() => null)
+    // Only timed bookings (1:1, live_event) get a meeting; digital has no start time.
+    const meeting = booking.startTime && booking.endTime
+      ? await this.meetingService.createMeeting(
+          this.meetingService.getDefaultProvider(),
+          {
+            creatorProfileId: offering.creatorProfileId,
+            title: offering.title,
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+            description: booking.topic ?? undefined,
+          },
+        ).catch(() => null)
+      : null
 
     // Confirm booking
     await this.bookingsRepo.confirm(bookingId, {
@@ -308,16 +339,19 @@ export class BookingsService {
     const offering = await this.offeringsRepo.findById(booking.offeringId)
     if (!offering) return
 
-    const meeting = await this.meetingService.createMeeting(
-      this.meetingService.getDefaultProvider(),
-      {
-        creatorProfileId: offering.creatorProfileId,
-        title: offering.title,
-        startTime: booking.startTime!,
-        endTime: booking.endTime!,
-        description: booking.topic ?? undefined,
-      },
-    ).catch(() => null)
+    // Only timed bookings (1:1, live_event) get a meeting; digital has no start time.
+    const meeting = booking.startTime && booking.endTime
+      ? await this.meetingService.createMeeting(
+          this.meetingService.getDefaultProvider(),
+          {
+            creatorProfileId: offering.creatorProfileId,
+            title: offering.title,
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+            description: booking.topic ?? undefined,
+          },
+        ).catch(() => null)
+      : null
 
     await this.bookingsRepo.confirm(booking.id, {
       razorpayPaymentId,
@@ -371,9 +405,9 @@ export class BookingsService {
       void this.bookingsRepo.decrementOfferingCounters(booking.offeringId, booking.amountPaise)
     }
 
-    // Restore seat for group/workshop
+    // Restore seat for seated types (live_event + legacy group/workshop)
     const offering = await this.offeringsRepo.findById(booking.offeringId)
-    if (offering && (offering.type === 'group' || offering.type === 'workshop') && offering.seatsTotal !== null) {
+    if (offering && this.isSeatedType(offering.type) && offering.seatsTotal !== null) {
       void this.bookingsRepo.restoreSeats(booking.offeringId)
     }
 

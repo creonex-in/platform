@@ -39,6 +39,8 @@ export class OfferingsRepository {
     durationMinutes?: number
     seatsTotal?: number
     scheduleId?: string
+    scheduledAt?: Date
+    metadata?: Record<string, unknown>
     status?: string
   }) {
     const id = generateId()
@@ -53,6 +55,8 @@ export class OfferingsRepository {
       seatsTotal: data.seatsTotal,
       seatsRemaining: data.seatsTotal,
       scheduleId: data.scheduleId,
+      scheduledAt: data.scheduledAt,
+      ...(data.metadata !== undefined && { metadata: data.metadata }),
       status: (data.status ?? 'live') as typeof offerings.$inferInsert['status'],
     })
     return id
@@ -128,6 +132,8 @@ export class OfferingsRepository {
       minNoticeMinutes?: number
       bookingWindowDays?: number
       bufferAfterMinutes?: number
+      scheduledAt?: Date | null
+      metadata?: Record<string, unknown>
     },
   ) {
     await this.db.update(offerings).set(data).where(eq(offerings.id, id))

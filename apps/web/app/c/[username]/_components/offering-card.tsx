@@ -1,8 +1,14 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faClock } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faCalendarDay } from '@fortawesome/free-solid-svg-icons'
 import { cn } from '@/lib/utils'
 import { getTypeConfig } from './types'
 import type { PublicOffering } from '@creonex/types'
+
+/** Every current type is purchasable; legacy/unknown types fall back to "coming soon". */
+const BOOKABLE_TYPES = new Set(['one_on_one', 'live_event', 'group', 'digital'])
+
+const ctaLabel = (type: string): string =>
+  type === 'digital' ? 'Get access' : type === 'live_event' ? 'Register' : 'Book'
 
 export function OfferingCard({ item, onBook }: { item: PublicOffering; onBook?: () => void }): React.ReactElement {
   const cfg = getTypeConfig(item.type)
@@ -13,16 +19,21 @@ export function OfferingCard({ item, onBook }: { item: PublicOffering; onBook?: 
       : `${item.durationMinutes} min`
     : null
 
+  const eventDate = item.scheduledAt
+    ? new Date(item.scheduledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null
+
   const hasSeats = item.seatsRemaining != null
   const urgency = hasSeats && item.seatsRemaining! <= 3 && item.seatsRemaining! > 0
   const soldOut = hasSeats && item.seatsRemaining === 0
+  const bookable = BOOKABLE_TYPES.has(item.type)
 
   return (
     <div className={cn(
       'relative flex flex-col rounded-2xl border border-border bg-card overflow-hidden',
       'transition-all duration-200',
       soldOut && 'opacity-60',
-      onBook && !soldOut && (item.type === 'one_on_one' || item.type === 'group') && 'cursor-pointer hover:shadow-md hover:border-primary/40',
+      onBook && !soldOut && bookable && 'cursor-pointer hover:shadow-md hover:border-primary/40',
     )}>
       {/* Gradient accent strip */}
       <div className={cn('h-1 w-full bg-linear-to-r', cfg.gradient)} />
@@ -50,6 +61,14 @@ export function OfferingCard({ item, onBook }: { item: PublicOffering; onBook?: 
           {item.title}
         </p>
 
+        {/* Live-event date */}
+        {eventDate && (
+          <span className="inline-flex w-fit items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <FontAwesomeIcon icon={faCalendarDay} className="size-2.5" />
+            {eventDate}
+          </span>
+        )}
+
         {/* Status chips */}
         {urgency && (
           <span className="inline-flex w-fit text-[10px] font-bold px-2 py-0.5 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
@@ -74,16 +93,16 @@ export function OfferingCard({ item, onBook }: { item: PublicOffering; onBook?: 
               </p>
             )}
           </div>
-          {onBook && !soldOut && (item.type === 'one_on_one' || item.type === 'group') ? (
+          {onBook && !soldOut && bookable ? (
             <button
               onClick={onBook}
               className="rounded-full bg-primary text-primary-foreground text-xs font-bold px-4 py-2 hover:bg-primary/90 active:scale-95 transition-all"
             >
-              Book
+              {ctaLabel(item.type)}
             </button>
           ) : (
             <span className="text-[10px] font-semibold text-muted-foreground/60 italic">
-              Coming soon
+              {soldOut ? 'Sold out' : 'Coming soon'}
             </span>
           )}
         </div>
