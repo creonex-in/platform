@@ -129,6 +129,22 @@ export interface CreatorOffering {
   updatedAt: string
 }
 
+// ── Creator profile update (post-onboarding edit) ─────────────────────────────
+
+/** Partial update for the creator's own profile. Only provided fields are written. */
+export interface UpdateCreatorProfileRequest {
+  displayName?: string
+  username?: string
+  bio?: string
+  profilePhotoUrl?: string | null
+  coverBannerUrl?: string | null
+  primaryNiche?: string
+  experienceYears?: number | null
+  socialLinks?: SocialLinks
+  languages?: string[]
+  tags?: string[]
+}
+
 // ── Offer creation eligibility (type gating) ──────────────────────────────────
 
 export interface OfferCreationEligibility {
