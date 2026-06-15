@@ -19,9 +19,11 @@ interface Props {
   offering: PublicOffering
   profile: PublicCreatorProfile
   onClose: () => void
+  /** Close is a navigation back to the profile — true while it's in flight. */
+  closing?: boolean
 }
 
-export function SlotPickerModal({ offering, profile, onClose }: Props) {
+export function SlotPickerModal({ offering, profile, onClose, closing = false }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const restoredRef = useRef(false)
@@ -291,9 +293,15 @@ export function SlotPickerModal({ offering, profile, onClose }: Props) {
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 size-9 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted active:scale-90 transition-all"
+          disabled={closing}
+          aria-label="Close"
+          className="absolute top-4 right-4 z-10 size-9 rounded-full bg-card/80 backdrop-blur border border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted active:scale-90 transition-all disabled:cursor-default disabled:opacity-100"
         >
-          <FontAwesomeIcon icon={faXmark} className="size-4" />
+          {closing ? (
+            <span className="size-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
+          ) : (
+            <FontAwesomeIcon icon={faXmark} className="size-4" />
+          )}
         </button>
       </DialogContent>
     </Dialog>
@@ -406,17 +414,17 @@ function CalendarSkeleton() {
   return (
     <div className="flex flex-1 min-h-0 flex-col md:flex-row">
       <div className="shrink-0 md:w-[18.5rem] p-6 md:p-7 border-b md:border-b-0 md:border-r border-border/50">
-        <div className="h-5 w-32 rounded bg-muted animate-pulse mb-5" />
+        <div className="h-5 w-32 rounded bg-foreground/20 animate-pulse mb-5" />
         <div className="grid grid-cols-7 gap-1">
           {Array.from({ length: 35 }).map((_, i) => (
-            <div key={i} className="aspect-square rounded-lg bg-muted/50 animate-pulse" />
+            <div key={i} className="aspect-square rounded-lg bg-foreground/10 animate-pulse" />
           ))}
         </div>
       </div>
       <div className="flex-1 p-6 md:p-7 flex flex-col gap-2.5">
-        <div className="h-4 w-40 rounded bg-muted animate-pulse mb-1" />
+        <div className="h-4 w-40 rounded bg-foreground/20 animate-pulse mb-1" />
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-12 rounded-xl bg-muted/50 animate-pulse" />
+          <div key={i} className="h-12 rounded-xl bg-foreground/10 animate-pulse" />
         ))}
       </div>
     </div>
