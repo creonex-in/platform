@@ -143,6 +143,61 @@ export class CreatorProfileRepository {
       .where(eq(creatorProfiles.userId, userId))
   }
 
+  /**
+   * Partial profile update for post-onboarding edits. Writes only the provided
+   * columns and never touches onboardingStatus/currentStep/isLive. When `tags`
+   * is provided it replaces the tag set (delete + insert), like updateStep2.
+   */
+  async updateProfile(
+    userId: string,
+    data: {
+      displayName?: string
+      username?: string
+      bio?: string
+      profilePhotoUrl?: string | null
+      coverBannerUrl?: string | null
+      primaryNiche?: string
+      experienceYears?: number | null
+      socialLinks?: Record<string, string>
+      languages?: string[]
+      tags?: string[]
+    },
+  ) {
+    const set: Partial<typeof creatorProfiles.$inferInsert> = {}
+    if (data.displayName !== undefined) set.displayName = data.displayName
+    if (data.username !== undefined) set.username = data.username
+    if (data.bio !== undefined) set.bio = data.bio
+    if (data.profilePhotoUrl !== undefined) set.profilePhotoUrl = data.profilePhotoUrl
+    if (data.coverBannerUrl !== undefined) set.coverBannerUrl = data.coverBannerUrl
+    if (data.primaryNiche !== undefined) {
+      set.primaryNiche = data.primaryNiche as typeof creatorProfiles.$inferInsert['primaryNiche']
+    }
+    if (data.experienceYears !== undefined) set.experienceYears = data.experienceYears
+    if (data.socialLinks !== undefined) set.socialLinks = data.socialLinks
+    if (data.languages !== undefined) set.languages = data.languages
+
+    if (Object.keys(set).length > 0) {
+      await this.db.update(creatorProfiles).set(set).where(eq(creatorProfiles.userId, userId))
+    }
+
+    if (data.tags !== undefined) {
+      const profile = await this.db
+        .select({ id: creatorProfiles.id })
+        .from(creatorProfiles)
+        .where(eq(creatorProfiles.userId, userId))
+        .limit(1)
+        .then((r) => r[0])
+      if (profile) {
+        await this.db.delete(creatorTags).where(eq(creatorTags.creatorProfileId, profile.id))
+        if (data.tags.length > 0) {
+          await this.db.insert(creatorTags).values(
+            data.tags.map((tag) => ({ id: generateId(), creatorProfileId: profile.id, tag })),
+          )
+        }
+      }
+    }
+  }
+
   async findPublicByUsername(username: string) {
     const profile = await this.db
       .select()

@@ -1,7 +1,8 @@
-import { Controller, Get, Post, HttpCode, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Post, HttpCode, UseGuards } from '@nestjs/common'
 import { AuthGuard, Session } from '@mguay/nestjs-better-auth'
 import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger'
 import { UsersService } from './users.service'
+import { UpdateCreatorProfileDto } from './dto/update-creator-profile.dto'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
 import type { AppUserSession } from '../auth/types'
@@ -38,6 +39,16 @@ export class UsersController {
   @ApiOperation({ summary: 'Get creator profile' })
   getMyCreatorProfile(@Session() session: AppUserSession) {
     return this.usersService.getCreatorProfile(session.user.id)
+  }
+
+  @Patch('me/creator-profile')
+  @Roles('creator')
+  @ApiOperation({ summary: 'Update creator profile (partial; post-onboarding edit)' })
+  updateMyCreatorProfile(
+    @Session() session: AppUserSession,
+    @Body() dto: UpdateCreatorProfileDto,
+  ) {
+    return this.usersService.updateCreatorProfile(session.user.id, dto)
   }
 
   @Get('me/learner-profile')
