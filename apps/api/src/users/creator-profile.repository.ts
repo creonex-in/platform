@@ -198,6 +198,30 @@ export class CreatorProfileRepository {
     }
   }
 
+  async findByRazorpayAccountId(razorpayAccountId: string) {
+    return this.db
+      .select()
+      .from(creatorProfiles)
+      .where(eq(creatorProfiles.razorpayAccountId, razorpayAccountId))
+      .limit(1)
+      .then((r) => r[0] ?? null)
+  }
+
+  /** Update Razorpay Route / KYC fields on the creator profile. */
+  async updatePayoutFields(
+    creatorProfileId: string,
+    data: { razorpayAccountId?: string; kycStatus?: string; payoutsEnabled?: boolean },
+  ) {
+    const set: Partial<typeof creatorProfiles.$inferInsert> = {}
+    if (data.razorpayAccountId !== undefined) set.razorpayAccountId = data.razorpayAccountId
+    if (data.kycStatus !== undefined) {
+      set.kycStatus = data.kycStatus as typeof creatorProfiles.$inferInsert['kycStatus']
+    }
+    if (data.payoutsEnabled !== undefined) set.payoutsEnabled = data.payoutsEnabled
+    if (Object.keys(set).length === 0) return
+    await this.db.update(creatorProfiles).set(set).where(eq(creatorProfiles.id, creatorProfileId))
+  }
+
   async findPublicByUsername(username: string) {
     const profile = await this.db
       .select()

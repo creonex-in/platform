@@ -2,10 +2,10 @@
 
 ## Phase
 
-Offering taxonomy finalized (`one_on_one | live_event | digital`) with per-type
-create + book/buy flows end-to-end. Booking flow live. Creator dashboard UI consolidated.
-**Next: creator payouts + KYC + Razorpay Route money-split** (see
-`docs/payouts-kyc-routing.md`). Uploads/S3 still stubbed.
+Offering taxonomy finalized (`one_on_one | live_event | digital`). Payouts + KYC +
+Razorpay Route money-split scaffolded end-to-end (see `docs/payouts-kyc-routing.md`).
+**Blocked on Razorpay config** (keys empty; Route must be enabled) before transfers run
+for real. Uploads/S3 still stubbed.
 
 ## Done
 
@@ -49,6 +49,25 @@ create + book/buy flows end-to-end. Booking flow live. Creator dashboard UI cons
   correctly-shaped placeholders, **no AWS yet**. Web `storage.service` records the presigned
   key but skips the real S3 PUT. Wire S3 + CloudFront per `docs/s3-cloudfront-setup.md`
   before digital file delivery actually works.
+
+**Creator Payouts + KYC + Razorpay Route** ✅ scaffolded (2026-06-16) — `docs/payouts-kyc-routing.md`
+
+- **Model**: Razorpay Route. Creators = linked sub-merchant accounts; payment splits at confirm
+  (platform commission kept, creator share transferred); platform absorbs PG fee + GST.
+- **Decisions**: commission configurable via `PLATFORM_FEE_BPS` (default 1000 bps = 10%, snapshot
+  per ledger row); sell-now / payouts-held-until-KYC.
+- **Schema**: `creatorProfiles.razorpayAccountId` + `payoutsEnabled`; new `creator_payout_accounts`
+  (KYC/bank PII), `creator_ledger` (per-booking earnings, idempotent on bookingId), `payouts`
+  (settlement history). Applied to Neon directly (migrator drift-blocked — see below).
+- **API**: `PaymentService` gains `createLinkedAccount`/`createTransfer`/`reverseTransfer` (Route,
+  cast at SDK boundary — VERIFY vs Razorpay docs). `PayoutsModule` (KYC submit + status + earnings
+  + ledger + history). `bookings.confirm` → split + ledger write; `cancel` → reverse transfer +
+  ledger reversed. Amounts server-derived; failures never break confirm.
+- **Web**: dynamic `/payouts` (real earnings/held/pending/ledger/history; functional KYC gate),
+  `/payouts/setup` KYC + bank form (shadcn + RHF/zod), `payouts.service`/`dal`. Deleted `mock-payouts`.
+- **NOT done / blocked**: Razorpay keys empty + Route not enabled → transfers/linked-account calls
+  no-op until configured (earnings recorded `pending`). KYC-verified webhook (flip `payoutsEnabled`
+  + release held) not wired. Refund-window hold/release, reconciliation, GST invoicing pending.
 
 **Testimonials** ✅ (merged from `feature/testimonals`, 2026-06-14)
 

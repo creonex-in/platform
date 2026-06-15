@@ -21,6 +21,8 @@ import {
   ONBOARDING_STATUSES,
   BOOKING_STATUSES,
   OVERRIDE_TYPES,
+  LEDGER_STATUSES,
+  PAYOUT_STATUSES,
 } from '@creonex/types'
 
 // ============================================================
@@ -33,6 +35,8 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
+  // Platform-wide contact phone (single source of truth; captured at KYC for now).
+  phone: text('phone'),
   // Comma-separated roles: "learner" | "learner,creator" | "admin"
   role: text('role').notNull().default('learner'),
   banned: boolean('banned').default(false),
@@ -95,6 +99,8 @@ export const kycStatusEnum = pgEnum('kyc_status', [...KYC_STATUSES] as [string, 
 export const onboardingStatusEnum = pgEnum('onboarding_status', [...ONBOARDING_STATUSES] as [string, ...string[]])
 export const bookingStatusEnum = pgEnum('booking_status', [...BOOKING_STATUSES] as [string, ...string[]])
 export const overrideTypeEnum = pgEnum('override_type', [...OVERRIDE_TYPES] as [string, ...string[]])
+export const ledgerStatusEnum = pgEnum('ledger_status', [...LEDGER_STATUSES] as [string, ...string[]])
+export const payoutStatusEnum = pgEnum('payout_status', [...PAYOUT_STATUSES] as [string, ...string[]])
 
 // ============================================================
 // LEARNER PROFILES
@@ -152,6 +158,10 @@ export const creatorProfiles = pgTable(
     isLive: boolean('is_live').default(false).notNull(),
     isVerified: boolean('is_verified').default(false).notNull(),
     kycStatus: kycStatusEnum('kyc_status').default('not_started').notNull(),
+    // Razorpay Route linked (sub-merchant) account id; null until KYC submitted.
+    razorpayAccountId: text('razorpay_account_id'),
+    // Flips true once KYC + bank verified → held transfers can be released.
+    payoutsEnabled: boolean('payouts_enabled').default(false).notNull(),
     socialLinks: jsonb('social_links')
       .$type<{
         youtube?: string
@@ -406,5 +416,79 @@ export const testimonials = pgTable(
     creatorIdx: index('idx_testimonials_creator').on(t.creatorProfileId),
     publicIdx: index('idx_testimonials_public').on(t.isPublic),
     userCreatorUnique: uniqueIndex('uq_testimonial_user_creator').on(t.userId, t.creatorProfileId),
+  }),
+)
+
+// ============================================================
+// PAYOUTS — KYC/bank account, earnings ledger, settlement history
+// ============================================================
+
+// Creator KYC + bank details (PII). 1:1 with creator_profiles, isolated from the
+// public profile. Backs the Razorpay Route linked account.
+export const creatorPayoutAccounts = pgTable(
+  'creator_payout_accounts',
+  {
+    id: text('id').primaryKey(),
+    creatorProfileId: text('creator_profile_id')
+      .notNull()
+      .unique()
+      .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
+    legalName: text('legal_name').notNull(),
+    entityType: text('entity_type').notNull(), // individual | proprietorship | ...
+    pan: text('pan').notNull(),
+    bankAccountNumber: text('bank_account_number').notNull(),
+    bankIfsc: text('bank_ifsc').notNull(),
+    accountHolderName: text('account_holder_name').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (t) => ({
+    creatorIdx: index('idx_payout_accounts_creator').on(t.creatorProfileId),
+  }),
+)
+
+// Per-booking earnings ledger — the source of truth for what a creator earned.
+export const creatorLedger = pgTable(
+  'creator_ledger',
+  {
+    id: text('id').primaryKey(),
+    creatorProfileId: text('creator_profile_id')
+      .notNull()
+      .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
+    bookingId: text('booking_id')
+      .notNull()
+      .references(() => bookings.id, { onDelete: 'cascade' }),
+    grossPaise: integer('gross_paise').notNull(),
+    platformFeePaise: integer('platform_fee_paise').notNull(),
+    feeBps: integer('fee_bps').notNull(), // snapshot of the rate at sale time
+    netPaise: integer('net_paise').notNull(),
+    razorpayTransferId: text('razorpay_transfer_id'),
+    status: ledgerStatusEnum('status').default('pending').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (t) => ({
+    creatorIdx: index('idx_ledger_creator').on(t.creatorProfileId),
+    // One ledger row per booking — idempotency guard for transfers.
+    bookingUnique: uniqueIndex('uq_ledger_booking').on(t.bookingId),
+  }),
+)
+
+// Settlement/payout history mirrored from Razorpay (for the payouts UI).
+export const payouts = pgTable(
+  'payouts',
+  {
+    id: text('id').primaryKey(),
+    creatorProfileId: text('creator_profile_id')
+      .notNull()
+      .references(() => creatorProfiles.id, { onDelete: 'cascade' }),
+    amountPaise: integer('amount_paise').notNull(),
+    status: payoutStatusEnum('status').default('pending').notNull(),
+    razorpaySettlementId: text('razorpay_settlement_id'),
+    utr: text('utr'), // bank reference once paid
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    creatorIdx: index('idx_payouts_creator').on(t.creatorProfileId),
   }),
 )

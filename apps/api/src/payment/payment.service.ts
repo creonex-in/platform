@@ -16,6 +16,23 @@ export interface RazorpayRefund {
   paymentId: string
 }
 
+export interface CreateLinkedAccountInput {
+  email: string
+  phone?: string
+  legalName: string
+  entityType: string
+  pan: string
+  bankAccountNumber: string
+  bankIfsc: string
+  accountHolderName: string
+}
+
+export interface RazorpayTransfer {
+  id: string
+  amount: number
+  recipientAccountId: string
+}
+
 @Injectable()
 export class PaymentService {
   private _rzp: Razorpay | null = null
@@ -94,5 +111,78 @@ export class PaymentService {
 
   getPublicKey(): string {
     return this.keyId
+  }
+
+  // ── Razorpay Route: linked accounts + transfers ───────────────────────────────
+  // Route must be enabled on the platform Razorpay account for these to succeed.
+
+  /**
+   * Create a Route linked (sub-merchant) account for a creator. Returns the linked
+   * account id to persist on the creator profile.
+   *
+   * NOTE: SDK v2.9.6 `accounts.create` (Partners onboarding) does not configure the
+   * settlement bank account — that's a follow-up via the product-configuration /
+   * stakeholder onboarding step. Bank details are persisted in our DB regardless.
+   */
+  async createLinkedAccount(input: CreateLinkedAccountInput): Promise<string> {
+    try {
+      const account = await this.rzp.accounts.create({
+        email: input.email,
+        phone: input.phone ?? '',
+        type: 'route',
+        legal_business_name: input.legalName,
+        customer_facing_business_name: input.legalName,
+        business_type: input.entityType,
+        contact_name: input.accountHolderName,
+        profile: { category: 'education', subcategory: 'coaching' },
+        legal_info: { pan: input.pan },
+      })
+      return account.id
+    } catch (err) {
+      throw new InternalServerErrorException(`Razorpay linked-account creation failed: ${String(err)}`)
+    }
+  }
+
+  /**
+   * Split a captured payment to a creator's linked account. `onHold` keeps the funds
+   * with the platform until `onHoldUntil` (refund window / pending KYC).
+   */
+  async createTransfer(
+    paymentId: string,
+    linkedAccountId: string,
+    amountPaise: number,
+    opts: { onHold: boolean; onHoldUntil?: number } = { onHold: false },
+  ): Promise<RazorpayTransfer> {
+    try {
+      const result = await this.rzp.payments.transfer(paymentId, {
+        transfers: [
+          {
+            account: linkedAccountId,
+            amount: amountPaise,
+            currency: 'INR',
+            on_hold: opts.onHold ? 1 : 0,
+            ...(opts.onHoldUntil ? { on_hold_until: opts.onHoldUntil } : {}),
+          },
+        ],
+      })
+      const created = result.items[0]
+      if (!created) throw new Error('Razorpay returned no transfer')
+      return {
+        id: created.id,
+        amount: Number(created.amount),
+        recipientAccountId: linkedAccountId,
+      }
+    } catch (err) {
+      throw new InternalServerErrorException(`Razorpay transfer failed: ${String(err)}`)
+    }
+  }
+
+  /** Reverse a transfer (claw back the creator's share) — used on refund/cancel. */
+  async reverseTransfer(transferId: string, amountPaise: number): Promise<void> {
+    try {
+      await this.rzp.transfers.reverse(transferId, { amount: amountPaise })
+    } catch (err) {
+      throw new InternalServerErrorException(`Razorpay transfer reversal failed: ${String(err)}`)
+    }
   }
 }

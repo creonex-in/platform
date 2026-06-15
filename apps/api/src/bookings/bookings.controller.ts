@@ -10,6 +10,7 @@ import { RolesGuard } from '../auth/roles.guard'
 import type { AppUserSession } from '../auth/types'
 import { BookingsService } from './bookings.service'
 import { PaymentService } from '../payment/payment.service'
+import { PayoutsService } from '../payouts/payouts.service'
 import { CancelBookingDto, ConfirmBookingDto, CreateBookingDto, CreateGuestBookingDto } from './bookings.dto'
 
 // ── Learner booking actions ───────────────────────────────────────────────────
@@ -107,11 +108,12 @@ export class PaymentWebhookController {
   constructor(
     private readonly bookingsService: BookingsService,
     private readonly paymentService: PaymentService,
+    private readonly payoutsService: PayoutsService,
   ) {}
 
   @Post('webhook')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Razorpay webhook — backup path for missed confirms' })
+  @ApiOperation({ summary: 'Razorpay webhook — payment confirms + linked-account KYC events' })
   async handleWebhook(@Req() req: RawBodyRequest<Request>) {
     const signature = req.headers['x-razorpay-signature'] as string | undefined
     if (!signature) throw new UnauthorizedException('Missing webhook signature')
@@ -122,10 +124,27 @@ export class PaymentWebhookController {
     }
 
     const event = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody
-    if (event?.event === 'payment.captured') {
+    const name: string | undefined = event?.event
+
+    // Payment captured → confirm the booking (backup to client-side confirm).
+    if (name === 'payment.captured') {
       const payment = event?.payload?.payment?.entity
       if (payment?.order_id && payment?.id) {
         await this.bookingsService.confirmFromWebhook(payment.order_id, payment.id)
+      }
+    }
+
+    // Linked-account KYC lifecycle → enable/disable creator payouts.
+    if (name?.startsWith('account.')) {
+      const accountId: string | undefined = event?.payload?.account?.entity?.id
+      if (accountId) {
+        if (name === 'account.activated') {
+          await this.payoutsService.activateAccount(accountId)
+        } else if (name === 'account.suspended' || name === 'account.rejected') {
+          await this.payoutsService.deactivateAccount(accountId, 'failed')
+        } else if (name === 'account.needs_clarification' || name === 'account.under_review') {
+          await this.payoutsService.deactivateAccount(accountId, 'pending')
+        }
       }
     }
 

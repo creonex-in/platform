@@ -3,29 +3,110 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { BookingsRepository } from './bookings.repository'
 import { LearnerProfileRepository } from '../users/learner-profile.repository'
 import { OfferingsRepository } from '../users/offerings.repository'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
+import { PayoutsRepository } from '../payouts/payouts.repository'
 import { PaymentService } from '../payment/payment.service'
 import { MeetingService } from '../meeting/meeting.service'
 import { SlotGenerationService } from '../availability/slot-generation.service'
+import { DEFAULT_PLATFORM_FEE_BPS } from '@creonex/types'
 import type { CreateBookingDto, CreateGuestBookingDto, ConfirmBookingDto, CancelBookingDto } from './bookings.dto'
 
 @Injectable()
 export class BookingsService {
+  private readonly logger = new Logger(BookingsService.name)
+  /** Platform commission in basis points (1000 = 10%). Configurable; snapshotted per ledger row. */
+  private readonly platformFeeBps: number
+
   constructor(
     private readonly bookingsRepo: BookingsRepository,
     private readonly learnerProfileRepo: LearnerProfileRepository,
     private readonly offeringsRepo: OfferingsRepository,
     private readonly creatorProfileRepo: CreatorProfileRepository,
+    private readonly payoutsRepo: PayoutsRepository,
     private readonly paymentService: PaymentService,
     private readonly meetingService: MeetingService,
     private readonly slotService: SlotGenerationService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.platformFeeBps = Number(
+      this.config.get<string>('PLATFORM_FEE_BPS', String(DEFAULT_PLATFORM_FEE_BPS)),
+    )
+  }
+
+  /**
+   * Split a confirmed payment to the creator via Razorpay Route + write the earnings
+   * ledger. Amounts are server-derived (never trust client). Idempotent — one ledger
+   * row per booking. If the creator isn't payout-ready (no linked account / KYC not
+   * verified) the earning is recorded as `pending`; a transfer is created once they
+   * are. Failures here never break booking confirmation.
+   */
+  private async recordCreatorEarning(
+    booking: { id: string; amountPaise: number; razorpayPaymentId: string | null },
+    creatorProfileId: string,
+  ): Promise<void> {
+    try {
+      const gross = booking.amountPaise
+      const feeBps = this.platformFeeBps
+      const platformFeePaise = Math.round((gross * feeBps) / 10000)
+      const netPaise = gross - platformFeePaise
+
+      const creator = await this.creatorProfileRepo.findById(creatorProfileId)
+      let transferId: string | null = null
+      let status: 'pending' | 'settled' = 'pending'
+
+      if (creator?.razorpayAccountId && creator.payoutsEnabled && booking.razorpayPaymentId) {
+        try {
+          const transfer = await this.paymentService.createTransfer(
+            booking.razorpayPaymentId,
+            creator.razorpayAccountId,
+            netPaise,
+            { onHold: false },
+          )
+          transferId = transfer.id
+          status = 'settled'
+        } catch (err) {
+          this.logger.warn(`Transfer deferred for booking ${booking.id}: ${String(err)}`)
+        }
+      }
+
+      await this.payoutsRepo.createLedgerEntry({
+        creatorProfileId,
+        bookingId: booking.id,
+        grossPaise: gross,
+        platformFeePaise,
+        feeBps,
+        netPaise,
+        razorpayTransferId: transferId,
+        status,
+      })
+    } catch (err) {
+      this.logger.error(`Failed to record creator earning for booking ${booking.id}: ${String(err)}`)
+    }
+  }
+
+  /** Reverse the creator's transfer + mark the ledger row reversed (on refund/cancel). */
+  private async reverseCreatorEarning(bookingId: string): Promise<void> {
+    try {
+      const entry = await this.payoutsRepo.findLedgerByBooking(bookingId)
+      if (!entry) return
+      if (entry.razorpayTransferId && entry.status === 'settled') {
+        await this.paymentService
+          .reverseTransfer(entry.razorpayTransferId, entry.netPaise)
+          .catch((err) => this.logger.warn(`Reversal failed for booking ${bookingId}: ${String(err)}`))
+      }
+      await this.payoutsRepo.setLedgerStatusByBooking(bookingId, 'reversed')
+    } catch (err) {
+      this.logger.error(`Failed to reverse creator earning for booking ${bookingId}: ${String(err)}`)
+    }
+  }
 
   /** Types that consume a seat (atomic decrement). */
   private isSeatedType(type: string): boolean {
@@ -267,6 +348,12 @@ export class BookingsService {
       this.bookingsRepo.incrementCreatorSessions(offering.creatorProfileId),
     ])
 
+    // Split to the creator (Route) + write the earnings ledger.
+    void this.recordCreatorEarning(
+      { id: bookingId, amountPaise: booking.amountPaise, razorpayPaymentId: dto.razorpayPaymentId },
+      offering.creatorProfileId,
+    )
+
     return this.bookingsRepo.findById(bookingId)
   }
 
@@ -322,6 +409,12 @@ export class BookingsService {
       this.bookingsRepo.incrementCreatorSessions(offering.creatorProfileId),
     ])
 
+    // Split to the creator (Route) + write the earnings ledger.
+    void this.recordCreatorEarning(
+      { id: bookingId, amountPaise: booking.amountPaise, razorpayPaymentId: dto.razorpayPaymentId },
+      offering.creatorProfileId,
+    )
+
     return this.bookingsRepo.findById(bookingId)
   }
 
@@ -359,6 +452,11 @@ export class BookingsService {
       this.bookingsRepo.incrementOfferingCounters(booking.offeringId, booking.amountPaise),
       this.bookingsRepo.incrementCreatorSessions(offering.creatorProfileId),
     ])
+
+    void this.recordCreatorEarning(
+      { id: booking.id, amountPaise: booking.amountPaise, razorpayPaymentId },
+      offering.creatorProfileId,
+    )
   }
 
   // ── Cancel booking ────────────────────────────────────────────────────────────
@@ -398,6 +496,8 @@ export class BookingsService {
     // Reverse offering counters only if this booking had been confirmed (counted).
     if (booking.status === 'confirmed') {
       void this.bookingsRepo.decrementOfferingCounters(booking.offeringId, booking.amountPaise)
+      // Claw back the creator's transfer + mark the ledger reversed.
+      void this.reverseCreatorEarning(bookingId)
     }
 
     // Restore seat for seated types (live_event)

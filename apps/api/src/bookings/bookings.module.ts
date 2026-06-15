@@ -7,10 +7,11 @@ import { UsersModule } from '../users/users.module'
 import { PaymentModule } from '../payment/payment.module'
 import { MeetingModule } from '../meeting/meeting.module'
 import { AvailabilityModule } from '../availability/availability.module'
+import { PayoutsModule } from '../payouts/payouts.module'
 import { RolesGuard } from '../auth/roles.guard'
 
 @Module({
-  imports: [UsersModule, PaymentModule, MeetingModule, AvailabilityModule],
+  imports: [UsersModule, PaymentModule, MeetingModule, AvailabilityModule, PayoutsModule],
   controllers: [BookingsController, CreatorBookingsController, GuestBookingsController, PaymentWebhookController],
   providers: [BookingsService, BookingsRepository, RolesGuard, Reflector],
   exports: [BookingsService],

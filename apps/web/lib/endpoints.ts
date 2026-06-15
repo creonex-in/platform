@@ -48,6 +48,12 @@ export const endpoints = {
     delete:        '/api/v1/uploads/delete',
     digitalAccess: (bookingId: string) => `/api/v1/uploads/digital/${bookingId}`,
   },
+  payouts: {
+    kyc:      '/api/v1/payouts/kyc',
+    earnings: '/api/v1/payouts/earnings',
+    ledger:   '/api/v1/payouts/ledger',
+    history:  '/api/v1/payouts/history',
+  },
   testimonials: {
     creatorList:       '/api/v1/creator/testimonials',
     updateVisibility:  (id: string) => `/api/v1/creator/testimonials/${id}/visibility`,

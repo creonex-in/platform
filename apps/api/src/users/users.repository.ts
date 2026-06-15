@@ -27,4 +27,8 @@ export class UsersRepository {
   async updateRole(userId: string, role: string) {
     await this.db.update(user).set({ role }).where(eq(user.id, userId))
   }
+
+  async updatePhone(userId: string, phone: string) {
+    await this.db.update(user).set({ phone }).where(eq(user.id, userId))
+  }
 }
