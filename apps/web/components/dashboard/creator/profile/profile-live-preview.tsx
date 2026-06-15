@@ -14,8 +14,9 @@ interface ProfileLivePreviewProps {
  * Live mobile preview rendered in an iframe at phone width. Because the iframe has
  * its own viewport, the page's responsive (`sm:`/`md:`) breakpoints resolve to the
  * real MOBILE layout — exactly like a phone (share-as-icon, working tabs, etc.).
- * It loads the actual /c/<username> page, so it reflects the SAVED profile; the
- * `reloadKey` reloads it after each save.
+ * It loads the actual /c/<username> page in preview mode (`?preview=1`), so it
+ * reflects the SAVED profile with booking interactions disabled; the `reloadKey`
+ * reloads it after each save.
  */
 export function ProfileLivePreview({ username, reloadKey }: ProfileLivePreviewProps): React.ReactElement {
   const url = username ? `/c/${username}` : null

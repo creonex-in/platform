@@ -9,10 +9,15 @@ import type { PublicCreatorProfile, PublicOffering } from '@creonex/types'
 
 export default async function CreatorProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>
+  searchParams: Promise<{ preview?: string }>
 }): Promise<React.ReactElement> {
   const { username } = await params
+  // `?preview=1` renders the page read-only (booking disabled) for the creator's
+  // own profile-editor live preview iframe.
+  const preview = (await searchParams).preview === '1'
 
   let profile: PublicCreatorProfile
   try {
@@ -38,24 +43,27 @@ export default async function CreatorProfilePage({
 
   const displayName = profile.displayName ?? `@${profile.username}`
 
-  return (
-    <MarketingShell>
-      <div className="min-h-screen bg-background text-foreground pb-20 sm:pb-0 font-sans w-full">
-        <ProfileHero
-          coverBannerUrl={profile.coverBannerUrl}
-          username={profile.username}
-          displayName={displayName}
-        />
-        <ProfileContent
-          profile={profile}
-          displayName={displayName}
-          availableDates={availableDates}
-          sessionPrice={sessionPrice}
-          activeTabs={activeTabs}
-          showAllTab={showAllTab}
-          defaultTab={defaultTab}
-        />
-      </div>
-    </MarketingShell>
+  const content = (
+    <div className="min-h-screen bg-background text-foreground pb-20 sm:pb-0 font-sans w-full">
+      <ProfileHero
+        coverBannerUrl={profile.coverBannerUrl}
+        username={profile.username}
+        displayName={displayName}
+        preview={preview}
+      />
+      <ProfileContent
+        profile={profile}
+        displayName={displayName}
+        availableDates={availableDates}
+        sessionPrice={sessionPrice}
+        activeTabs={activeTabs}
+        showAllTab={showAllTab}
+        defaultTab={defaultTab}
+        preview={preview}
+      />
+    </div>
   )
+
+  // Preview iframe (creator's own editor) drops the site navbar/footer chrome.
+  return preview ? content : <MarketingShell>{content}</MarketingShell>
 }

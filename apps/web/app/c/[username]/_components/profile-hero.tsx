@@ -6,9 +6,11 @@ interface ProfileHeroProps {
   coverBannerUrl: string | null
   username: string
   displayName: string
+  /** Read-only preview: hide the share control. */
+  preview?: boolean
 }
 
-export function ProfileHero({ coverBannerUrl, username, displayName }: ProfileHeroProps): React.ReactElement {
+export function ProfileHero({ coverBannerUrl, username, displayName, preview = false }: ProfileHeroProps): React.ReactElement {
   const isUrl = coverBannerUrl ? isBannerUrl(coverBannerUrl) : false
 
   return (
@@ -26,9 +28,11 @@ export function ProfileHero({ coverBannerUrl, username, displayName }: ProfileHe
 
       {/* Share button — top-right on mobile (clear of the sidebar card that overlaps
           the banner bottom), bottom-right on desktop. */}
-      <div className="absolute top-4 right-4 sm:top-auto sm:bottom-4 z-20">
-        <ShareDialog username={username} displayName={displayName} variant="banner" />
-      </div>
+      {!preview && (
+        <div className="absolute top-4 right-4 sm:top-auto sm:bottom-4 z-20">
+          <ShareDialog username={username} displayName={displayName} variant="banner" />
+        </div>
+      )}
     </div>
   )
 }

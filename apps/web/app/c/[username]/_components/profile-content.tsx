@@ -21,6 +21,8 @@ interface Props {
   activeTabs: [string, PublicOffering[]][]
   showAllTab: boolean
   defaultTab: string
+  /** Read-only preview (creator's own editor iframe): booking disabled. */
+  preview?: boolean
 }
 
 export function ProfileContent({
@@ -31,6 +33,7 @@ export function ProfileContent({
   activeTabs,
   showAllTab,
   defaultTab,
+  preview = false,
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
@@ -56,6 +59,7 @@ export function ProfileContent({
   ) ?? null
 
   const openModal = (offering: PublicOffering) => {
+    if (preview) return // booking disabled in the editor preview
     const params = new URLSearchParams(searchParams.toString())
     params.set('offering', offering.id)
     startTransition(() => router.push(`${pathname}?${params.toString()}`, { scroll: false }))
@@ -78,6 +82,7 @@ export function ProfileContent({
               profile={profile}
               displayName={displayName}
               onBook={firstBookable ? () => openModal(firstBookable) : undefined}
+              preview={preview}
             />
           </div>
 
@@ -143,7 +148,9 @@ export function ProfileContent({
                     <p className="text-sm text-muted-foreground font-medium mt-0.5">
                       {profile.testimonials.length > 0
                         ? `Read what students of ${displayName} have experienced.`
-                        : 'Thousands of learners across India use Creonex to upskill, switch careers, and grow.'}
+                        : preview
+                          ? 'Reviews from your learners will appear here.'
+                          : 'Thousands of learners across India use Creonex to upskill, switch careers, and grow.'}
                     </p>
                   </div>
                   <ReviewsTab
@@ -164,16 +171,18 @@ export function ProfileContent({
         </div>
       </div>
 
-      {/* Mobile sticky bar */}
-      <BookSessionBar
-        name={displayName}
-        price={sessionPrice}
-        onBook={firstBookable ? () => openModal(firstBookable) : undefined}
-      />
+      {/* Mobile sticky bar — hidden in read-only preview */}
+      {!preview && (
+        <BookSessionBar
+          name={displayName}
+          price={sessionPrice}
+          onBook={firstBookable ? () => openModal(firstBookable) : undefined}
+        />
+      )}
 
       {/* Opening — the dialog is a navigation, so bridge the round-trip with a
           backdrop + spinner that visually flows into the dialog. */}
-      {opening && (
+      {!preview && opening && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-xs">
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-card/90 px-6 py-5 shadow-xl ring-1 ring-foreground/10">
             <span className="size-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
@@ -182,8 +191,8 @@ export function ProfileContent({
         </div>
       )}
 
-      {/* Booking modal */}
-      {selectedOffering && (
+      {/* Booking modal — never mounts in read-only preview */}
+      {!preview && selectedOffering && (
         <SlotPickerModal
           offering={selectedOffering}
           profile={profile}

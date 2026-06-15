@@ -17,7 +17,6 @@ import {
   faCalendar,
   faBox,
   faUsers,
-  faStar,
   faWallet,
   faGear,
   faFolderOpen,
@@ -112,7 +111,6 @@ const creatorNav: NavGroup[] = [
     section: 'Grow',
     items: [
       { title: 'Analytics', href: '/analytics', icon: faChartColumn },
-      { title: 'CQS Score', href: '/cqs', icon: faStar },
       { title: 'Collaborate', href: '/collaborate', icon: faUsers },
       { title: 'Testimonials', href: '/testimonials', icon: faComments },
     ],

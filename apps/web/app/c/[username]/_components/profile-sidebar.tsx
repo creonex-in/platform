@@ -23,6 +23,8 @@ interface ProfileSidebarProps {
   profile: PublicCreatorProfile
   displayName: string
   onBook?: () => void
+  /** Read-only preview: CTAs render but don't act. */
+  preview?: boolean
 }
 
 function getResponseTime(tier: string): string {
@@ -31,7 +33,7 @@ function getResponseTime(tier: string): string {
   return 'Responds within 48 hours'
 }
 
-export function ProfileSidebar({ profile, displayName, onBook }: ProfileSidebarProps) {
+export function ProfileSidebar({ profile, displayName, onBook, preview = false }: ProfileSidebarProps) {
   const initials = getInitials(displayName)
   
   // Format niche nicely or fallback
@@ -157,12 +159,13 @@ export function ProfileSidebar({ profile, displayName, onBook }: ProfileSidebarP
           </div>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex items-center justify-center gap-3 w-full">
+        {/* CTA Buttons — visible in preview but inert (no booking/email) */}
+        <div className={`flex items-center justify-center gap-3 w-full${preview ? ' pointer-events-none select-none' : ''}`}>
           {/* Round message/mail button - Orange Accent as in layout */}
           <a
-            href={`mailto:${profile.email}`}
+            href={preview ? undefined : `mailto:${profile.email}`}
             title="Get in touch"
+            aria-disabled={preview || undefined}
             className="flex items-center justify-center size-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground transition-all hover:scale-105 active:scale-95 shrink-0 shadow-sm"
           >
             <FontAwesomeIcon icon={faEnvelope} className="size-4.5" />
@@ -170,6 +173,8 @@ export function ProfileSidebar({ profile, displayName, onBook }: ProfileSidebarP
 
           {/* Main Book Call Button */}
           <button
+            type="button"
+            disabled={preview}
             onClick={onBook ?? (() => { document.querySelector('#offerings')?.scrollIntoView({ behavior: 'smooth' }) })}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold tracking-tight transition-all hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer"
           >
