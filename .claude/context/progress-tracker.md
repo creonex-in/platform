@@ -71,9 +71,6 @@ Next: learner-side history + replace remaining mocked dashboard data.
 1. **Per-type checkout flow** — only `one_on_one` tested. Make checkout dynamic per offer
    type: `group`/`workshop` (seat counter + fixed `scheduled_at`, no slot math), `digital`
    - `courses` (instant access, no scheduling). Lock the final type set + each buy flow.
-2. **Testimonial eligibility** — `/c/[username]/testimonial`: who may review? Any logged-in
-   user vs only learners who actually booked from this creator (trust / real reviews).
-   Decide + enforce server-side.
 3. **Creator payouts + KYC** — funds currently land in the platform Razorpay account, not the
    creator's. Need split to creator (Razorpay Route / transfers), creator bank + KYC capture,
    real `(creator)/payouts/page.tsx` UI + endpoints (page is mock). Secure + audited (ledger,
@@ -82,6 +79,17 @@ Next: learner-side history + replace remaining mocked dashboard data.
    auth or drop the form. Capture phone for creator + learner at signup. Guest checkout:
    verify phone? + sync a guest's prior bookings to their account when they later sign up
    with the same email. Keep guest flow secure/trusted.
+
+## Done
+
+- **Testimonial eligibility (Model C)** — submit now requires login (`AuthGuard` + `@Session`).
+  Any signed-in user may review; reviews backed by a confirmed/completed booking get an
+  `isVerified` flag → "Verified booking" badge on the public reviews tab. Server-side guards:
+  self-review (403), one-per-user-per-creator dup (409, unique index `uq_testimonial_user_creator`).
+  `testimonials` gained `user_id` (FK→user, set null) + `is_verified` (applied to Neon directly,
+  see migration `0005`). Web: soft login gate via reusable `components/shared/auth-dialog.tsx`
+  (Google + email/password), form draft persisted to sessionStorage for the Google round-trip.
+
 5. **Onboarding step-4 (first offering)** — still missing `description` field + lite
    availability per `docs/offerings-bookings-slots-schedulies.md` §10.2
    (`AvailabilityScheduleBuilder showOverrides={false}`, collapsed expander, default

@@ -3,6 +3,14 @@ import { creatorsService } from '@/services/creators.service'
 import { getInitials } from '@/lib/utils'
 import { TestimonialForm } from './_components/testimonial-form'
 
+function formatNiche(niche: string | null): string | null {
+  if (!niche) return null
+  return niche
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
 export default async function TestimonialSubmitPage({
   params,
 }: {
@@ -12,11 +20,19 @@ export default async function TestimonialSubmitPage({
 
   let displayName = `@${username}`
   let profilePhotoUrl: string | null = null
+  let niche: string | null = null
+  let avgRating = 0
+  let totalReviews = 0
+  let totalSessions = 0
 
   try {
     const profile = await creatorsService.getPublicProfile(username)
     displayName = profile.displayName ?? `@${profile.username}`
     profilePhotoUrl = profile.profilePhotoUrl ?? null
+    niche = formatNiche(profile.primaryNiche)
+    avgRating = parseFloat(profile.smoothedRating) || 0
+    totalReviews = profile.totalReviews ?? 0
+    totalSessions = profile.totalSessions ?? 0
   } catch {
     // Profile might not be live yet or API is unavailable — still show the form.
     // The submission endpoint validates the creator independently.
@@ -25,42 +41,23 @@ export default async function TestimonialSubmitPage({
   return (
     <MarketingShell>
       <div
-        className="min-h-screen flex flex-col items-center justify-center px-4 py-16"
+        className="relative min-h-dvh px-4 py-12 sm:py-16"
         style={{
           background:
-            'radial-gradient(ellipse at top, oklch(0.55 0.18 255 / 0.07) 0%, transparent 65%)',
+            'radial-gradient(120% 80% at 50% -10%, oklch(0.55 0.18 255 / 0.10) 0%, transparent 55%)',
         }}
       >
-        <div className="w-full max-w-[480px] space-y-6">
-          {/* Creator hero */}
-          <div className="text-center space-y-3">
-            <div
-              className="mx-auto size-14 rounded-full flex items-center justify-center text-lg font-bold text-white ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
-              style={{ background: 'oklch(0.55 0.18 255)' }}
-            >
-              {profilePhotoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profilePhotoUrl}
-                  alt={displayName}
-                  className="size-14 rounded-full object-cover"
-                />
-              ) : (
-                getInitials(displayName)
-              )}
-            </div>
-            <div>
-              <h1 className="text-xl font-bold font-display text-foreground">{displayName}</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Share your honest experience
-              </p>
-            </div>
-          </div>
-
-          {/* Form card */}
-          <div className="rounded-2xl border border-border bg-card/90 shadow-xl backdrop-blur-sm p-6">
-            <TestimonialForm username={username} creatorName={displayName} />
-          </div>
+        <div className="mx-auto w-full max-w-5xl">
+          <TestimonialForm
+            username={username}
+            creatorName={displayName}
+            profilePhotoUrl={profilePhotoUrl}
+            initials={getInitials(displayName)}
+            niche={niche}
+            avgRating={avgRating}
+            totalReviews={totalReviews}
+            totalSessions={totalSessions}
+          />
         </div>
       </div>
     </MarketingShell>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { ReviewsTab } from './reviews-tab'
 import { ProfileSidebar } from './profile-sidebar'
@@ -34,6 +35,9 @@ export function ProfileContent({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  // Opening/closing the dialog are URL navigations (server round-trip). Wrapping
+  // them in a transition gives `isPending` so we can show loading feedback.
+  const [isPending, startTransition] = useTransition()
 
   // Modal open-state lives in the URL (?offering=…) so it survives a round-trip
   // to /checkout — Back restores the dialog with the same offering/slot/tz.
@@ -42,6 +46,11 @@ export function ProfileContent({
     ? (profile.offerings.find((o) => o.id === offeringId) ?? null)
     : null
 
+  // During a pending open the param isn't committed yet (selectedOffering still
+  // null); during a pending close it's still set — so the two are distinguishable.
+  const opening = isPending && !selectedOffering
+  const closing = isPending && !!selectedOffering
+
   const firstBookable = profile.offerings.find(
     (o) => o.type === 'one_on_one' || o.type === 'group'
   ) ?? null
@@ -49,13 +58,13 @@ export function ProfileContent({
   const openModal = (offering: PublicOffering) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('offering', offering.id)
-    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    startTransition(() => router.push(`${pathname}?${params.toString()}`, { scroll: false }))
   }
   const closeModal = () => {
     const params = new URLSearchParams(searchParams.toString())
     for (const k of ['offering', 'tz', 'start', 'end']) params.delete(k)
     const qs = params.toString()
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    startTransition(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }))
   }
 
   return (
@@ -144,6 +153,7 @@ export function ProfileContent({
                       niche: t.learnerRole ?? '',
                       quote: t.content,
                       initials: getInitials(t.learnerName),
+                      isVerified: t.isVerified,
                     }))}
                   />
                 </div>
@@ -161,12 +171,24 @@ export function ProfileContent({
         onBook={firstBookable ? () => openModal(firstBookable) : undefined}
       />
 
+      {/* Opening — the dialog is a navigation, so bridge the round-trip with a
+          backdrop + spinner that visually flows into the dialog. */}
+      {opening && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-xs">
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-card/90 px-6 py-5 shadow-xl ring-1 ring-foreground/10">
+            <span className="size-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+            <span className="text-xs font-semibold text-muted-foreground">Opening booking…</span>
+          </div>
+        </div>
+      )}
+
       {/* Booking modal */}
       {selectedOffering && (
         <SlotPickerModal
           offering={selectedOffering}
           profile={profile}
           onClose={closeModal}
+          closing={closing}
         />
       )}
     </>
