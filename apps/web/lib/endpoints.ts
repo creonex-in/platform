@@ -54,6 +54,9 @@ export const endpoints = {
     ledger:   '/api/v1/payouts/ledger',
     history:  '/api/v1/payouts/history',
   },
+  dashboard: {
+    summary: (tz: string) => `/api/v1/creator/dashboard?tz=${encodeURIComponent(tz)}`,
+  },
   testimonials: {
     creatorList:       '/api/v1/creator/testimonials',
     updateVisibility:  (id: string) => `/api/v1/creator/testimonials/${id}/visibility`,

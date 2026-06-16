@@ -184,6 +184,7 @@ export const creatorProfiles = pgTable(
     audienceType: text('audience_type'),
     primaryPlatform: text('primary_platform'),
     creatorGoal: text('creator_goal'),
+    lastDashboardVisitAt: timestamp('last_dashboard_visit_at', { withTimezone: true }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
   },

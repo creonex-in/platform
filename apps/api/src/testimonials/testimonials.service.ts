@@ -27,6 +27,8 @@ export class TestimonialsService {
     const profile = await this.creatorProfileRepo.findByUserId(userId)
     if (!profile) throw new NotFoundException('Creator profile not found')
     await this.testimonialsRepo.updateVisibility(id, profile.id, dto.isPublic)
+    // Visibility change alters the public review set → refresh aggregates.
+    await this.testimonialsRepo.recomputeRatingAggregates(profile.id)
   }
 
   async submitTestimonial(
@@ -59,5 +61,8 @@ export class TestimonialsService {
       rating: dto.rating,
       isVerified,
     })
+
+    // Keep the denormalized rating + review count on creator_profiles in sync.
+    await this.testimonialsRepo.recomputeRatingAggregates(profile.id)
   }
 }

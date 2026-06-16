@@ -384,3 +384,53 @@ export interface GoLiveResponse {
   offeringId?: string
   redirectTo: string
 }
+
+// ── Creator Dashboard Summary ─────────────────────────────────────────────────
+
+export interface ActivityFeedItem {
+  id: string
+  type: 'payout' | 'review' | 'booking'
+  /** Pre-formatted message string — no client computation needed. */
+  message: string
+  occurredAt: string // ISO
+}
+
+export interface EarningsTrendPoint {
+  /** Week label, e.g. "Jun 2" */
+  week: string
+  earningsPaise: number
+}
+
+export interface BookingsTrendPoint {
+  /** Date label, e.g. "Jun 17" */
+  date: string
+  count: number
+}
+
+export interface CreatorDashboardSummary {
+  /** Confirmed sessions with startTime inside creator's today. */
+  todaySessions: CreatorBookingItem[]
+  /** Nearest future confirmed session — null when todaySessions is non-empty. */
+  nextSession: CreatorBookingItem | null
+  earnings: {
+    thisWeekPaise: number
+    thisMonthPaise: number
+    /** Net held in escrow (48-h buyer refund window). */
+    pendingPaise: number
+  }
+  /** Confirmed bookings created since the creator last opened the dashboard. */
+  newBookings: CreatorBookingItem[]
+  quickStats: {
+    totalSessions: number
+    totalReviews: number
+    avgRating: number
+    /** Rank within the creator's primary niche (0 = not ranked / no niche). */
+    nicheRank: number
+    nicheTotal: number
+  }
+  activityFeed: ActivityFeedItem[]
+  /** Last 8 weeks of earnings for the bar chart */
+  earningsTrend: EarningsTrendPoint[]
+  /** Last 30 days of confirmed booking counts for the line chart */
+  bookingsTrend: BookingsTrendPoint[]
+}

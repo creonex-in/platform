@@ -18,6 +18,7 @@ import { BookingsModule } from './bookings/bookings.module'
 import { TestimonialsModule } from './testimonials/testimonials.module'
 import { UploadsModule } from './uploads/uploads.module'
 import { PayoutsModule } from './payouts/payouts.module'
+import { DashboardModule } from './dashboard/dashboard.module'
 import { DATABASE_CONNECTION, type Database } from './database/database-connection'
 
 @Module({
@@ -62,6 +63,7 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
     TestimonialsModule,
     UploadsModule,
     PayoutsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
 })

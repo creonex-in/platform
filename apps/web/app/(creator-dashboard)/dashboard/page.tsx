@@ -1,21 +1,23 @@
+import { Suspense } from 'react'
 import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
-import { StatPanel } from '@/components/dashboard/creator/stat-panel'
-import { EarningsChart } from '@/components/dashboard/creator/earnings-chart'
-import { InsightBox } from '@/components/dashboard/creator/insight-box'
-import { BookingRow } from '@/components/dashboard/creator/booking-row'
-import { WelcomeHero } from '@/components/dashboard/shared/welcome-hero'
-import { WelcomeDialog } from './_components/welcome-dialog'
 import { ProfileLinkButton } from '@/components/dashboard/creator/profile-link-button'
-import { buttonVariants } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faShareNodes } from '@fortawesome/free-solid-svg-icons'
-import { creatorMetrics } from '@/data/mock-earnings'
-import { formatCurrency, cn, getInitials } from '@/lib/utils'
+import { WelcomeDialog } from './_components/welcome-dialog'
+import { DashboardHero } from './_components/dashboard-hero'
+import { TodaySessionStrip } from './_components/today-session-strip'
+import { EarningsSummaryCard } from './_components/earnings-summary-card'
+import { NewBookingAlert } from './_components/new-booking-alert'
+import { QuickStatsRow } from './_components/quick-stats-row'
+import { ActivityFeed } from './_components/activity-feed'
+import { ChartsRow } from './_components/charts-row'
+import {
+  HeroSkeleton,
+  StatPanelSkeleton,
+  ChartsRowSkeleton,
+  TodayStripSkeleton,
+  ActivityFeedSkeleton,
+  CardSkeleton,
+} from './_components/skeletons'
 import { getCreatorContext } from '@/dal/users.dal'
-import { getCreatorBookings } from '@/dal/bookings.dal'
-import { getCreatorTestimonials } from '@/dal/testimonials.dal'
-import Link from 'next/link'
 
 export const metadata = { title: 'Dashboard — Creonex' }
 
@@ -24,18 +26,10 @@ export default async function CreatorDashboardPage({
 }: {
   searchParams: Promise<{ welcome?: string; offer?: string }>
 }): Promise<React.ReactElement> {
-  const [{ user, profile }, allBookings, recentReviews, params] = await Promise.all([
+  const [{ profile }, params] = await Promise.all([
     getCreatorContext(),
-    getCreatorBookings(),
-    getCreatorTestimonials(),
     searchParams,
   ])
-  const displayName = profile?.displayName ?? user?.name ?? 'Creator'
-  const avatarImage = profile?.profilePhotoUrl ?? user?.image ?? null
-
-  const upcomingBookings = allBookings.filter(
-    (b) => b.status === 'pending_payment' || b.status === 'confirmed'
-  )
 
   return (
     <>
@@ -46,116 +40,44 @@ export default async function CreatorDashboardPage({
       {params.welcome === '1' && params.offer && (
         <WelcomeDialog offerId={params.offer} username={profile?.username ?? undefined} />
       )}
-      <div className="space-y-8 p-4 sm:p-6 lg:p-8">
-        <WelcomeHero
-          name={displayName}
-          initials={getInitials(displayName)}
-          image={avatarImage}
-          subtitle="Here's how your creator business is doing today."
-          stats={[
-            { label: 'This month', value: formatCurrency(creatorMetrics.earningsThisMonth) },
-            { label: 'Bookings', value: creatorMetrics.totalBookings.toString() },
-            { label: 'CQS score', value: creatorMetrics.cqsScore.toString() },
-          ]}
-          action={
-            <>
-              <Link href="/offers/new" className={cn(buttonVariants({ size: 'sm' }))}>
-                <FontAwesomeIcon icon={faPlus} className="mr-1 size-4" />
-                New offer
-              </Link>
-              {profile?.username && (
-                <Link
-                  href={`/c/${profile.username}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-                >
-                  <FontAwesomeIcon icon={faShareNodes} className="mr-1 size-3.5" />
-                  Share page
-                </Link>
-              )}
-            </>
-          }
-        />
 
-        <StatPanel
-          stats={[
-            {
-              label: 'Earnings (this month)',
-              value: formatCurrency(creatorMetrics.earningsThisMonth),
-              change: creatorMetrics.earningsGrowth,
-              changeLabel: 'vs last month',
-            },
-            {
-              label: 'Total bookings',
-              value: creatorMetrics.totalBookings.toString(),
-              changeLabel: `${creatorMetrics.bookingsThisWeek} this week`,
-            },
-            {
-              label: 'Profile views',
-              value: creatorMetrics.profileViews.toLocaleString(),
-              changeLabel: `${creatorMetrics.conversionRate}% conversion`,
-            },
-            {
-              label: 'CQS score',
-              value: creatorMetrics.cqsScore.toString(),
-              change: creatorMetrics.cqsChange,
-              changeLabel: 'this month',
-            },
-          ]}
-        />
+      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+        {/* Hero */}
+        <Suspense fallback={<HeroSkeleton />}>
+          <DashboardHero />
+        </Suspense>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          <Card className="lg:col-span-3">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Weekly earnings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EarningsChart />
-            </CardContent>
-          </Card>
+        {/* New booking banner — collapses cleanly when none */}
+        <Suspense fallback={null}>
+          <NewBookingAlert />
+        </Suspense>
 
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">{"Today's schedule"}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1.5">
-              {upcomingBookings.slice(0, 3).map((booking, i) => (
-                <BookingRow key={booking.id} booking={booking} index={i} compact />
-              ))}
-            </CardContent>
-          </Card>
+        {/* Today's sessions */}
+        <Suspense fallback={<TodayStripSkeleton />}>
+          <TodaySessionStrip />
+        </Suspense>
+
+        {/* Quick stats — hairline panel */}
+        <Suspense fallback={<StatPanelSkeleton />}>
+          <QuickStatsRow />
+        </Suspense>
+
+        {/* Charts — both always present, no gap */}
+        <Suspense fallback={<ChartsRowSkeleton />}>
+          <ChartsRow />
+        </Suspense>
+
+        {/* Earnings (1/3) + Activity feed (2/3) */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Suspense fallback={<CardSkeleton bodyHeight="h-40" />}>
+            <EarningsSummaryCard />
+          </Suspense>
+          <div className="lg:col-span-2">
+            <Suspense fallback={<ActivityFeedSkeleton />}>
+              <ActivityFeed />
+            </Suspense>
+          </div>
         </div>
-
-        <InsightBox
-          message="Your profile conversion is 3.1% — below the 5% average. Adding 2 testimonials and updating your session title could boost bookings by ~40%."
-          type="warning"
-          actionLabel="Edit profile →"
-        />
-
-        {recentReviews.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Recent reviews</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {recentReviews.slice(0, 3).map((review) => (
-                <div key={review.id} className="flex gap-3">
-                  <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
-                    {getInitials(review.learnerName)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-medium">{review.learnerName}</span>
-                      <span className="text-xs text-amber-400">{'★'.repeat(review.rating)}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{review.content}</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
       </div>
     </>
   )
