@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTriangleExclamation, faCircleCheck, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
+import { StatPanel } from '@/components/dashboard/creator/stat-panel'
 import { PayoutRow } from '@/components/dashboard/creator/payout-row'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button'
@@ -35,12 +36,14 @@ export default async function PayoutsPage(): Promise<React.ReactElement> {
       <div className="p-4 sm:p-6 space-y-6">
 
         {/* Earnings summary */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <SummaryCard label="Available" value={formatCurrency(earnings.availablePaise / 100)} hint="Settled to you" />
-          <SummaryCard label="Held" value={formatCurrency(earnings.heldPaise / 100)} hint="Clears after refund window" />
-          <SummaryCard label="Pending" value={formatCurrency(earnings.pendingPaise / 100)} hint="Awaiting KYC / transfer" />
-          <SummaryCard label="Lifetime earned" value={formatCurrency(earnings.lifetimeNetPaise / 100)} hint="Net of platform fee" />
-        </div>
+        <StatPanel
+          stats={[
+            { label: 'Available', value: formatCurrency(earnings.availablePaise / 100), changeLabel: 'Settled to you' },
+            { label: 'Held', value: formatCurrency(earnings.heldPaise / 100), changeLabel: 'Clears after refund window' },
+            { label: 'Pending', value: formatCurrency(earnings.pendingPaise / 100), changeLabel: 'Awaiting KYC / transfer' },
+            { label: 'Lifetime earned', value: formatCurrency(earnings.lifetimeNetPaise / 100), changeLabel: 'Net of platform fee' },
+          ]}
+        />
 
         {/* KYC gate */}
         {verified ? (
@@ -121,12 +124,3 @@ export default async function PayoutsPage(): Promise<React.ReactElement> {
   )
 }
 
-function SummaryCard({ label, value, hint }: { label: string; value: string; hint: string }): React.ReactElement {
-  return (
-    <div className="rounded-lg bg-muted/40 border border-border p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-2xl font-semibold mt-1 tabular-nums">{value}</p>
-      <p className="text-xs text-muted-foreground mt-1">{hint}</p>
-    </div>
-  )
-}

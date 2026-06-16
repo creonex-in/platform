@@ -122,3 +122,32 @@ Razorpay test mode: create a test linked account → book → confirm → Transf
 kept, creator share transferred) → refund → reversal → KYC/activation webhook flips
 `kycStatus`/`payoutsEnabled` and releases held transfers → `/payouts` reflects ledger balances.
 Plus `pnpm type-check` both apps.
+
+## 12. Blockers — before payouts move real money
+
+Status: code scaffolded + type-checks clean. NOT yet payout-functional. Order = critical path.
+
+**Owner: you (config — nothing charges/transfers without these)**
+1. **Razorpay keys** — `RAZORPAY_KEY_ID/SECRET/WEBHOOK_SECRET` in `apps/api/.env` + web
+   `NEXT_PUBLIC_RAZORPAY_KEY_ID`. Empty now → even base booking payment throws.
+2. **Enable Route** on the platform Razorpay account (request via dashboard/support). Without it,
+   `accounts.create` + `transfers` fail.
+3. **Configure webhook** — URL + secret; subscribe `payment.captured` + `account.*` (+ settlement).
+
+**Owner: build (me)**
+4. **Linked-account onboarding steps 2–3** — SDK v2.9.6 `accounts.create` only makes a shell
+   account. To actually settle to the creator's bank, still need: (a) **stakeholder** creation,
+   (b) **product configuration** (`/accounts/{id}/products`) that enables Route + attaches the
+   **settlement bank** (acct no + IFSC). Not in the typed SDK → raw-HTTP calls (typed at our
+   boundary). Without this, transfers have nowhere to settle. Bank details already captured at KYC.
+5. **(Optional) settlement webhook → `payouts` table** — populate settlement history rows for the
+   `/payouts` UI (currently the table exists but nothing writes to it).
+
+**Owner: you (product / finance decisions)**
+6. Final **commission %** (`PLATFORM_FEE_BPS`).
+7. **Refund-window** policy — transfers currently settle immediately (`on_hold:false`); a refund
+   after settlement may fail to reverse. Decide hold window → set `on_hold` + release on expiry.
+8. **GST/tax invoicing** on the commission — CA review.
+
+**Critical path to "money reaches creator's bank":** 1 → 2 → 4 → (3 for webhook activation) → 6.
+Items 4–5 buildable now; 1–3 are config; verify end-to-end in Razorpay test mode (§11).
