@@ -54,7 +54,7 @@ export default function CreatorSignUpForm({ hasError }: Props): React.ReactEleme
       {/* LEFT SIDE */}
       <div className="relative flex flex-1 flex-col justify-between bg-[linear-gradient(to_bottom_right,hsl(var(--primary)/0.05),hsl(var(--primary)/0.01))] p-8 lg:p-12 xl:p-16 lg:border-r lg:border-border/50">
         <div className="flex items-center gap-2">
-          <Link href="/creators" className="flex items-center gap-2.5 transition-all hover:scale-105">
+          <Link href="/become-a-creator" className="flex items-center gap-2.5 transition-all hover:scale-105">
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 p-2 ring-1 ring-primary/20 backdrop-blur-md">
               <Image src="/logo.webp" alt="Creonex" width={32} height={32} className="size-full object-contain" priority />
             </div>

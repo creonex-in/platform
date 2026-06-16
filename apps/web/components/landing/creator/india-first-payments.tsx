@@ -40,7 +40,7 @@ const PILLARS: readonly Pillar[] = [
 
 export default function IndiaFirstPayments(): React.ReactElement {
   return (
-    <section className="bg-background py-12 md:py-16 relative z-10">
+    <section id="payments" className="bg-background py-12 md:py-16 relative z-10">
       <div className="page-container">
         <div className="rounded-[2.5rem] border border-border/50 bg-card p-8 md:p-12 shadow-sm relative overflow-hidden">
 

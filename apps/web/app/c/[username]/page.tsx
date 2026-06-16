@@ -4,7 +4,7 @@ import { isNotFound } from '@/lib/api'
 import { ProfileHero } from './_components/profile-hero'
 import { ProfileContent } from './_components/profile-content'
 import { getCreatorAvailabilityDates } from '@/dal/slots.dal'
-import MarketingShell from '@/components/layout/marketing-shell'
+import { CreatorProfileFooter } from '@/components/layout/creator-profile-footer'
 import type { PublicCreatorProfile, PublicOffering } from '@creonex/types'
 
 export default async function CreatorProfilePage({
@@ -49,6 +49,10 @@ export default async function CreatorProfilePage({
         coverBannerUrl={profile.coverBannerUrl}
         username={profile.username}
         displayName={displayName}
+        isVerified={profile.isVerified}
+        qualityTier={profile.qualityTier}
+        socialLinks={profile.socialLinks}
+        nextSlot={availableDates[0] ?? null}
         preview={preview}
       />
       <ProfileContent
@@ -65,5 +69,10 @@ export default async function CreatorProfilePage({
   )
 
   // Preview iframe (creator's own editor) drops the site navbar/footer chrome.
-  return preview ? content : <MarketingShell>{content}</MarketingShell>
+  return preview ? content : (
+    <>
+      {content}
+      <CreatorProfileFooter />
+    </>
+  )
 }

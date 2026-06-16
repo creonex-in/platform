@@ -112,7 +112,7 @@ export default function MonetizeSection(): React.ReactElement {
   const [activeTabId, setActiveTabId] = useState(WAYS_TO_EARN[1].id); // Default to Courses
 
   return (
-    <section className="bg-background pt-12 pb-24 md:pt-16 md:pb-32 overflow-hidden">
+    <section id="monetize" className="bg-background pt-12 pb-24 md:pt-16 md:pb-32 overflow-hidden">
       <div className="page-container">
         
         {/* Header */}

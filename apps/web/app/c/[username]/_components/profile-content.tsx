@@ -8,6 +8,8 @@ import { OverviewTab } from './overview-tab'
 import { OfferingsSection } from './offerings-section'
 import { BookSessionBar } from './book-session-bar'
 import { SlotPickerModal } from './slot-picker-modal'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTableCells, faBox, faStar } from '@fortawesome/free-solid-svg-icons'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getInitials } from '@/lib/utils'
 import type { PublicCreatorProfile, PublicOffering } from '@creonex/types'
@@ -90,7 +92,7 @@ export function ProfileContent({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
 
           {/* Sidebar */}
-          <div className="lg:col-span-4 xl:col-span-4 lg:sticky lg:top-6">
+          <div className="lg:col-span-4 xl:col-span-4 lg:sticky lg:top-6 lg:self-start">
             <ProfileSidebar
               profile={profile}
               displayName={displayName}
@@ -103,28 +105,51 @@ export function ProfileContent({
           <div className="lg:col-span-8 xl:col-span-8 flex flex-col gap-6 w-full">
             <Tabs defaultValue="overview" className="w-full">
               <div className="overflow-x-auto scrollbar-hide border-b border-border/80 mb-8">
-                <TabsList className="flex justify-start bg-transparent h-auto p-0 gap-6 rounded-none w-fit">
+                <TabsList className="flex justify-start bg-transparent h-auto p-0 gap-1 rounded-none w-fit">
+                  {/* Overview */}
                   <TabsTrigger
                     value="overview"
-                    className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                    className="group flex items-center gap-2 border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-3 py-3 text-sm font-semibold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
                   >
+                    <FontAwesomeIcon icon={faTableCells} className="size-3.5 opacity-60 group-data-[state=active]:opacity-100" />
                     Overview
                   </TabsTrigger>
 
-                  {profile.offerings.length > 0 && (
-                    <TabsTrigger
-                      value="offerings"
-                      className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
-                    >
-                      Offerings ({profile.offerings.length})
-                    </TabsTrigger>
-                  )}
+                  {/* Offerings — show count badge + min price hook */}
+                  {profile.offerings.length > 0 && (() => {
+                    const minPrice = Math.min(...profile.offerings.map(o => o.price))
+                    return (
+                      <TabsTrigger
+                        value="offerings"
+                        className="group flex items-center gap-2 border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-3 py-3 text-sm font-semibold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        <FontAwesomeIcon icon={faBox} className="size-3.5 opacity-60 group-data-[state=active]:opacity-100" />
+                        Offerings
+                        <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary leading-none">
+                          {profile.offerings.length}
+                        </span>
+                        <span className="hidden sm:inline text-[11px] text-muted-foreground/60 font-medium">
+                          from ₹{minPrice.toLocaleString('en-IN')}
+                        </span>
+                      </TabsTrigger>
+                    )
+                  })()}
 
+                  {/* Reviews — show avg rating as hook */}
                   <TabsTrigger
                     value="reviews"
-                    className="border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-1 py-3 text-sm font-bold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
+                    className="group flex items-center gap-2 border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-3 py-3 text-sm font-semibold text-muted-foreground data-[state=active]:text-foreground bg-transparent shadow-none transition-all cursor-pointer whitespace-nowrap"
                   >
-                    Reviews ({profile.testimonials.length})
+                    <FontAwesomeIcon icon={faStar} className="size-3.5 text-yellow-400" />
+                    {parseFloat(profile.smoothedRating) > 0 && (
+                      <span className="font-bold text-foreground">{parseFloat(profile.smoothedRating).toFixed(1)}</span>
+                    )}
+                    Reviews
+                    {profile.testimonials.length > 0 && (
+                      <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary leading-none">
+                        {profile.testimonials.length}
+                      </span>
+                    )}
                   </TabsTrigger>
                 </TabsList>
               </div>

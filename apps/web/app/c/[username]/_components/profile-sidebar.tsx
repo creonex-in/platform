@@ -57,9 +57,9 @@ export function ProfileSidebar({ profile, displayName, onBook, preview = false }
           <div className="relative z-10 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold mb-5 shadow-sm uppercase tracking-wider">
             <FontAwesomeIcon icon={faAward} className="size-3.5" />
             <span>
-              {profile.qualityTier === 'platinum' ? 'Top 1% Mentor' : 
-               profile.qualityTier === 'gold' ? 'Top Rated Creator' :
-               profile.qualityTier === 'silver' ? 'Rising Star' : 'Verified Pro'}
+              {profile.qualityTier === 'platinum' ? 'Elite Creator' :
+               profile.qualityTier === 'gold' ? 'Pro Creator' :
+               profile.qualityTier === 'silver' ? 'Rising Star' : 'Featured'}
             </span>
           </div>
         )}

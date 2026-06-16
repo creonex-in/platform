@@ -1,32 +1,23 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
-  faHouse,
-  faUserTie,
-  faGraduationCap,
-  faCalendarDays,
-  faVideo,
-  faBagShopping,
   faTableColumns,
   faCalendar,
   faBox,
-  faUsers,
+  faCalendarDays,
   faWallet,
-  faGear,
-  faFolderOpen,
-  faDownload,
-  faBookmark,
-  faNoteSticky,
   faChartColumn,
+  faUsers,
   faComments,
   faUserPen,
   faRightFromBracket,
+  faGraduationCap,
 } from '@fortawesome/free-solid-svg-icons'
 import {
   Sidebar,
@@ -51,7 +42,6 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { ContextTransition } from './context-transition'
 import { authClient } from '@/lib/auth-client'
 
 interface NavItem {
@@ -64,38 +54,6 @@ interface NavGroup {
   section: string
   items: NavItem[]
 }
-
-const learnerNav: NavGroup[] = [
-  {
-    section: 'Discover',
-    items: [
-      { title: 'Home', href: '/learner/dashboard', icon: faHouse },
-      { title: '1:1 Experts', href: '/learner/search', icon: faUserTie },
-      { title: 'Courses', href: '/learner/courses', icon: faGraduationCap },
-      { title: 'Workshops', href: '/learner/workshops', icon: faCalendarDays },
-    ],
-  },
-  {
-    section: 'My Activity',
-    items: [
-      { title: 'My Sessions', href: '/learner/sessions', icon: faVideo },
-      { title: 'Purchases', href: '/learner/purchases', icon: faBagShopping },
-    ],
-  },
-  {
-    section: 'Library',
-    items: [
-      { title: 'Resources', href: '/learner/resources', icon: faFolderOpen },
-      { title: 'Downloads', href: '/learner/downloads', icon: faDownload },
-      { title: 'Bookmarks', href: '/learner/bookmarks', icon: faBookmark },
-      { title: 'Notes', href: '/learner/notes', icon: faNoteSticky },
-    ],
-  },
-  {
-    section: 'Account',
-    items: [{ title: 'Settings', href: '/learner/settings', icon: faGear }],
-  },
-]
 
 const creatorNav: NavGroup[] = [
   {
@@ -120,32 +78,24 @@ const creatorNav: NavGroup[] = [
     section: 'Account',
     items: [
       { title: 'Edit Profile', href: '/edit-profile', icon: faUserPen },
-      { title: 'Settings', href: '/settings', icon: faGear },
     ],
   },
 ]
 
 interface AppSidebarProps {
-  role: 'learner' | 'creator'
   userName?: string
   userInitials?: string
-  isCreator?: boolean
 }
 
 export function AppSidebar({
-  role,
-  userName = 'Meera V.',
-  userInitials = 'MV',
-  isCreator = false,
+  userName = 'Creator',
+  userInitials = 'CR',
 }: AppSidebarProps): React.ReactElement {
   const pathname = usePathname()
   const router = useRouter()
   const { isMobile, setOpenMobile } = useSidebar()
-  const nav = role === 'creator' ? creatorNav : learnerNav
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
-  const [switchOpen, setSwitchOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
 
   function handleNavigate(): void {
     if (isMobile) setOpenMobile(false)
@@ -155,12 +105,6 @@ export function AppSidebar({
     setLoggingOut(true)
     await authClient.signOut()
     router.push('/sign-in')
-  }
-
-  function handleSwitch(): void {
-    startTransition(() => {
-      router.push(role === 'creator' ? '/learner/dashboard' : '/dashboard')
-    })
   }
 
   return (
@@ -181,14 +125,14 @@ export function AppSidebar({
                 creo<span className="text-primary">nex</span>
               </span>
               <span className="text-[10px] uppercase font-extrabold tracking-widest text-muted-foreground mt-1">
-                {role === 'creator' ? 'Creator' : 'Learner'}
+                Creator
               </span>
             </div>
           </Link>
         </SidebarHeader>
 
         <SidebarContent className="gap-1 py-2">
-          {nav.map((group) => (
+          {creatorNav.map((group) => (
             <SidebarGroup key={group.section} className="py-1">
               <SidebarGroupLabel>{group.section}</SidebarGroupLabel>
               <SidebarMenu className="gap-1">
@@ -216,35 +160,20 @@ export function AppSidebar({
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border p-2 gap-1">
-          {role === 'creator' ? (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Learner Mode"
-                  className="h-10 gap-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-primary/10 hover:from-blue-500/20 hover:to-primary/20 text-foreground font-medium border border-border/50 shadow-sm transition-all"
-                  onClick={() => setSwitchOpen(true)}
-                >
-                  <FontAwesomeIcon icon={faGraduationCap} className="size-4 text-blue-500" />
-                  <span>Switch to Learner</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          ) : isCreator ? (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Creator Mode"
-                  className="h-10 gap-3 rounded-lg bg-gradient-to-r from-primary/10 to-blue-500/10 hover:from-primary/20 hover:to-blue-500/20 text-foreground font-medium border border-border/50 shadow-sm transition-all"
-                  onClick={() => setSwitchOpen(true)}
-                >
-                  <FontAwesomeIcon icon={faTableColumns} className="size-4 text-primary" />
-                  <span>Switch to Creator</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          ) : null}
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Explore as Learner"
+                className="h-9 gap-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                render={<Link href="/learner/dashboard" />}
+              >
+                <FontAwesomeIcon icon={faGraduationCap} className="size-4" />
+                <span>Want to learn? Explore</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
 
-          <div className="flex items-center gap-2.5 rounded-md px-1.5 py-2 mt-1">
+          <div className="flex items-center gap-2.5 rounded-md px-1.5 py-2">
             <Avatar className="size-8 shrink-0">
               <AvatarFallback className="bg-muted text-xs font-medium">
                 {userInitials}
@@ -252,7 +181,7 @@ export function AppSidebar({
             </Avatar>
             <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
               <p className="truncate text-sm font-medium">{userName}</p>
-              <p className="truncate text-xs capitalize text-muted-foreground">{role}</p>
+              <p className="truncate text-xs capitalize text-muted-foreground">creator</p>
             </div>
           </div>
 
@@ -270,37 +199,6 @@ export function AppSidebar({
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-
-      <ContextTransition 
-        isVisible={isPending} 
-        targetRole={role === 'creator' ? 'learner' : 'creator'} 
-      />
-
-      <AlertDialog open={switchOpen} onOpenChange={setSwitchOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Switch to {role === 'creator' ? 'Learner' : 'Creator'} Mode?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {role === 'creator' 
-                ? 'You are about to switch to the Learner Dashboard to discover courses, 1:1 sessions, and digital products. You can switch back at any time.'
-                : 'You are about to switch to the Creator Dashboard to manage your bookings, offers, and analytics. You can switch back at any time.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault() // Keep dialog open while transitioning
-                handleSwitch()
-              }}
-              disabled={isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {isPending ? 'Switching...' : `Switch to ${role === 'creator' ? 'Learner' : 'Creator'}`}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent>

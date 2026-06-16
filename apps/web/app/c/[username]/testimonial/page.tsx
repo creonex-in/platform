@@ -1,4 +1,4 @@
-import MarketingShell from '@/components/layout/marketing-shell'
+import { CreatorProfileShell } from '@/components/layout/creator-profile-shell'
 import { creatorsService } from '@/services/creators.service'
 import { getInitials } from '@/lib/utils'
 import { TestimonialForm } from './_components/testimonial-form'
@@ -20,6 +20,7 @@ export default async function TestimonialSubmitPage({
 
   let displayName = `@${username}`
   let profilePhotoUrl: string | null = null
+  let rawNiche: string | null = null
   let niche: string | null = null
   let avgRating = 0
   let totalReviews = 0
@@ -29,6 +30,7 @@ export default async function TestimonialSubmitPage({
     const profile = await creatorsService.getPublicProfile(username)
     displayName = profile.displayName ?? `@${profile.username}`
     profilePhotoUrl = profile.profilePhotoUrl ?? null
+    rawNiche = profile.primaryNiche
     niche = formatNiche(profile.primaryNiche)
     avgRating = parseFloat(profile.smoothedRating) || 0
     totalReviews = profile.totalReviews ?? 0
@@ -39,7 +41,12 @@ export default async function TestimonialSubmitPage({
   }
 
   return (
-    <MarketingShell>
+    <CreatorProfileShell
+      username={username}
+      displayName={displayName}
+      primaryNiche={rawNiche}
+      profilePhotoUrl={profilePhotoUrl}
+    >
       <div
         className="relative min-h-dvh px-4 py-12 sm:py-16"
         style={{
@@ -60,6 +67,6 @@ export default async function TestimonialSubmitPage({
           />
         </div>
       </div>
-    </MarketingShell>
+    </CreatorProfileShell>
   )
 }

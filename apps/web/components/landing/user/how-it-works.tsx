@@ -207,7 +207,7 @@ export default function HowItWorks(): React.ReactElement {
   }, { scope: sectionRef });
 
   return (
-    <section ref={sectionRef} className="bg-background">
+    <section ref={sectionRef} id="how-it-works" className="bg-background">
 
       {/* Header — scrolls away before sticky panel takes focus */}
       <div className="page-container pb-12 pt-16 text-center md:pb-18 md:pt-24">

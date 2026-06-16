@@ -14,10 +14,10 @@ import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const CREATOR_LINKS = [
-  { label: "Become a Creator", href: "/creators" },
-  { label: "Monetization", href: "/creators#monetize" },
-  { label: "Payments Ecosystem", href: "/creators#payments" },
-  { label: "Mobile App (Waitlist)", href: "/creators#app" },
+  { label: "Become a Creator", href: "/become-a-creator" },
+  { label: "Monetization", href: "/become-a-creator#monetize" },
+  { label: "Payments Ecosystem", href: "/become-a-creator#payments" },
+  { label: "Mobile App (Waitlist)", href: "/become-a-creator#app" },
 ];
 
 const LEARNER_LINKS = [

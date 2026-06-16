@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const isPublicPath = (pathname: string) =>
   pathname === '/' ||
-  pathname === '/creators' ||
+  pathname === '/become-a-creator' ||
   pathname.startsWith('/top-creators') ||
   pathname.startsWith('/sign-in') ||
   pathname.startsWith('/sign-up') ||

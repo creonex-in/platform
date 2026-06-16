@@ -1,0 +1,14 @@
+import { DiscoveryHeader } from '@/components/layout/discovery-header'
+
+export default function MarketplaceLayout({
+  children,
+}: {
+  children: React.ReactNode
+}): React.ReactElement {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <DiscoveryHeader />
+      <main className="flex-1">{children}</main>
+    </div>
+  )
+}

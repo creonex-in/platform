@@ -17,7 +17,7 @@ const CATEGORIES: CategoryCardData[] = [
 
 export default function CategoryGrid(): React.ReactElement {
   return (
-    <section className="section-py bg-background">
+    <section id="explore" className="section-py bg-background">
       <div className="page-container">
 
         {/* Header */}
