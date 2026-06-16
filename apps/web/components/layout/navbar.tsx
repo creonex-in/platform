@@ -48,7 +48,7 @@ export default function Navbar(): React.ReactElement {
   const isLoaded = !isPending
 
   function handleDashboard(): void {
-    const roles = session ? parseRoles(session.user.role) : []
+    const roles = session ? parseRoles(session.user.role ?? '') : []
     router.push(roles.includes('creator') ? '/dashboard' : '/learner/dashboard')
   }
 
@@ -118,7 +118,7 @@ export default function Navbar(): React.ReactElement {
                 isSignedIn
                   ? {
                       label: 'Go to Dashboard',
-                      href: session && parseRoles(session.user.role).includes('creator')
+                      href: session && parseRoles(session.user.role ?? '').includes('creator')
                         ? '/dashboard'
                         : '/learner/dashboard',
                     }
