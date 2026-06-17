@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBell, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { getInitials } from '@/lib/utils'
 import { ThemeToggleInline } from '@/components/layout/theme-toggle-inline'
-import { MarketplaceSearch } from '@/components/layout/marketplace-search'
+import { CommandTrigger } from '@/components/learner/command-trigger'
 
 interface LearnerHeaderProps {
   displayName: string
@@ -13,8 +13,10 @@ interface LearnerHeaderProps {
 }
 
 const NAV_LINKS = [
-  { label: 'My Schedule', href: '/learner/schedule' },
-  { label: 'My Library', href: '/learner/library' },
+  { label: 'Home', href: '/learner' },
+  { label: 'Schedule', href: '/learner/schedule' },
+  { label: 'Library', href: '/learner/library' },
+  { label: 'Growth', href: '/learner/growth' },
 ] as const
 
 export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
@@ -33,10 +35,10 @@ export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
         }}
       />
 
-      <div className="relative flex h-[60px] items-center gap-4 px-4 sm:px-6">
+      <div className="relative mx-auto flex h-[60px] w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         {/* Left — logo + LEARNER badge */}
         <Link
-          href="/learner/dashboard"
+          href="/learner"
           className="flex shrink-0 items-center gap-3"
         >
           <Image
@@ -56,9 +58,9 @@ export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
           </div>
         </Link>
 
-        {/* Center — search */}
-        <div className="relative flex flex-1 items-center justify-center">
-          <MarketplaceSearch className="hidden w-full max-w-[500px] md:block" />
+        {/* Center — command palette trigger */}
+        <div className="relative flex flex-1 items-center justify-center max-w-md mx-auto">
+          <CommandTrigger />
         </div>
 
         {/* Right — nav + profile */}

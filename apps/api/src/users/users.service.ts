@@ -35,6 +35,17 @@ export class UsersService {
     return profile
   }
 
+  /** Partial update of the learner's own profile (goal + interests). */
+  async updateLearnerProfile(
+    userId: string,
+    dto: { goalType?: string; interestedNiches?: string[] },
+  ) {
+    const existing = await this.learnerRepo.findByUserId(userId)
+    if (!existing) throw new NotFoundException('Learner profile not found')
+    await this.learnerRepo.updateProfile(userId, dto)
+    return this.getLearnerProfile(userId)
+  }
+
   /** Partial update of the creator's own profile (post-onboarding edit). */
   async updateCreatorProfile(userId: string, dto: UpdateCreatorProfileDto) {
     const existing = await this.creatorRepo.findByUserId(userId)

@@ -40,4 +40,18 @@ export class LearnerProfileRepository {
       })
       .where(eq(learnerProfiles.userId, userId))
   }
+
+  /** Partial post-onboarding edit (does not touch onboarding state). */
+  async updateProfile(
+    userId: string,
+    data: { goalType?: string; interestedNiches?: string[] },
+  ) {
+    const set: Partial<typeof learnerProfiles.$inferInsert> = {}
+    if (data.goalType !== undefined) {
+      set.goalType = data.goalType as typeof learnerProfiles.$inferInsert['goalType']
+    }
+    if (data.interestedNiches !== undefined) set.interestedNiches = data.interestedNiches
+    if (Object.keys(set).length === 0) return
+    await this.db.update(learnerProfiles).set(set).where(eq(learnerProfiles.userId, userId))
+  }
 }

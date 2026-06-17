@@ -19,6 +19,7 @@ import { TestimonialsModule } from './testimonials/testimonials.module'
 import { UploadsModule } from './uploads/uploads.module'
 import { PayoutsModule } from './payouts/payouts.module'
 import { DashboardModule } from './dashboard/dashboard.module'
+import { LearnerModule } from './learner/learner.module'
 import { DATABASE_CONNECTION, type Database } from './database/database-connection'
 
 @Module({
@@ -80,6 +81,7 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
     UploadsModule,
     PayoutsModule,
     DashboardModule,
+    LearnerModule,
   ],
   controllers: [AppController],
 })

@@ -3,6 +3,7 @@ import { AuthGuard, Session } from '@mguay/nestjs-better-auth'
 import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { UpdateCreatorProfileDto } from './dto/update-creator-profile.dto'
+import { UpdateLearnerProfileDto } from '../learner/learner.dto'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
 import type { AppUserSession } from '../auth/types'
@@ -56,5 +57,15 @@ export class UsersController {
   @ApiOperation({ summary: 'Get learner profile' })
   getMyLearnerProfile(@Session() session: AppUserSession) {
     return this.usersService.getLearnerProfile(session.user.id)
+  }
+
+  @Patch('me/learner-profile')
+  @Roles('learner')
+  @ApiOperation({ summary: 'Update learner profile (goal + interests)' })
+  updateMyLearnerProfile(
+    @Session() session: AppUserSession,
+    @Body() dto: UpdateLearnerProfileDto,
+  ) {
+    return this.usersService.updateLearnerProfile(session.user.id, dto)
   }
 }

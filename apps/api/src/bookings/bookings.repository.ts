@@ -52,6 +52,34 @@ export class BookingsRepository {
       .orderBy(sql`${bookings.createdAt} desc`)
   }
 
+  /** Learner bookings enriched with offering + creator for the learner workspace. */
+  async findAllByLearnerEnriched(learnerProfileId: string) {
+    return this.db
+      .select({
+        id: bookings.id,
+        offeringId: bookings.offeringId,
+        offeringTitle: offerings.title,
+        offeringType: offerings.type,
+        format: sql<string | null>`${offerings.metadata}->>'format'`,
+        thumbnailUrl: offerings.thumbnailUrl,
+        creatorUsername: creatorProfiles.username,
+        creatorName: creatorProfiles.displayName,
+        creatorPhotoUrl: creatorProfiles.profilePhotoUrl,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        status: bookings.status,
+        amountPaise: bookings.amountPaise,
+        meetingUrl: bookings.meetingUrl,
+        topic: bookings.topic,
+        createdAt: bookings.createdAt,
+      })
+      .from(bookings)
+      .innerJoin(offerings, eq(bookings.offeringId, offerings.id))
+      .innerJoin(creatorProfiles, eq(offerings.creatorProfileId, creatorProfiles.id))
+      .where(eq(bookings.learnerProfileId, learnerProfileId))
+      .orderBy(desc(bookings.createdAt))
+  }
+
   /** True if the user has at least one confirmed/completed booking with this creator.
    *  Used to mark a testimonial as a verified-booking review. */
   async hasConfirmedBookingByUser(userId: string, creatorProfileId: string): Promise<boolean> {

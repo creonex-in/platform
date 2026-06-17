@@ -23,6 +23,7 @@ import {
   OVERRIDE_TYPES,
   LEDGER_STATUSES,
   PAYOUT_STATUSES,
+  LEARNER_GOAL_STATUSES,
 } from '@creonex/types'
 
 // ============================================================
@@ -101,6 +102,7 @@ export const bookingStatusEnum = pgEnum('booking_status', [...BOOKING_STATUSES] 
 export const overrideTypeEnum = pgEnum('override_type', [...OVERRIDE_TYPES] as [string, ...string[]])
 export const ledgerStatusEnum = pgEnum('ledger_status', [...LEDGER_STATUSES] as [string, ...string[]])
 export const payoutStatusEnum = pgEnum('payout_status', [...PAYOUT_STATUSES] as [string, ...string[]])
+export const learnerGoalStatusEnum = pgEnum('learner_goal_status', [...LEARNER_GOAL_STATUSES] as [string, ...string[]])
 
 // ============================================================
 // LEARNER PROFILES
@@ -491,5 +493,67 @@ export const payouts = pgTable(
   },
   (t) => ({
     creatorIdx: index('idx_payouts_creator').on(t.creatorProfileId),
+  }),
+)
+
+// ============================================================
+// LEARNER WORKSPACE — saved items, notes, goals
+// ============================================================
+
+export const learnerSaved = pgTable(
+  'learner_saved',
+  {
+    id: text('id').primaryKey(),
+    learnerProfileId: text('learner_profile_id')
+      .notNull()
+      .references(() => learnerProfiles.id, { onDelete: 'cascade' }),
+    targetType: text('target_type').notNull(), // 'creator' | 'offering'
+    targetId: text('target_id').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    learnerIdx: index('idx_learner_saved_learner').on(t.learnerProfileId),
+    targetUnique: uniqueIndex('uq_learner_saved_target').on(
+      t.learnerProfileId,
+      t.targetType,
+      t.targetId,
+    ),
+  }),
+)
+
+export const learnerNotes = pgTable(
+  'learner_notes',
+  {
+    id: text('id').primaryKey(),
+    learnerProfileId: text('learner_profile_id')
+      .notNull()
+      .references(() => learnerProfiles.id, { onDelete: 'cascade' }),
+    bookingId: text('booking_id').references(() => bookings.id, { onDelete: 'set null' }),
+    offeringId: text('offering_id').references(() => offerings.id, { onDelete: 'set null' }),
+    title: text('title').notNull(),
+    content: text('content').notNull().default(''),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (t) => ({
+    learnerIdx: index('idx_learner_notes_learner').on(t.learnerProfileId),
+  }),
+)
+
+export const learnerGoals = pgTable(
+  'learner_goals',
+  {
+    id: text('id').primaryKey(),
+    learnerProfileId: text('learner_profile_id')
+      .notNull()
+      .references(() => learnerProfiles.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    targetDate: date('target_date'),
+    status: learnerGoalStatusEnum('status').default('active').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
+  },
+  (t) => ({
+    learnerIdx: index('idx_learner_goals_learner').on(t.learnerProfileId),
   }),
 )
