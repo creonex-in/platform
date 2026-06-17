@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { Command as CommandPrimitive } from "cmdk";
+import { useSearchSuggestions } from "@/hooks/use-search-suggestions";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMagnifyingGlass,
@@ -42,13 +43,17 @@ const POPULAR: readonly string[] = [
 
 export default function HeroSearch({
   onSearch,
-  results,
-  isLoading = false,
+  results: resultsProp,
+  isLoading: isLoadingProp,
   className,
 }: HeroSearchProps): React.ReactElement {
   const [query, setQuery]     = useState("");
   const [open, setOpen]       = useState(false);
   const [focused, setFocused] = useState(false);
+
+  const { data: apiResults, isLoading: apiLoading } = useSearchSuggestions(query);
+  const results   = resultsProp   ?? apiResults   ?? [];
+  const isLoading = isLoadingProp ?? apiLoading;
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);

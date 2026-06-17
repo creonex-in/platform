@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { parseRoles } from "@creonex/types";
+import { getMe } from "@/dal/users.dal";
 import MarketingShell from "@/components/layout/marketing-shell";
 import UserHero from "@/components/landing/user/user-hero";
 import StatsSection from "@/components/landing/user/stats-section";
@@ -19,7 +22,13 @@ export const metadata: Metadata = {
     "Discover courses and book 1-on-1 mentorship sessions with verified experts across design, tech, marketing, and more.",
 };
 
-export default function LearnerLandingPage(): React.ReactElement {
+export default async function LearnerLandingPage(): Promise<React.ReactElement> {
+  const user = await getMe();
+  if (user) {
+    const roles = parseRoles(user.role);
+    redirect(roles.includes("creator") ? "/dashboard" : "/learner/dashboard");
+  }
+
   return (
     <MarketingShell>
       <main>
