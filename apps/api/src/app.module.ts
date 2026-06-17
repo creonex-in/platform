@@ -48,14 +48,19 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
           session: {
             cookieCache: { enabled: false },
           },
-          // Cross-domain prod: web (Vercel) and api (Mau/AWS) live on different
-          // sites, so the session cookie must be SameSite=None;Secure to be sent
-          // on cross-site requests. Gated to prod — `secure` cookies are dropped
-          // over http://localhost in dev.
-          ...(config.get<string>('NODE_ENV') === 'production'
+          // Shared-domain prod: web (creonex.in) and api (api.creonex.in) sit on
+          // the same parent domain, so the session cookie is scoped to that
+          // parent (e.g. ".creonex.in") and sent on both. SameSite=Lax is enough
+          // — no third-party-cookie risk. Set COOKIE_DOMAIN to the leading-dot
+          // parent. Gated to prod; dev stays on plain localhost cookies.
+          ...(config.get<string>('NODE_ENV') === 'production' &&
+          config.get<string>('COOKIE_DOMAIN')
             ? {
                 advanced: {
-                  defaultCookieAttributes: { sameSite: 'none', secure: true },
+                  crossSubDomainCookies: {
+                    enabled: true,
+                    domain: config.get<string>('COOKIE_DOMAIN'),
+                  },
                 },
               }
             : {}),
