@@ -48,6 +48,17 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
           session: {
             cookieCache: { enabled: false },
           },
+          // Cross-domain prod: web (Vercel) and api (Mau/AWS) live on different
+          // sites, so the session cookie must be SameSite=None;Secure to be sent
+          // on cross-site requests. Gated to prod — `secure` cookies are dropped
+          // over http://localhost in dev.
+          ...(config.get<string>('NODE_ENV') === 'production'
+            ? {
+                advanced: {
+                  defaultCookieAttributes: { sameSite: 'none', secure: true },
+                },
+              }
+            : {}),
         }),
       })) as any,
     }),
