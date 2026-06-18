@@ -1,5 +1,5 @@
 import type { UserRole } from './roles'
-import type { Niche, GoalType, SocialLinks, LiveEventFormat } from './onboarding'
+import type { Niche, GoalType, SocialLinks, LiveEventFormat, OfferType } from './onboarding'
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -265,6 +265,56 @@ export interface PublicCreatorProfile {
   email: string
   offerings: PublicOffering[]
   testimonials: PublicTestimonial[]
+}
+
+// ── Explore / Discovery (public browse + search) ──────────────────────────────
+
+/** Sort modes for the explore grid. `relevance` = boost → quality → rating → recency. */
+export const EXPLORE_SORTS = [
+  'relevance', 'top_rated', 'price_asc', 'price_desc', 'newest',
+] as const
+export type ExploreSort = typeof EXPLORE_SORTS[number]
+
+/** Denormalized creator shown alongside an offering in the explore grid. */
+export interface ExploreCreator {
+  username: string
+  displayName: string | null
+  profilePhotoUrl: string | null
+  primaryNiche: Niche | null
+  /** Smoothed rating 0–5 (already a number, not the DB decimal string). */
+  rating: number
+  reviewCount: number
+  isVerified: boolean
+}
+
+/** A single browse-grid item: a live offering joined with its creator.
+ *  `price` is whole INR (paise/100). Never carries the digital delivery payload. */
+export interface ExploreItem {
+  id: string
+  type: OfferType
+  title: string
+  description: string | null
+  price: number
+  currency: string
+  durationMinutes: number | null
+  /** live_event only — fixed event datetime (UTC ISO). */
+  scheduledAt: string | null
+  seatsTotal: number | null
+  seatsRemaining: number | null
+  totalBookings: number
+  thumbnailUrl: string | null
+  slug: string | null
+  /** live_event: 'group' | 'webinar' (from metadata.format). */
+  format: LiveEventFormat | null
+  creator: ExploreCreator
+}
+
+/** Response of GET /api/v1/explore (and /explore/recommended). */
+export interface BrowseOfferingsResponse {
+  items: ExploreItem[]
+  total: number
+  limit: number
+  offset: number
 }
 
 // ── Creator Bookings ──────────────────────────────────────────────────────────
