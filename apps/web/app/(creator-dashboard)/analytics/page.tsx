@@ -1,4 +1,4 @@
-import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
+import { DashboardShell } from '@/components/dashboard/shared/dashboard-shell'
 import { MetricCard } from '@/components/dashboard/creator/metric-card'
 import { EarningsChart } from '@/components/dashboard/creator/earnings-chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,9 +16,7 @@ export const metadata = { title: 'Analytics — Creonex' }
 
 export default function AnalyticsPage(): React.ReactElement {
   return (
-    <>
-      <DashboardTopbar title="Analytics" />
-      <div className="space-y-6 p-4 sm:p-6">
+    <DashboardShell title="Analytics">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <MetricCard
             label="Profile views"
@@ -86,7 +84,6 @@ export default function AnalyticsPage(): React.ReactElement {
           <MetricCard label="Total bookings" value={creatorMetrics.totalBookings.toString()} index={1} />
           <MetricCard label="All-time earned" value={formatCurrency(creatorMetrics.totalEarned)} index={2} />
         </div>
-      </div>
-    </>
+    </DashboardShell>
   )
 }

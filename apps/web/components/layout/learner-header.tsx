@@ -3,33 +3,21 @@ import Link from 'next/link'
 import { ThemeToggleInline } from '@/components/layout/theme-toggle-inline'
 import { MarketplaceSearch } from '@/components/layout/marketplace-search'
 import { LearnerProfileMenu } from '@/components/layout/learner-profile-menu'
+import { LearnerNavLinks } from '@/components/layout/learner-nav-links'
 import { NotificationBell } from '@/components/layout/notification-bell'
+import { FindCreatorsMenu } from '@/components/layout/find-creators-menu'
 
 interface LearnerHeaderProps {
   displayName: string
   avatarUrl?: string | null
   role: string
+  email?: string
 }
 
-const NAV_LINKS = [
-  { label: 'My Schedule', href: '/learner/schedule' },
-  { label: 'My Library', href: '/learner/library' },
-] as const
-
-export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
+export function LearnerHeader({ displayName, avatarUrl, email }: LearnerHeaderProps) {
   return (
-    <header className="sticky top-0 z-50 w-full overflow-hidden border-b border-border/60 bg-background/95 backdrop-blur-md">
-      {/* Holographic glow bleeding from behind the center of the bar */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[200%] w-[640px] -translate-x-1/2 -translate-y-1/2 opacity-40 blur-[60px] dark:opacity-70"
-        style={{
-          background:
-            'linear-gradient(90deg,#f472b6,#c084fc,#818cf8,#60a5fa,#22d3ee,#34d399,#a3e635,#facc15,#fb923c,#f87171)',
-        }}
-      />
-
-      <div className="relative mx-auto flex h-[60px] w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-md">
+      <div className="mx-auto flex h-[60px] w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         {/* Left — logo + LEARNER badge */}
         <Link
           href="/learner"
@@ -57,22 +45,13 @@ export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
           <MarketplaceSearch className="hidden w-full max-w-[480px] md:block" />
         </div>
 
-        {/* Right — nav + profile */}
+        {/* Right — Find Creators dropdown + nav links + account */}
         <div className="flex shrink-0 items-center justify-end gap-4 sm:gap-5">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link
-              key={href}
-              href={href}
-              className="hidden whitespace-nowrap text-[12px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground md:block"
-            >
-              {label}
-            </Link>
-          ))}
+          <FindCreatorsMenu />
+          <LearnerNavLinks />
+          <LearnerProfileMenu displayName={displayName} avatarUrl={avatarUrl} email={email} />
 
-          {/* Profile dropdown */}
-          <LearnerProfileMenu displayName={displayName} avatarUrl={avatarUrl} />
-
-          {/* Bell + theme toggle */}
+          {/* Mobile search + bell + theme toggle */}
           <div className="flex items-center gap-2">
             <NotificationBell />
             <ThemeToggleInline />

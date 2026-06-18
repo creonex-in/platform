@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
+import { DashboardShell } from '@/components/dashboard/shared/dashboard-shell'
 import { ProfileLinkButton } from '@/components/dashboard/creator/profile-link-button'
 import { WelcomeDialog } from './_components/welcome-dialog'
 import { DashboardHero } from './_components/dashboard-hero'
@@ -9,76 +9,83 @@ import { NewBookingAlert } from './_components/new-booking-alert'
 import { QuickStatsRow } from './_components/quick-stats-row'
 import { ActivityFeed } from './_components/activity-feed'
 import { ChartsRow } from './_components/charts-row'
-import {
-  HeroSkeleton,
-  StatPanelSkeleton,
-  ChartsRowSkeleton,
-  TodayStripSkeleton,
-  ActivityFeedSkeleton,
-  CardSkeleton,
-} from './_components/skeletons'
+import { AboveFoldSkeleton, BelowFoldSkeleton } from './_components/skeletons'
 import { getCreatorContext } from '@/dal/users.dal'
 
 export const metadata = { title: 'Dashboard — Creonex' }
 
-export default async function CreatorDashboardPage({
+/** Topbar action — needs the profile username, so it streams in on its own
+ *  (fallback null) and never blocks the instant topbar. */
+async function ProfileLinkAction(): Promise<React.ReactElement | null> {
+  const { profile } = await getCreatorContext()
+  return profile?.username ? <ProfileLinkButton username={profile.username} /> : null
+}
+
+/** First-run welcome dialog, gated on ?welcome=1&offer=… */
+async function WelcomeDialogSlot({
   searchParams,
 }: {
   searchParams: Promise<{ welcome?: string; offer?: string }>
-}): Promise<React.ReactElement> {
-  const [{ profile }, params] = await Promise.all([
-    getCreatorContext(),
-    searchParams,
-  ])
+}): Promise<React.ReactElement | null> {
+  const [{ profile }, params] = await Promise.all([getCreatorContext(), searchParams])
+  if (params.welcome !== '1' || !params.offer) return null
+  return <WelcomeDialog offerId={params.offer} username={profile?.username ?? undefined} />
+}
 
+/** Above-the-fold group — hero, new-booking alert, today's sessions, quick stats. */
+function AboveFold(): React.ReactElement {
   return (
-    <>
-      <DashboardTopbar
-        title="Dashboard"
-        action={profile?.username ? <ProfileLinkButton username={profile.username} /> : undefined}
-      />
-      {params.welcome === '1' && params.offer && (
-        <WelcomeDialog offerId={params.offer} username={profile?.username ?? undefined} />
-      )}
+    <div className="space-y-6">
+      <DashboardHero />
+      <NewBookingAlert />
+      <TodaySessionStrip />
+      <QuickStatsRow />
+    </div>
+  )
+}
 
-      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-        {/* Hero */}
-        <Suspense fallback={<HeroSkeleton />}>
-          <DashboardHero />
-        </Suspense>
-
-        {/* New booking banner — collapses cleanly when none */}
-        <Suspense fallback={null}>
-          <NewBookingAlert />
-        </Suspense>
-
-        {/* Today's sessions */}
-        <Suspense fallback={<TodayStripSkeleton />}>
-          <TodaySessionStrip />
-        </Suspense>
-
-        {/* Quick stats — hairline panel */}
-        <Suspense fallback={<StatPanelSkeleton />}>
-          <QuickStatsRow />
-        </Suspense>
-
-        {/* Charts — both always present, no gap */}
-        <Suspense fallback={<ChartsRowSkeleton />}>
-          <ChartsRow />
-        </Suspense>
-
-        {/* Earnings (1/3) + Activity feed (2/3) */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <Suspense fallback={<CardSkeleton bodyHeight="h-40" />}>
-            <EarningsSummaryCard />
-          </Suspense>
-          <div className="lg:col-span-2">
-            <Suspense fallback={<ActivityFeedSkeleton />}>
-              <ActivityFeed />
-            </Suspense>
-          </div>
+/** Below-the-fold group — charts, earnings summary, activity feed. */
+function BelowFold(): React.ReactElement {
+  return (
+    <div className="space-y-6">
+      <ChartsRow />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <EarningsSummaryCard />
+        <div className="lg:col-span-2">
+          <ActivityFeed />
         </div>
       </div>
-    </>
+    </div>
+  )
+}
+
+export default function CreatorDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string; offer?: string }>
+}): React.ReactElement {
+  return (
+    <DashboardShell
+      title="Dashboard"
+      action={
+        <Suspense fallback={null}>
+          <ProfileLinkAction />
+        </Suspense>
+      }
+    >
+      <Suspense fallback={null}>
+        <WelcomeDialogSlot searchParams={searchParams} />
+      </Suspense>
+
+      {/* Above the fold — one coherent frame */}
+      <Suspense fallback={<AboveFoldSkeleton />}>
+        <AboveFold />
+      </Suspense>
+
+      {/* Below the fold — second frame */}
+      <Suspense fallback={<BelowFoldSkeleton />}>
+        <BelowFold />
+      </Suspense>
+    </DashboardShell>
   )
 }

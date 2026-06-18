@@ -5,7 +5,6 @@ import { toast } from '@/lib/toast'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import { Button } from '@/components/ui/button'
-import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
 import { scheduleService } from '@/services/schedule.service'
 import type { Schedule, ScheduleOverride } from '@/types/schedule'
 import type { CalendarStatus } from '@/services/calendar.service'
@@ -179,7 +178,15 @@ export function AvailabilityBuilder({ initialSchedule, initialCalendarStatus, ca
 
   return (
     <>
-      <DashboardTopbar title="Availability" action={saveButton} />
+      {/* Sticky action bar — save lives with the content, not the topbar, so the
+          page chrome stays instant and consistent with every other page. */}
+      <div className="sticky top-16 z-10 flex items-center justify-between gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur sm:px-6">
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-semibold tracking-tight">Weekly availability</h2>
+          <p className="truncate text-xs text-muted-foreground">Set the hours learners can book you.</p>
+        </div>
+        {saveButton}
+      </div>
       <div className="grid grid-cols-1 gap-4 p-4 sm:p-6 lg:grid-cols-3">
         <WeeklyScheduleCard
           days={days}

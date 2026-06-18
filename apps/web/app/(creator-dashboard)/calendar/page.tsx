@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { DashboardShell } from '@/components/dashboard/shared/dashboard-shell'
 import { getDefaultSchedule } from '@/dal/schedule.dal'
 import { getCalendarStatus } from '@/dal/calendar.dal'
 import { AvailabilityBuilder } from './_components/availability-builder'
@@ -31,8 +32,10 @@ async function AvailabilityContent({ searchParams }: Props) {
 
 export default function CalendarPage(props: Props): React.ReactElement {
   return (
-    <Suspense fallback={<ScheduleSkeleton />}>
-      <AvailabilityContent {...props} />
-    </Suspense>
+    <DashboardShell title="Availability" noPadding>
+      <Suspense fallback={<ScheduleSkeleton />}>
+        <AvailabilityContent {...props} />
+      </Suspense>
+    </DashboardShell>
   )
 }

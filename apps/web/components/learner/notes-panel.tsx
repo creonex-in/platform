@@ -53,7 +53,7 @@ export function NotesPanel({ initial }: { initial: LearnerNote[] }): React.React
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" className="rounded-lg" onClick={() => open('new')}>
+        <Button size="default" className="h-10 rounded-xl" onClick={() => open('new')}>
           <FontAwesomeIcon icon={faPlus} className="size-3.5 mr-1.5" /> New note
         </Button>
       </div>
@@ -63,9 +63,9 @@ export function NotesPanel({ initial }: { initial: LearnerNote[] }): React.React
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {data.map((note) => (
-            <div key={note.id} className="group rounded-2xl border border-border bg-card p-4">
+            <div key={note.id} className="group rounded-2xl border border-border bg-card p-5 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_6px_20px_-4px_rgba(0,0,0,0.10)]">
               <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold text-foreground">{note.title}</p>
+                <p className="text-base font-semibold text-foreground">{note.title}</p>
                 <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <button onClick={() => open(note)} className="text-muted-foreground hover:text-foreground" aria-label="Edit">
                     <FontAwesomeIcon icon={faPen} className="size-3.5" />

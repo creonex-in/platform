@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import HeroSearch from "@/components/landing/shared/hero-search";
@@ -9,6 +10,7 @@ gsap.registerPlugin(useGSAP);
 
 export default function UserHero(): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useGSAP(
     () => {
@@ -49,7 +51,9 @@ export default function UserHero(): React.ReactElement {
           </p>
 
           <div className="u-hero-item relative z-10 mt-8 w-full px-1 text-left">
-            <HeroSearch />
+            <HeroSearch
+              onSearch={(q) => router.push(`/explore?q=${encodeURIComponent(q)}`)}
+            />
           </div>
 
         </div>

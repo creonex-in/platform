@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { payoutsService } from '@/services/payouts.service'
 import type {
@@ -10,18 +11,19 @@ async function getCookieHeader(): Promise<string> {
   return cookieStore.toString()
 }
 
-export async function getKycStatus(): Promise<KycStatusResponse> {
+// cache() — dedupes within a single request render.
+export const getKycStatus = cache(async (): Promise<KycStatusResponse> => {
   return payoutsService.getKycStatus(await getCookieHeader())
-}
+})
 
-export async function getEarnings(): Promise<CreatorEarnings> {
+export const getEarnings = cache(async (): Promise<CreatorEarnings> => {
   return payoutsService.getEarnings(await getCookieHeader())
-}
+})
 
-export async function getLedger(): Promise<LedgerEntryItem[]> {
+export const getLedger = cache(async (): Promise<LedgerEntryItem[]> => {
   return payoutsService.getLedger(await getCookieHeader())
-}
+})
 
-export async function getPayoutHistory(): Promise<PayoutItem[]> {
+export const getPayoutHistory = cache(async (): Promise<PayoutItem[]> => {
   return payoutsService.getPayoutHistory(await getCookieHeader())
-}
+})

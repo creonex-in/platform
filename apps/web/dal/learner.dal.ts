@@ -1,6 +1,7 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 import { learnerService } from '@/services/learner.service'
+import { exploreService, type BrowseParams } from '@/services/explore.service'
 import { isNotFound } from '@/lib/api'
 import type {
   LearnerBookingItem,
@@ -8,6 +9,7 @@ import type {
   LearnerOverview,
   LearnerProfile,
   LearnerSavedItem,
+  BrowseOfferingsResponse,
 } from '@creonex/types'
 
 async function cookieHeader(): Promise<string> {
@@ -75,3 +77,15 @@ export async function getLearnerProfile(): Promise<LearnerProfile> {
     throw e
   }
 }
+
+export async function getPublicOfferings(params: BrowseParams): Promise<BrowseOfferingsResponse> {
+  try {
+    return await exploreService.browse(params)
+  } catch (e) {
+    if (isNotFound(e)) {
+      return { items: [], total: 0, limit: 0, offset: 0 }
+    }
+    throw e
+  }
+}
+
