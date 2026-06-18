@@ -22,16 +22,18 @@ export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
   const initials = getInitials(displayName)
 
   return (
-    <header className="sticky top-0 z-50 w-full overflow-hidden border-b border-border/60 bg-background/95 backdrop-blur-md">
-      {/* Holographic glow bleeding from behind the center of the bar */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[200%] w-[640px] -translate-x-1/2 -translate-y-1/2 opacity-40 blur-[60px] dark:opacity-70"
-        style={{
-          background:
-            'linear-gradient(90deg,#f472b6,#c084fc,#818cf8,#60a5fa,#22d3ee,#34d399,#a3e635,#facc15,#fb923c,#f87171)',
-        }}
-      />
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-md">
+      {/* Glow clipped to the bar only — overflow-hidden lives here, NOT on the
+          header, so the search suggestions dropdown can overflow below it. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div
+          className="absolute left-1/2 top-1/2 h-[200%] w-[640px] -translate-x-1/2 -translate-y-1/2 opacity-40 blur-[60px] dark:opacity-70"
+          style={{
+            background:
+              'linear-gradient(90deg,#f472b6,#c084fc,#818cf8,#60a5fa,#22d3ee,#34d399,#a3e635,#facc15,#fb923c,#f87171)',
+          }}
+        />
+      </div>
 
       <div className="relative flex h-[60px] items-center gap-4 px-4 sm:px-6">
         {/* Left — logo + LEARNER badge */}
