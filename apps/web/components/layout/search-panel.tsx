@@ -4,9 +4,10 @@ import Image from 'next/image'
 import { Command as CommandPrimitive } from 'cmdk'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faMagnifyingGlass, faUser, faGraduationCap, faHashtag, faArrowRight, faArrowTurnDown, faArrowTrendUp,
+  faMagnifyingGlass, faUser, faGraduationCap, faHashtag, faArrowRight, faArrowTurnDown, faClockRotateLeft,
 } from '@fortawesome/free-solid-svg-icons'
 import { useSearchSuggestions } from '@/hooks/use-search-suggestions'
+import { useRecentSearches } from '@/hooks/use-recent-searches'
 import { NICHE_OPTIONS } from '@/constants/onboarding'
 import { FEATURED_NICHES } from '@/lib/niche'
 import { cn, getInitials } from '@/lib/utils'
@@ -20,8 +21,6 @@ const TYPE_ICON: Record<SearchResult['type'], typeof faUser> = {
 }
 
 const PER_GROUP_CAP = 4
-
-const POPULAR_SEARCHES = ['Mock interview', 'DSA patterns', 'Resume review', 'UI/UX portfolio', 'SIP & investing']
 
 const FEATURED_NICHE_OPTIONS = NICHE_OPTIONS.filter(
   (n) => (FEATURED_NICHES as readonly string[]).includes(n.value as string),
@@ -128,29 +127,47 @@ function DefaultPanel({
   onSearch: (q: string) => void
   onNiche: (niche: string) => void
 }) {
+  const { recent, clear } = useRecentSearches()
+
   return (
     <>
-      <CommandPrimitive.Group heading="Popular searches" className={GROUP_HEADING_CLASS}>
-        {POPULAR_SEARCHES.map((term) => (
-          <CommandPrimitive.Item
-            key={term}
-            value={`popular:${term}`}
-            onSelect={() => onSearch(term)}
-            className="group flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-left outline-none transition-colors data-[selected=true]:bg-muted"
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-              <FontAwesomeIcon icon={faArrowTrendUp} className="size-3.5" />
-            </span>
-            <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">{term}</span>
-            <FontAwesomeIcon
-              icon={faArrowRight}
-              className="size-3 shrink-0 text-muted-foreground/0 transition-colors group-data-[selected=true]:text-muted-foreground/40"
-            />
-          </CommandPrimitive.Item>
-        ))}
-      </CommandPrimitive.Group>
+      {recent.length > 0 && (
+        <>
+          <CommandPrimitive.Group>
+            <div className="flex items-center justify-between px-2.5 pb-1 pt-2">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                Recent
+              </span>
+              <button
+                type="button"
+                onClick={clear}
+                className="text-[11px] font-medium text-muted-foreground/70 transition-colors hover:text-foreground"
+              >
+                Clear
+              </button>
+            </div>
+            {recent.map((term) => (
+              <CommandPrimitive.Item
+                key={term}
+                value={`recent:${term}`}
+                onSelect={() => onSearch(term)}
+                className="group flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-left outline-none transition-colors data-[selected=true]:bg-muted"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <FontAwesomeIcon icon={faClockRotateLeft} className="size-3.5" />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">{term}</span>
+                <FontAwesomeIcon
+                  icon={faArrowRight}
+                  className="size-3 shrink-0 text-muted-foreground/0 transition-colors group-data-[selected=true]:text-muted-foreground/40"
+                />
+              </CommandPrimitive.Item>
+            ))}
+          </CommandPrimitive.Group>
 
-      <div className="mx-2 my-1.5 h-px bg-border/60" />
+          <div className="mx-2 my-1.5 h-px bg-border/60" />
+        </>
+      )}
 
       <CommandPrimitive.Group heading="Browse by niche" className={GROUP_HEADING_CLASS}>
         {FEATURED_NICHE_OPTIONS.map((n) => (

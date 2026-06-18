@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { addRecentSearch } from '@/hooks/use-recent-searches'
 import { SearchPanel } from './search-panel'
 
 /**
@@ -27,6 +28,7 @@ export function MobileSearchTrigger({ className }: { className?: string }) {
   const goToSearch = useCallback(
     (q: string) => {
       close()
+      addRecentSearch(q)
       router.push(q.trim() ? `/explore?q=${encodeURIComponent(q.trim())}` : '/explore')
     },
     [router, close],

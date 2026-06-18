@@ -6,6 +6,7 @@ import { Command as CommandPrimitive } from 'cmdk'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { cn } from '@/lib/utils'
+import { addRecentSearch } from '@/hooks/use-recent-searches'
 import { SearchPanel, SearchHints } from './search-panel'
 
 interface MarketplaceSearchProps {
@@ -48,6 +49,7 @@ function MarketplaceSearchInner({
   const goToSearch = useCallback(
     (q: string) => {
       setOpen(false)
+      addRecentSearch(q)
       router.push(q.trim() ? `/explore?q=${encodeURIComponent(q.trim())}` : '/explore')
     },
     [router],
