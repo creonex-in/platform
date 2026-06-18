@@ -30,7 +30,13 @@ export function isNetworkError(e: unknown): boolean {
   return isApiError(e) && e.status === 0
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+// Server has no browser origin, so it calls the API by absolute URL and
+// forwards the session cookie header explicitly. The browser must use a
+// RELATIVE URL so the request is same-origin and goes through the Next rewrite
+// proxy (next.config.ts) — that keeps the session cookie first-party to the web
+// domain. A direct cross-origin browser call to the API domain would send no
+// cookie (cookie lives on the web origin) and 401.
+const SERVER_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -44,6 +50,7 @@ interface RequestOptions {
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, cookieHeader, next } = options
   const isServer = typeof window === 'undefined'
+  const baseUrl = isServer ? SERVER_BASE_URL : ''
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (isServer && cookieHeader) headers['Cookie'] = cookieHeader
@@ -58,7 +65,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   let res: Response
   try {
-    res = await fetch(`${BASE_URL}${path}`, init)
+    res = await fetch(`${baseUrl}${path}`, init)
   } catch (e) {
     // Connection failed (API down / DNS / socket reset) — a raw
     // TypeError("fetch failed"), not an HTTP response. GETs are safe to retry
@@ -66,14 +73,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     if (method === 'GET') {
       await new Promise((r) => setTimeout(r, 600))
       try {
-        res = await fetch(`${BASE_URL}${path}`, init)
+        res = await fetch(`${baseUrl}${path}`, init)
       } catch (retryErr) {
-        throw new ApiError(0, `Cannot reach API at ${BASE_URL}`, retryErr)
+        throw new ApiError(0, `Cannot reach API at ${baseUrl || path}`, retryErr)
       }
     } else {
       // Normalize into a typed ApiError so callers use isNetworkError/isApiError
       // instead of catching a raw TypeError (which crashes the SSR render).
-      throw new ApiError(0, `Cannot reach API at ${BASE_URL}`, e)
+      throw new ApiError(0, `Cannot reach API at ${baseUrl || path}`, e)
     }
   }
 
