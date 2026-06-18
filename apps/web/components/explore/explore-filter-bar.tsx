@@ -2,46 +2,52 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBolt, faCalendar, faBoxOpen, faChevronDown } from '@fortawesome/free-solid-svg-icons'
+import { faBolt, faCalendar, faBoxOpen, faChevronDown, faArrowDownWideShort } from '@fortawesome/free-solid-svg-icons'
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+import { NICHE_OPTIONS } from '@/constants/onboarding'
+import { nicheLabel } from '@/lib/niche'
 import { cn } from '@/lib/utils'
 
 const TYPE_FILTERS = [
-  { value: 'all',     label: 'All' },
-  { value: '1on1',   label: '1:1 Sessions',   icon: faBolt },
-  { value: 'live',   label: 'Live Workshops', icon: faCalendar },
-  { value: 'digital',label: 'Digital Assets', icon: faBoxOpen },
+  { value: 'all', label: 'All' },
+  { value: '1on1', label: '1:1 Sessions', icon: faBolt },
+  { value: 'live', label: 'Live Workshops', icon: faCalendar },
+  { value: 'digital', label: 'Digital', icon: faBoxOpen },
 ] as const
 
-const TOP_NICHES = [
-  { value: 'all',               label: 'All Niches' },
-  { value: 'design_creative',   label: 'UI/UX Design' },
-  { value: 'coding_dsa',        label: 'Coding & DSA' },
-  { value: 'ai_data_science',   label: 'Data Science' },
-  { value: 'digital_marketing', label: 'Digital Marketing' },
-  { value: 'personal_finance',  label: 'Personal Finance' },
-  { value: 'startup_product',   label: 'Startup & Product' },
-  { value: 'fitness_nutrition', label: 'Fitness & Yoga' },
-  { value: 'writing_content',   label: 'Content Writing' },
-]
+const SORT_OPTIONS = [
+  { value: 'relevance', label: 'Relevance' },
+  { value: 'top_rated', label: 'Top rated' },
+  { value: 'price_asc', label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'newest', label: 'Newest' },
+] as const
 
 interface ExploreFilterBarProps {
   activeType: string
   activeNiche: string
+  activeSort: string
 }
 
-export function ExploreFilterBar({ activeType, activeNiche }: ExploreFilterBarProps) {
+export function ExploreFilterBar({ activeType, activeNiche, activeSort }: ExploreFilterBarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   function pushParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
-    value === 'all' ? params.delete(key) : params.set(key, value)
+    if (value === 'all' || value === 'relevance') params.delete(key)
+    else params.set(key, value)
+    params.delete('page') // any filter change resets to page 1
     router.push(`/explore?${params.toString()}`)
   }
 
+  const sortLabel = SORT_OPTIONS.find((s) => s.value === activeSort)?.label ?? 'Relevance'
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {/* Type filters */}
+      {/* Type pills */}
       {TYPE_FILTERS.map((f) => {
         const active = activeType === f.value
         return (
@@ -63,29 +69,47 @@ export function ExploreFilterBar({ activeType, activeNiche }: ExploreFilterBarPr
         )
       })}
 
-      {/* Separator */}
       <div className="mx-0.5 hidden h-4 w-px bg-border sm:block" />
 
-      {/* Niche select */}
-      <div className="relative">
-        <select
-          value={activeNiche}
-          onChange={(e) => pushParam('niche', e.target.value)}
+      {/* Niche dropdown (replaces native select) */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
           className={cn(
-            'cursor-pointer appearance-none rounded-full border border-border bg-transparent',
-            'py-1.5 pl-4 pr-8 text-[13px] font-medium text-muted-foreground',
-            'transition-colors hover:border-foreground/20 hover:text-foreground focus:outline-none',
+            'flex items-center gap-2 rounded-full border px-4 py-1.5 text-[13px] font-medium outline-none transition-colors',
+            activeNiche !== 'all'
+              ? 'border-foreground/30 text-foreground'
+              : 'border-border text-muted-foreground hover:border-foreground/20 hover:text-foreground',
           )}
         >
-          {TOP_NICHES.map((n) => (
-            <option key={n.value} value={n.value}>{n.label}</option>
+          {activeNiche === 'all' ? 'All niches' : nicheLabel(activeNiche)}
+          <FontAwesomeIcon icon={faChevronDown} className="size-2.5 text-muted-foreground/60" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto">
+          <DropdownMenuItem onClick={() => pushParam('niche', 'all')}>All niches</DropdownMenuItem>
+          {NICHE_OPTIONS.map((n) => (
+            <DropdownMenuItem key={n.value} onClick={() => pushParam('niche', n.value)}>
+              <FontAwesomeIcon icon={n.icon} className="text-muted-foreground" />
+              {n.label}
+            </DropdownMenuItem>
           ))}
-        </select>
-        <FontAwesomeIcon
-          icon={faChevronDown}
-          className="pointer-events-none absolute right-3 top-1/2 size-2.5 -translate-y-1/2 text-muted-foreground/60"
-        />
-      </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Sort dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-[13px] font-medium text-muted-foreground outline-none transition-colors hover:border-foreground/20 hover:text-foreground">
+          <FontAwesomeIcon icon={faArrowDownWideShort} className="size-3 text-muted-foreground/60" />
+          {sortLabel}
+          <FontAwesomeIcon icon={faChevronDown} className="size-2.5 text-muted-foreground/60" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {SORT_OPTIONS.map((s) => (
+            <DropdownMenuItem key={s.value} onClick={() => pushParam('sort', s.value)}>
+              {s.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

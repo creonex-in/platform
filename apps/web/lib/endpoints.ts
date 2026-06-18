@@ -66,6 +66,10 @@ export const endpoints = {
     suggestions: (q: string) =>
       `/api/v1/search/suggestions?q=${encodeURIComponent(q)}`,
   },
+  explore: {
+    browse:      (qs: string) => `/api/v1/explore${qs ? `?${qs}` : ''}`,
+    recommended: '/api/v1/explore/recommended',
+  },
   schedules: {
     list:      '/api/v1/schedules',
     create:    '/api/v1/schedules',
