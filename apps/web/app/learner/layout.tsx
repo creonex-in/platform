@@ -1,5 +1,6 @@
 import { requireLearner } from '@/lib/auth-guards'
 import { LearnerHeader } from '@/components/layout/learner-header'
+import { LearnerBottomNav } from '@/components/layout/learner-bottom-nav'
 
 export default async function LearnerLayout({
   children,
@@ -15,7 +16,8 @@ export default async function LearnerLayout({
         avatarUrl={user.image}
         role={user.role}
       />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+      <LearnerBottomNav />
     </div>
   )
 }

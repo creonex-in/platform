@@ -1,10 +1,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBell, faChevronDown } from '@fortawesome/free-solid-svg-icons'
-import { getInitials } from '@/lib/utils'
+import { faBell } from '@fortawesome/free-solid-svg-icons'
 import { ThemeToggleInline } from '@/components/layout/theme-toggle-inline'
 import { MarketplaceSearch } from '@/components/layout/marketplace-search'
+import { MobileSearchTrigger } from '@/components/layout/mobile-search'
+import { LearnerNavLinks } from '@/components/layout/learner-nav-links'
+import { UserMenu } from '@/components/layout/user-menu'
+import { LEARNER_ACCOUNT_NAV } from '@/lib/nav'
 
 interface LearnerHeaderProps {
   displayName: string
@@ -12,15 +15,7 @@ interface LearnerHeaderProps {
   role: string
 }
 
-const NAV_LINKS = [
-  { label: 'My Schedule', href: '/learner/schedule' },
-  { label: 'My Library', href: '/learner/library' },
-] as const
-
 export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
-  const firstName = displayName.split(' ')[0]
-  const initials = getInitials(displayName)
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-md">
       {/* Glow clipped to the bar only — overflow-hidden lives here, NOT on the
@@ -63,49 +58,16 @@ export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
           <MarketplaceSearch className="hidden w-full max-w-[500px] md:block" />
         </div>
 
-        {/* Right — nav + profile */}
+        {/* Right — primary nav (desktop) + account */}
         <div className="flex shrink-0 items-center justify-end gap-4 sm:gap-5">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link
-              key={href}
-              href={href}
-              className="hidden whitespace-nowrap text-[12px] font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground md:block"
-            >
-              {label}
-            </Link>
-          ))}
+          <LearnerNavLinks />
 
-          {/* Profile */}
-          <button
-            type="button"
-            className="group flex items-center gap-2.5 transition-opacity hover:opacity-80"
-          >
-            <span className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/10 ring-1 ring-border">
-              {avatarUrl ? (
-                <Image
-                  src={avatarUrl}
-                  alt={displayName}
-                  width={32}
-                  height={32}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-[11px] font-bold text-primary">
-                  {initials}
-                </span>
-              )}
-            </span>
-            <span className="hidden whitespace-nowrap text-[13px] font-medium text-foreground sm:block">
-              {firstName}
-            </span>
-            <FontAwesomeIcon
-              icon={faChevronDown}
-              className="hidden size-[10px] text-muted-foreground transition-colors group-hover:text-foreground sm:block"
-            />
-          </button>
+          {/* Account menu — identity + account + sign out only (no section nav) */}
+          <UserMenu items={LEARNER_ACCOUNT_NAV} name={displayName} avatarUrl={avatarUrl} />
 
-          {/* Bell + theme toggle */}
+          {/* Mobile search + bell + theme toggle */}
           <div className="flex items-center gap-2">
+            <MobileSearchTrigger className="md:hidden" />
             <button
               type="button"
               aria-label="Notifications"
