@@ -28,6 +28,15 @@ export class UsersRepository {
     await this.db.update(user).set({ role }).where(eq(user.id, userId))
   }
 
+  /** Partial update of the user's own name / avatar image. */
+  async updateMe(userId: string, data: { name?: string; image?: string | null }) {
+    const set: { name?: string; image?: string | null } = {}
+    if (data.name !== undefined) set.name = data.name
+    if (data.image !== undefined) set.image = data.image
+    if (Object.keys(set).length === 0) return
+    await this.db.update(user).set(set).where(eq(user.id, userId))
+  }
+
   async updatePhone(userId: string, phone: string) {
     await this.db.update(user).set({ phone }).where(eq(user.id, userId))
   }

@@ -46,6 +46,9 @@ export const ALWAYS_UNLOCKED_OFFER_TYPES = ['one_on_one', 'digital'] as const
 /** Offer types gated behind completed 1:1 sessions. */
 export const GATED_OFFER_TYPES = ['live_event'] as const
 
+/** What a learner can bookmark. */
+export const SAVED_TARGET_TYPES = ['creator', 'offering'] as const
+
 export const KYC_STATUSES = [
   'not_started', 'pending', 'verified', 'failed',
 ] as const
@@ -114,6 +117,7 @@ export type OfferType = typeof OFFER_TYPES[number]
 export type LiveEventFormat = typeof LIVE_EVENT_FORMATS[number]
 export type OfferStatus = typeof OFFER_STATUSES[number]
 export type KycStatus = typeof KYC_STATUSES[number]
+export type SavedTargetType = typeof SAVED_TARGET_TYPES[number]
 export type OnboardingStatus = typeof ONBOARDING_STATUSES[number]
 export type DurationOption = typeof DURATION_OPTIONS[number]
 export type Weekday = typeof WEEKDAYS[number]

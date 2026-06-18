@@ -6,7 +6,8 @@ import { LEARNER_PRIMARY_NAV } from '@/lib/nav'
 import { cn } from '@/lib/utils'
 
 // Home is represented by the logo, so skip it in the text-link row.
-const LINKS = LEARNER_PRIMARY_NAV.filter((n) => n.href !== '/learner/dashboard')
+// Home is represented by the logo — skip it from the text-link row
+const LINKS = LEARNER_PRIMARY_NAV.filter((n) => n.href !== '/learner')
 
 /** Desktop primary nav for the learner header. Mobile uses the bottom tab bar. */
 export function LearnerNavLinks() {

@@ -414,6 +414,65 @@ export interface DigitalAccessResponse {
   expiresInSeconds: number
 }
 
+// ── Learner workspace ─────────────────────────────────────────────────────────
+
+/** A learner's booking, enriched with offering + creator for display. */
+export interface LearnerBookingItem {
+  id: string
+  offeringId: string
+  offeringTitle: string
+  offeringType: string // one_on_one | live_event | digital
+  format: string | null // live_event: group | webinar
+  creatorUsername: string | null
+  creatorName: string | null
+  creatorPhotoUrl: string | null
+  thumbnailUrl: string | null
+  startTime: string | null
+  endTime: string | null
+  status: string // BOOKING_STATUSES
+  amountPaise: number
+  meetingUrl: string | null
+  topic: string | null
+  createdAt: string
+}
+
+/** A saved/bookmarked creator or offering, with resolved display fields. */
+export interface LearnerSavedItem {
+  id: string
+  targetType: string // creator | offering
+  targetId: string
+  createdAt: string
+  // resolved (null if the target was removed)
+  title: string | null
+  subtitle: string | null
+  imageUrl: string | null
+  href: string | null
+}
+
+export interface LearnerNote {
+  id: string
+  bookingId: string | null
+  offeringId: string | null
+  title: string
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpdateLearnerProfileRequest {
+  goalType?: string
+  interestedNiches?: string[]
+}
+
+/** Aggregate payload for the learner home/hub. */
+export interface LearnerOverview {
+  nextSession: LearnerBookingItem | null
+  upcomingCount: number
+  recentDigital: LearnerBookingItem[]
+  digitalCount: number
+  savedCount: number
+}
+
 // ── Onboarding Responses ──────────────────────────────────────────────────────
 
 export interface OnboardingStepResponse {

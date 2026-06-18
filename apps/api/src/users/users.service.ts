@@ -19,6 +19,13 @@ export class UsersService {
     return u
   }
 
+  /** Update the current user's name / avatar image. */
+  async updateMe(userId: string, dto: { name?: string; image?: string }) {
+    await this.usersRepo.updateMe(userId, dto)
+    const u = await this.getById(userId)
+    return { id: u.id, email: u.email, name: u.name, role: u.role, image: u.image }
+  }
+
   async getByEmail(email: string) {
     return this.usersRepo.findByEmail(email)
   }
@@ -33,6 +40,17 @@ export class UsersService {
     const profile = await this.learnerRepo.findByUserId(userId)
     if (!profile) throw new NotFoundException('Learner profile not found')
     return profile
+  }
+
+  /** Partial update of the learner's own profile (goal + interests). */
+  async updateLearnerProfile(
+    userId: string,
+    dto: { goalType?: string; interestedNiches?: string[] },
+  ) {
+    const existing = await this.learnerRepo.findByUserId(userId)
+    if (!existing) throw new NotFoundException('Learner profile not found')
+    await this.learnerRepo.updateProfile(userId, dto)
+    return this.getLearnerProfile(userId)
   }
 
   /** Partial update of the creator's own profile (post-onboarding edit). */

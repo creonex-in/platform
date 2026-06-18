@@ -15,7 +15,7 @@ export interface NavItem {
  * mobile. The account menu does NOT repeat these; it only holds account actions.
  */
 export const LEARNER_PRIMARY_NAV: NavItem[] = [
-  { label: 'Home', href: '/learner/dashboard', icon: faHouse },
+  { label: 'Home', href: '/learner', icon: faHouse },
   { label: 'Explore', href: '/explore', icon: faCompass },
   { label: 'Schedule', href: '/learner/schedule', icon: faCalendarDay },
   { label: 'Library', href: '/learner/library', icon: faBookOpen },

@@ -3,6 +3,8 @@ import { AuthGuard, Session } from '@mguay/nestjs-better-auth'
 import { ApiTags, ApiCookieAuth, ApiOperation } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { UpdateCreatorProfileDto } from './dto/update-creator-profile.dto'
+import { UpdateMeDto } from './dto/update-me.dto'
+import { UpdateLearnerProfileDto } from '../learner/learner.dto'
 import { Roles } from '../auth/roles.decorator'
 import { RolesGuard } from '../auth/roles.guard'
 import type { AppUserSession } from '../auth/types'
@@ -24,6 +26,12 @@ export class UsersController {
       role: session.user.role,
       image: session.user.image,
     }
+  }
+
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current user (name / avatar image)' })
+  updateMe(@Session() session: AppUserSession, @Body() dto: UpdateMeDto) {
+    return this.usersService.updateMe(session.user.id, dto)
   }
 
   @Post('me/add-creator-role')
@@ -56,5 +64,15 @@ export class UsersController {
   @ApiOperation({ summary: 'Get learner profile' })
   getMyLearnerProfile(@Session() session: AppUserSession) {
     return this.usersService.getLearnerProfile(session.user.id)
+  }
+
+  @Patch('me/learner-profile')
+  @Roles('learner')
+  @ApiOperation({ summary: 'Update learner profile (goal + interests)' })
+  updateMyLearnerProfile(
+    @Session() session: AppUserSession,
+    @Body() dto: UpdateLearnerProfileDto,
+  ) {
+    return this.usersService.updateLearnerProfile(session.user.id, dto)
   }
 }

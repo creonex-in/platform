@@ -527,7 +527,7 @@ export class BookingsService {
   async getMyBookings(userId: string) {
     const learnerProfile = await this.learnerProfileRepo.findByUserId(userId)
     if (!learnerProfile) return []
-    return this.bookingsRepo.findAllByLearner(learnerProfile.id)
+    return this.bookingsRepo.findAllByLearnerEnriched(learnerProfile.id)
   }
 
   async getCreatorBookings(userId: string, offeringId: string) {
