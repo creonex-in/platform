@@ -62,6 +62,10 @@ export const endpoints = {
     updateVisibility:  (id: string) => `/api/v1/creator/testimonials/${id}/visibility`,
     submit:            (username: string) => `/api/v1/testimonials/submit/${username}`,
   },
+  search: {
+    suggestions: (q: string) =>
+      `/api/v1/search/suggestions?q=${encodeURIComponent(q)}`,
+  },
   schedules: {
     list:      '/api/v1/schedules',
     create:    '/api/v1/schedules',

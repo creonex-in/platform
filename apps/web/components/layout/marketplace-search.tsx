@@ -2,12 +2,38 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Command as CommandPrimitive } from 'cmdk'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
-import { cn } from '@/lib/utils'
+import {
+  faMagnifyingGlass,
+  faXmark,
+  faUser,
+  faGraduationCap,
+  faHashtag,
+  faArrowRight,
+} from '@fortawesome/free-solid-svg-icons'
+import { CommandList } from '@/components/ui/command'
+import { useSearchSuggestions } from '@/hooks/use-search-suggestions'
+import { cn, getInitials } from '@/lib/utils'
+import type { SearchResult } from '@/types/search'
+
+// Group results by type for a structured dropdown
+function groupResults(results: SearchResult[]) {
+  return {
+    creators:   results.filter((r) => r.type === 'creator'),
+    courses:    results.filter((r) => r.type === 'course'),
+    categories: results.filter((r) => r.type === 'category'),
+  }
+}
+
+const TYPE_ICON: Record<SearchResult['type'], typeof faUser> = {
+  creator:         faUser,
+  course:          faGraduationCap,
+  category:        faHashtag,
+  'learning-path': faHashtag,
+}
 
 interface MarketplaceSearchProps {
-  /** Extra classes for the wrapping <form> (width, visibility, etc.). */
   className?: string
   placeholder?: string
 }
@@ -31,6 +57,7 @@ function MarketplaceSearchInner({ className, placeholder }: MarketplaceSearchPro
     router.push(q ? `/explore?q=${encodeURIComponent(q)}` : '/explore')
   }
 
+function SuggestionItem({ result, onSelect }: { result: SearchResult; onSelect: () => void }) {
   return (
     <form onSubmit={submit} className={cn('relative', className)}>
       <FontAwesomeIcon
