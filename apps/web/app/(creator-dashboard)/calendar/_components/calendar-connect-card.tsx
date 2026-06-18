@@ -26,7 +26,11 @@ interface Props {
   initialStatus: CalendarStatus
 }
 
-const GOOGLE_CONNECT_LINK = process.env.NEXT_PUBLIC_API_URL! + endpoints.calendar.connect
+// Relative (not absolute API URL): a top-level nav to the web origin goes
+// through the Next rewrite proxy, so the first-party session cookie is sent and
+// the connect endpoint authorizes. An absolute cross-origin nav to the API
+// domain sends no cookie -> 401.
+const GOOGLE_CONNECT_LINK = endpoints.calendar.connect
 
 export function CalendarConnectCard({ initialStatus }: Props) {
   const [status, setStatus] = useState<CalendarStatus>(initialStatus)
