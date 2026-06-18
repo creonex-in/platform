@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
+import { NICHES, type Niche } from '@creonex/types'
+import { SearchRepository } from './search.repository'
 
-interface SearchResult {
+export interface SearchResult {
   id: string
   type: 'creator' | 'course' | 'category'
   title: string
@@ -9,56 +11,86 @@ interface SearchResult {
   thumbnailUrl?: string | null
 }
 
-// ── Phase-1 sample data ───────────────────────────────────────────────────────
-// Swap this for real Drizzle queries once the DB has live creators/offerings.
+/** Human labels for niches (kept in sync with the web NICHE_OPTIONS list). */
+const NICHE_LABELS: Record<Niche, string> = {
+  cat_mba_prep: 'CAT / MBA Prep',
+  coding_dsa: 'Coding & DSA',
+  personal_finance: 'Personal Finance',
+  fitness_nutrition: 'Fitness & Nutrition',
+  design_creative: 'Design & Creative',
+  language_learning: 'Language Learning',
+  digital_marketing: 'Digital Marketing',
+  music_arts: 'Music & Arts',
+  upsc_govt_exams: 'UPSC & Govt Exams',
+  mental_wellness: 'Mental Wellness',
+  photography: 'Photography',
+  science_research: 'Science & Research',
+  real_estate: 'Real Estate',
+  writing_content: 'Writing & Content',
+  ai_data_science: 'AI & Data Science',
+  gaming_esports: 'Gaming & Esports',
+  cooking_food: 'Cooking & Food',
+  interview_prep: 'Interview Prep',
+  ayurveda_yoga: 'Ayurveda & Yoga',
+  startup_product: 'Startup & Product',
+}
 
-const SAMPLE: SearchResult[] = [
-  // Creators
-  { id: 'c1', type: 'creator', title: 'Rahul Mehta',       subtitle: 'UI/UX Design · 4.9★',       href: '/c/rahulmehta',    thumbnailUrl: null },
-  { id: 'c2', type: 'creator', title: 'Priya Sharma',      subtitle: 'Data Science · 4.7★',        href: '/c/priyasharma',   thumbnailUrl: null },
-  { id: 'c3', type: 'creator', title: 'Arjun Verma',       subtitle: 'Full Stack Dev · 4.8★',      href: '/c/arjunverma',    thumbnailUrl: null },
-  { id: 'c4', type: 'creator', title: 'Sneha Nair',        subtitle: 'Digital Marketing · 4.6★',   href: '/c/snehanair',     thumbnailUrl: null },
-  { id: 'c5', type: 'creator', title: 'Vikram Singh',      subtitle: 'Personal Finance · 4.9★',    href: '/c/vikramsingh',   thumbnailUrl: null },
-  { id: 'c6', type: 'creator', title: 'Ananya Reddy',      subtitle: 'Fitness & Yoga · 4.8★',      href: '/c/ananyareddy',   thumbnailUrl: null },
-  { id: 'c7', type: 'creator', title: 'Karan Malhotra',    subtitle: 'Music Production · 4.7★',    href: '/c/karanmalhotra', thumbnailUrl: null },
-  { id: 'c8', type: 'creator', title: 'Divya Iyer',        subtitle: 'Content Writing · 4.5★',     href: '/c/divyaiyer',     thumbnailUrl: null },
-
-  // Courses / Offerings
-  { id: 'o1', type: 'course',  title: 'React Interview Prep',           subtitle: 'by @arjunverma · ₹999',      href: '/c/arjunverma' },
-  { id: 'o2', type: 'course',  title: 'Figma for Beginners',            subtitle: 'by @rahulmehta · ₹499',      href: '/c/rahulmehta' },
-  { id: 'o3', type: 'course',  title: 'System Design Fundamentals',     subtitle: 'by @arjunverma · ₹1,499',    href: '/c/arjunverma' },
-  { id: 'o4', type: 'course',  title: 'Digital Marketing Strategy',     subtitle: 'by @snehanair · ₹799',       href: '/c/snehanair' },
-  { id: 'o5', type: 'course',  title: 'Personal Finance Basics',        subtitle: 'by @vikramsingh · ₹599',     href: '/c/vikramsingh' },
-  { id: 'o6', type: 'course',  title: 'Data Science Roadmap 2025',      subtitle: 'by @priyasharma · ₹1,299',   href: '/c/priyasharma' },
-  { id: 'o7', type: 'course',  title: 'Career Switch to Tech',          subtitle: 'by @arjunverma · ₹1,999',    href: '/c/arjunverma' },
-  { id: 'o8', type: 'course',  title: 'UI Portfolio Review (1:1)',       subtitle: 'by @rahulmehta · ₹1,200',    href: '/c/rahulmehta' },
-  { id: 'o9', type: 'course',  title: 'Yoga for Desk Workers',          subtitle: 'by @ananyareddy · ₹399',     href: '/c/ananyareddy' },
-  { id: 'o10', type: 'course', title: 'Music Theory for Producers',     subtitle: 'by @karanmalhotra · ₹699',   href: '/c/karanmalhotra' },
-
-  // Categories / Topics
-  { id: 'cat1',  type: 'category', title: 'UI/UX Design',         subtitle: 'Topic', href: '/explore?niche=design_creative' },
-  { id: 'cat2',  type: 'category', title: 'Data Science',         subtitle: 'Topic', href: '/explore?niche=ai_data_science' },
-  { id: 'cat3',  type: 'category', title: 'Full Stack Dev',       subtitle: 'Topic', href: '/explore?niche=coding_dsa' },
-  { id: 'cat4',  type: 'category', title: 'Digital Marketing',    subtitle: 'Topic', href: '/explore?niche=digital_marketing' },
-  { id: 'cat5',  type: 'category', title: 'Personal Finance',     subtitle: 'Topic', href: '/explore?niche=personal_finance' },
-  { id: 'cat6',  type: 'category', title: 'Fitness & Yoga',       subtitle: 'Topic', href: '/explore?niche=fitness_nutrition' },
-  { id: 'cat7',  type: 'category', title: 'Music & Arts',         subtitle: 'Topic', href: '/explore?niche=music_arts' },
-  { id: 'cat8',  type: 'category', title: 'Content Writing',      subtitle: 'Topic', href: '/explore?niche=writing_content' },
-  { id: 'cat9',  type: 'category', title: 'Interview Prep',       subtitle: 'Topic', href: '/explore?niche=interview_prep' },
-  { id: 'cat10', type: 'category', title: 'Startup & Product',    subtitle: 'Topic', href: '/explore?niche=startup_product' },
-]
+const inr = (paise: number) => `₹${Math.round(paise / 100).toLocaleString('en-IN')}`
 
 @Injectable()
 export class SearchService {
-  getSuggestions(q: string, limit: number): SearchResult[] {
-    const term = q.trim().toLowerCase()
-    if (!term || term.length < 2) return []
+  constructor(private readonly repo: SearchRepository) {}
 
-    return SAMPLE
-      .filter((r) =>
-        r.title.toLowerCase().includes(term) ||
-        (r.subtitle ?? '').toLowerCase().includes(term),
-      )
-      .slice(0, limit)
+  /** Typeahead across live creators, their live offerings, and matching niches. */
+  async getSuggestions(q: string, limit: number): Promise<SearchResult[]> {
+    const term = q.trim()
+    if (term.length < 2) return []
+
+    const perGroup = Math.min(Math.max(Math.ceil(limit / 2), 4), 8)
+
+    const [creators, offers] = await Promise.all([
+      this.repo.searchCreators(term, perGroup),
+      this.repo.searchOfferings(term, perGroup),
+    ])
+
+    const creatorResults: SearchResult[] = creators.map((c) => {
+      const rating = Number(c.rating ?? 0)
+      const niche = c.primaryNiche ? NICHE_LABELS[c.primaryNiche as Niche] : ''
+      const subtitle = [niche, rating > 0 ? `${rating.toFixed(1)}★` : '']
+        .filter(Boolean)
+        .join(' · ')
+      return {
+        id: c.id,
+        type: 'creator',
+        title: c.displayName ?? c.username ?? 'Creator',
+        subtitle: subtitle || undefined,
+        href: `/c/${c.username}`,
+        thumbnailUrl: c.profilePhotoUrl,
+      }
+    })
+
+    const offerResults: SearchResult[] = offers.map((o) => ({
+      id: o.id,
+      type: 'course',
+      title: o.title,
+      subtitle: `by @${o.username} · ${inr(o.price)}`,
+      href: `/c/${o.username}`,
+      thumbnailUrl: o.thumbnailUrl,
+    }))
+
+    // Niche matches are static + cheap — resolved in-memory against the label map.
+    const lower = term.toLowerCase()
+    const nicheResults: SearchResult[] = (NICHES as readonly Niche[])
+      .filter((n) => NICHE_LABELS[n].toLowerCase().includes(lower) || n.includes(lower))
+      .slice(0, 4)
+      .map((n) => ({
+        id: `niche-${n}`,
+        type: 'category',
+        title: NICHE_LABELS[n],
+        subtitle: 'Topic',
+        href: `/explore?niche=${n}`,
+      }))
+
+    return [...creatorResults, ...offerResults, ...nicheResults]
   }
 }
