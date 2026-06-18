@@ -49,6 +49,22 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
           session: {
             cookieCache: { enabled: false },
           },
+          // Shared-domain prod: web (creonex.in) and api (api.creonex.in) sit on
+          // the same parent domain, so the session cookie is scoped to that
+          // parent (e.g. ".creonex.in") and sent on both. SameSite=Lax is enough
+          // — no third-party-cookie risk. Set COOKIE_DOMAIN to the leading-dot
+          // parent. Gated to prod; dev stays on plain localhost cookies.
+          ...(config.get<string>('NODE_ENV') === 'production' &&
+          config.get<string>('COOKIE_DOMAIN')
+            ? {
+                advanced: {
+                  crossSubDomainCookies: {
+                    enabled: true,
+                    domain: config.get<string>('COOKIE_DOMAIN'),
+                  },
+                },
+              }
+            : {}),
         }),
       })) as any,
     }),
