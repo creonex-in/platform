@@ -3,7 +3,16 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 export function ScheduleSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 p-4 sm:p-6 lg:grid-cols-3">
+    <>
+      {/* Mirrors the builder's sticky action bar so there's no jump on swap */}
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
+        <div className="space-y-1.5">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-56" />
+        </div>
+        <Skeleton className="h-8 w-24" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 p-4 sm:p-6 lg:grid-cols-3">
       {/* Weekly card */}
       <Card className="lg:col-span-2">
         <CardHeader className="pb-3">
@@ -62,6 +71,7 @@ export function ScheduleSkeleton() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

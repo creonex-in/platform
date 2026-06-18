@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
+import { DashboardShell } from '@/components/dashboard/shared/dashboard-shell'
 import { getCreatorContext } from '@/dal/users.dal'
 import { getCreatorTestimonials } from '@/dal/testimonials.dal'
 import { TestimonialsClient } from './_components/testimonials-client'
@@ -21,13 +21,10 @@ async function TestimonialsContent(): Promise<React.ReactElement> {
 
 export default function TestimonialsPage(): React.ReactElement {
   return (
-    <>
-      <DashboardTopbar title="Testimonials" />
-      <div className="space-y-4 p-4 sm:p-6">
-        <Suspense fallback={<TestimonialsSkeleton />}>
-          <TestimonialsContent />
-        </Suspense>
-      </div>
-    </>
+    <DashboardShell title="Testimonials">
+      <Suspense fallback={<TestimonialsSkeleton />}>
+        <TestimonialsContent />
+      </Suspense>
+    </DashboardShell>
   )
 }

@@ -1,4 +1,4 @@
-import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
+import { DashboardShell } from '@/components/dashboard/shared/dashboard-shell'
 import { CollabCard } from '@/components/dashboard/creator/collab-card'
 import { InsightBox } from '@/components/dashboard/creator/insight-box'
 import { PageHeader } from '@/components/dashboard/shared/page-header'
@@ -13,13 +13,10 @@ export default function CollaboratePage(): React.ReactElement {
   const active = mockCollaborations.filter((c) => c.status === 'active' || c.status === 'pending')
 
   return (
-    <>
-      <DashboardTopbar
-        title="Collaborate"
-        action={<Button size="sm" className="h-8 text-xs">Invite creator</Button>}
-      />
-      <div className="p-6 space-y-6">
-
+    <DashboardShell
+      title="Collaborate"
+      action={<Button size="sm" className="h-8 text-xs">Invite creator</Button>}
+    >
         <InsightBox
           message="Collaborating with complementary creators can 3x your reach and earnings. Propose a co-workshop to get started."
           type="info"
@@ -67,7 +64,6 @@ export default function CollaboratePage(): React.ReactElement {
             ))}
           </CardContent>
         </Card>
-      </div>
-    </>
+    </DashboardShell>
   )
 }

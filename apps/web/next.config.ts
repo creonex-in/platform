@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Reuse a visited route from the client Router Cache for 30s before
+    // refetching. Kills the re-skeleton flash when navigating back to a page
+    // (e.g. bookings → payouts → bookings). Mutations call router.refresh(),
+    // which bypasses this cache, so post-write data stays fresh.
+    staleTimes: { dynamic: 30, static: 180 },
+  },
   async rewrites() {
     return {
       beforeFiles: [

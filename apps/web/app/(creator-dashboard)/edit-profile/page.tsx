@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
+import { DashboardShell } from '@/components/dashboard/shared/dashboard-shell'
 import { EditProfileForm } from '@/components/dashboard/creator/profile/edit-profile-form'
 import { getCreatorContext } from '@/dal/users.dal'
 
@@ -12,9 +12,8 @@ export default async function CreatorEditProfilePage(): Promise<React.ReactEleme
   if (!profile) redirect('/onboarding/creator/step-1')
 
   return (
-    <>
-      <DashboardTopbar title="Edit Profile" />
+    <DashboardShell title="Edit Profile" noPadding>
       <EditProfileForm profile={profile} />
-    </>
+    </DashboardShell>
   )
 }

@@ -1,7 +1,8 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTriangleExclamation, faCircleCheck, faArrowRight } from '@fortawesome/free-solid-svg-icons'
-import { DashboardTopbar } from '@/components/dashboard/shared/dashboard-topbar'
+import { DashboardShell } from '@/components/dashboard/shared/dashboard-shell'
 import { StatPanel } from '@/components/dashboard/creator/stat-panel'
 import { PayoutRow } from '@/components/dashboard/creator/payout-row'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { getKycStatus, getEarnings, getLedger, getPayoutHistory } from '@/dal/payouts.dal'
 import { formatCurrency, cn } from '@/lib/utils'
 import type { LedgerStatus } from '@creonex/types'
+import { PayoutsSkeleton } from './_components/payouts-skeleton'
 
 export const metadata = { title: 'Payouts — Creonex' }
 
@@ -20,7 +22,7 @@ const ledgerBadge: Record<LedgerStatus, { label: string; variant: 'secondary' | 
   reversed: { label: 'Refunded', variant: 'destructive' },
 }
 
-export default async function PayoutsPage(): Promise<React.ReactElement> {
+async function PayoutsContent(): Promise<React.ReactElement> {
   const [kyc, earnings, ledger, history] = await Promise.all([
     getKycStatus(),
     getEarnings(),
@@ -31,10 +33,7 @@ export default async function PayoutsPage(): Promise<React.ReactElement> {
   const verified = kyc.status === 'verified' && kyc.payoutsEnabled
 
   return (
-    <>
-      <DashboardTopbar title="Payouts" />
-      <div className="p-4 sm:p-6 space-y-6">
-
+    <div className="space-y-6">
         {/* Earnings summary */}
         <StatPanel
           stats={[
@@ -119,8 +118,17 @@ export default async function PayoutsPage(): Promise<React.ReactElement> {
             )}
           </CardContent>
         </Card>
-      </div>
-    </>
+    </div>
+  )
+}
+
+export default function PayoutsPage(): React.ReactElement {
+  return (
+    <DashboardShell title="Payouts">
+      <Suspense fallback={<PayoutsSkeleton />}>
+        <PayoutsContent />
+      </Suspense>
+    </DashboardShell>
   )
 }
 
