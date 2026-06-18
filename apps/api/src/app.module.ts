@@ -50,29 +50,25 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
           session: {
             cookieCache: { enabled: false },
           },
-          // Prod cookie scoping. Two modes, gated to prod (dev stays on plain
-          // localhost cookies):
-          //   - COOKIE_DOMAIN set  -> web + api share a parent domain
-          //     (e.g. creonex.in + api.creonex.in). Cookie scoped to the
-          //     leading-dot parent, SameSite=Lax is enough, no third-party risk.
-          //   - COOKIE_DOMAIN unset -> web + api are on different sites
-          //     (e.g. *.vercel.app + *.railway.app). The auth cookies are
-          //     third-party, so they MUST be SameSite=None; Secure or the
-          //     browser drops them -> OAuth state_mismatch. Requires the API to
-          //     trust the proxy (see main.ts) so Secure cookies are honored.
-          ...(config.get<string>('NODE_ENV') === 'production'
+          // Browser auth traffic is same-origin: the web app proxies
+          // /api/auth/* to this API via Next rewrites (next.config.ts), so the
+          // auth cookies are FIRST-PARTY to the web origin. BETTER_AUTH_URL must
+          // therefore be the web origin so Google's OAuth redirect_uri also goes
+          // through the proxy and the state cookie is present at the callback.
+          // SameSite=Lax (better-auth default) is correct; no cross-site cookies.
+          //
+          // COOKIE_DOMAIN is only for the shared-parent-domain setup
+          // (creonex.in + api.creonex.in): it scopes the cookie to the parent so
+          // both subdomains see it. Leave unset for the proxy setup above.
+          ...(config.get<string>('NODE_ENV') === 'production' &&
+          config.get<string>('COOKIE_DOMAIN')
             ? {
-                advanced: config.get<string>('COOKIE_DOMAIN')
-                  ? {
-                      crossSubDomainCookies: {
-                        enabled: true,
-                        domain: config.get<string>('COOKIE_DOMAIN'),
-                      },
-                      defaultCookieAttributes: { sameSite: 'lax', secure: true },
-                    }
-                  : {
-                      defaultCookieAttributes: { sameSite: 'none', secure: true },
-                    },
+                advanced: {
+                  crossSubDomainCookies: {
+                    enabled: true,
+                    domain: config.get<string>('COOKIE_DOMAIN'),
+                  },
+                },
               }
             : {}),
         }),
