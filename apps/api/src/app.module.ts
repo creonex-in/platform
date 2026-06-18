@@ -50,20 +50,29 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
           session: {
             cookieCache: { enabled: false },
           },
-          // Shared-domain prod: web (creonex.in) and api (api.creonex.in) sit on
-          // the same parent domain, so the session cookie is scoped to that
-          // parent (e.g. ".creonex.in") and sent on both. SameSite=Lax is enough
-          // — no third-party-cookie risk. Set COOKIE_DOMAIN to the leading-dot
-          // parent. Gated to prod; dev stays on plain localhost cookies.
-          ...(config.get<string>('NODE_ENV') === 'production' &&
-          config.get<string>('COOKIE_DOMAIN')
+          // Prod cookie scoping. Two modes, gated to prod (dev stays on plain
+          // localhost cookies):
+          //   - COOKIE_DOMAIN set  -> web + api share a parent domain
+          //     (e.g. creonex.in + api.creonex.in). Cookie scoped to the
+          //     leading-dot parent, SameSite=Lax is enough, no third-party risk.
+          //   - COOKIE_DOMAIN unset -> web + api are on different sites
+          //     (e.g. *.vercel.app + *.railway.app). The auth cookies are
+          //     third-party, so they MUST be SameSite=None; Secure or the
+          //     browser drops them -> OAuth state_mismatch. Requires the API to
+          //     trust the proxy (see main.ts) so Secure cookies are honored.
+          ...(config.get<string>('NODE_ENV') === 'production'
             ? {
-                advanced: {
-                  crossSubDomainCookies: {
-                    enabled: true,
-                    domain: config.get<string>('COOKIE_DOMAIN'),
-                  },
-                },
+                advanced: config.get<string>('COOKIE_DOMAIN')
+                  ? {
+                      crossSubDomainCookies: {
+                        enabled: true,
+                        domain: config.get<string>('COOKIE_DOMAIN'),
+                      },
+                      defaultCookieAttributes: { sameSite: 'lax', secure: true },
+                    }
+                  : {
+                      defaultCookieAttributes: { sameSite: 'none', secure: true },
+                    },
               }
             : {}),
         }),

@@ -13,6 +13,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false })
 
   const expressApp = app.getHttpAdapter().getInstance()
+  // Railway (and most PaaS) terminate TLS at a proxy and forward over http.
+  // Trust the proxy so Express/better-auth see x-forwarded-proto=https and
+  // honor Secure cookies + build https callback URLs.
+  expressApp.set('trust proxy', 1)
   const authService = app.get<AuthService>(AuthService)
 
   const express = require('express') // eslint-disable-line @typescript-eslint/no-require-imports
