@@ -18,10 +18,10 @@ packages/
 
 ## Prerequisites
 
-| Tool | Version |
-|------|---------|
-| Node.js | >= 20 |
-| pnpm | >= 10 (`npm i -g pnpm`) |
+| Tool    | Version                 |
+| ------- | ----------------------- |
+| Node.js | >= 20                   |
+| pnpm    | >= 10 (`npm i -g pnpm`) |
 
 ---
 
@@ -47,7 +47,6 @@ cp apps/web/.env.example apps/web/.env.local
 
 See [Environment variables](#environment-variables) below for what each key means.
 
-
 ### 3. Start the dev servers
 
 ```bash
@@ -56,10 +55,10 @@ pnpm dev
 
 This runs both apps in parallel. Turborepo automatically builds `packages/types` first, then starts both servers.
 
-| App | URL |
-|-----|-----|
-| API | http://localhost:3000 |
-| Web | http://localhost:3001 |
+| App                | URL                       |
+| ------------------ | ------------------------- |
+| API                | http://localhost:3000     |
+| Web                | http://localhost:3001     |
 | API docs (Swagger) | http://localhost:3000/api |
 
 ---
@@ -75,6 +74,7 @@ pnpm --filter @creonex/web dev
 ```
 
 > If you run an app individually, build the shared types package first:
+>
 > ```bash
 > pnpm --filter @creonex/types build
 > ```
@@ -85,32 +85,32 @@ pnpm --filter @creonex/web dev
 
 ### `apps/api/.env`
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `PORT` | No | API port (default `3000`) |
-| `DATABASE_URL` | Yes | Neon Postgres pooled connection string |
-| `DATABASE_DIRECT_URL` | Yes | Neon Postgres direct connection (for migrations) |
-| `BETTER_AUTH_SECRET` | Yes | Secret key for Better Auth — min 32 chars |
-| `BETTER_AUTH_URL` | Yes | Public URL of this API |
-| `ALLOWED_ORIGINS` | Yes | Comma-separated CORS origins (e.g. `http://localhost:3001`) |
-| `GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret |
-| `CALENDAR_TOKEN_ENC_KEY` | Yes | 64-char hex key for encrypting calendar tokens — generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
-| `API_BASE_URL` | Yes | Public base URL of the API (used for OAuth callbacks) |
-| `RAZORPAY_KEY_ID` | No | Razorpay key ID (payment features disabled if blank) |
-| `RAZORPAY_KEY_SECRET` | No | Razorpay key secret |
-| `RAZORPAY_WEBHOOK_SECRET` | No | Razorpay webhook secret |
+| Variable                  | Required | Description                                                                                                                                |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PORT`                    | No       | API port (default `3000`)                                                                                                                  |
+| `DATABASE_URL`            | Yes      | Neon Postgres pooled connection string                                                                                                     |
+| `DATABASE_DIRECT_URL`     | Yes      | Neon Postgres direct connection (for migrations)                                                                                           |
+| `BETTER_AUTH_SECRET`      | Yes      | Secret key for Better Auth — min 32 chars                                                                                                  |
+| `BETTER_AUTH_URL`         | Yes      | Public URL of this API                                                                                                                     |
+| `ALLOWED_ORIGINS`         | Yes      | Comma-separated CORS origins (e.g. `http://localhost:3001`)                                                                                |
+| `GOOGLE_CLIENT_ID`        | Yes      | Google OAuth client ID                                                                                                                     |
+| `GOOGLE_CLIENT_SECRET`    | Yes      | Google OAuth client secret                                                                                                                 |
+| `CALENDAR_TOKEN_ENC_KEY`  | Yes      | 64-char hex key for encrypting calendar tokens — generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `API_BASE_URL`            | Yes      | Public base URL of the API (used for OAuth callbacks)                                                                                      |
+| `RAZORPAY_KEY_ID`         | No       | Razorpay key ID (payment features disabled if blank)                                                                                       |
+| `RAZORPAY_KEY_SECRET`     | No       | Razorpay key secret                                                                                                                        |
+| `RAZORPAY_WEBHOOK_SECRET` | No       | Razorpay webhook secret                                                                                                                    |
 
 Get Neon credentials from [neon.tech](https://neon.tech) and Google OAuth credentials from [Google Cloud Console](https://console.cloud.google.com/).
 
 ### `apps/web/.env.local`
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | Yes | URL of the API (`http://localhost:3000` locally) |
-| `NEXT_PUBLIC_WEB_URL` | Yes | URL of the web app (`http://localhost:3001` locally) |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Yes | Cloudinary cloud name for image uploads |
-| `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Yes | Cloudinary unsigned upload preset |
+| Variable                               | Required | Description                                          |
+| -------------------------------------- | -------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`                  | Yes      | URL of the API (`http://localhost:3000` locally)     |
+| `NEXT_PUBLIC_WEB_URL`                  | Yes      | URL of the web app (`http://localhost:3001` locally) |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`    | Yes      | Cloudinary cloud name for image uploads              |
+| `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Yes      | Cloudinary unsigned upload preset                    |
 
 Get Cloudinary credentials from [cloudinary.com](https://cloudinary.com/).
 
@@ -178,3 +178,37 @@ node -v   # must be v20 or higher
 ```
 
 If using `nvm`: `nvm use 20`
+
+---
+
+The one-line answer
+"Frontend and backend share a typed contract. The monorepo lets that contract be a single source of truth, enforced by the compiler, instead of two repos drifting apart."
+
+Concrete benefits (your repo, not theory)
+
+1. Shared types = one contract (packages/types)
+   Your @creonex/types holds DTOs, roles, enums used by both web and api. Change a DTO on the backend → the frontend that consumes it fails to compile until updated. In two separate repos, that mismatch ships to production silently (API returns new shape, frontend reads old shape, runtime bug). This is the strongest argument — show him parseRoles() / shared enums used on both sides.
+
+2. Atomic cross-stack changes
+   A feature touching API + web (e.g. payouts: new endpoint + new UI) = one branch, one PR, one commit. Reviewer sees the whole change. Two repos = two PRs, ordering problems ("deploy API first or web breaks"), hard to roll back together.
+
+3. One toolchain, no duplication
+   Turborepo + pnpm: one pnpm install, one lint config, one TS config (@creonex/typescript-config), one CI. Two repos = duplicate all of it, keep versions in sync by hand.
+
+4. Turborepo build caching
+   Only changed packages rebuild. Unchanged types is cached. CI stays fast even as the repo grows.
+
+5. Easy onboarding
+   New dev clones one repo, pnpm dev, both apps run. No "clone these 3 repos, link them locally."
+
+Honest tradeoffs (say these — he'll trust you more)
+CI/deploy needs path filtering — you saw this: web build had to build types first. Solved with turbo --filter. Real but one-time.
+Single repo = shared access — everyone sees all code. Fine for one team; matters only if you need to isolate teams.
+Repo grows large over time — manageable at your scale, revisit if it ever gets huge.
+When separate repos would win
+"If the API and web were owned by different teams, released on totally independent cycles, or written in unrelated stacks with no shared types — then separate repos make sense. None of those apply here: one team, shared TypeScript contract, coupled release. So monorepo is the right fit for this project."
+
+The clincher
+"It's not monorepo-for-trend. It's because web and api share a type contract, and a monorepo makes the compiler enforce that contract. That's the specific problem it solves for us."
+
+That framing — specific problem, honest tradeoffs, when you'd choose otherwise — is exactly what a tech client respects.
