@@ -1,12 +1,11 @@
 'use client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { learnerService, type CreateGoalBody, type CreateNoteBody, type SavedTargetBody } from '@/services/learner.service'
+import { learnerService, type CreateNoteBody, type SavedTargetBody } from '@/services/learner.service'
 import type { UpdateLearnerProfileRequest } from '@creonex/types'
 
 const KEYS = {
   saved: ['learner', 'saved'] as const,
   notes: ['learner', 'notes'] as const,
-  goals: ['learner', 'goals'] as const,
   overview: ['learner', 'overview'] as const,
   bookings: ['learner', 'bookings'] as const,
 }
@@ -41,27 +40,6 @@ export function useNoteMutations() {
       onSuccess: invalidate,
     }),
     remove: useMutation({ mutationFn: (id: string) => learnerService.deleteNote(id), onSuccess: invalidate }),
-  }
-}
-
-// ── Goals ──
-export function useGoals() {
-  return useQuery({ queryKey: KEYS.goals, queryFn: () => learnerService.getGoals(), staleTime: 30_000 })
-}
-export function useGoalMutations() {
-  const qc = useQueryClient()
-  const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: KEYS.goals })
-    void qc.invalidateQueries({ queryKey: KEYS.overview })
-  }
-  return {
-    create: useMutation({ mutationFn: (b: CreateGoalBody) => learnerService.createGoal(b), onSuccess: invalidate }),
-    update: useMutation({
-      mutationFn: ({ id, ...b }: { id: string; title?: string; targetDate?: string; status?: string }) =>
-        learnerService.updateGoal(id, b),
-      onSuccess: invalidate,
-    }),
-    remove: useMutation({ mutationFn: (id: string) => learnerService.deleteGoal(id), onSuccess: invalidate }),
   }
 }
 

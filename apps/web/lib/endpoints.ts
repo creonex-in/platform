@@ -45,8 +45,6 @@ export const endpoints = {
     saved:    '/api/v1/learner/saved',
     notes:    '/api/v1/learner/notes',
     noteById: (id: string) => `/api/v1/learner/notes/${id}`,
-    goals:    '/api/v1/learner/goals',
-    goalById: (id: string) => `/api/v1/learner/goals/${id}`,
   },
   availability: {
     slots: (offeringId: string) => `/api/v1/availability/offerings/${offeringId}/slots`,

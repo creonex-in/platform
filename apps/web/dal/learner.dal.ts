@@ -4,7 +4,6 @@ import { learnerService } from '@/services/learner.service'
 import { isNotFound } from '@/lib/api'
 import type {
   LearnerBookingItem,
-  LearnerGoal,
   LearnerNote,
   LearnerOverview,
   LearnerProfile,
@@ -24,7 +23,7 @@ export async function getLearnerOverview(): Promise<LearnerOverview> {
         nextSession: null,
         upcomingCount: 0,
         recentDigital: [],
-        activeGoals: [],
+        digitalCount: 0,
         savedCount: 0,
       }
     }
@@ -59,14 +58,6 @@ export async function getLearnerNotes(): Promise<LearnerNote[]> {
   }
 }
 
-export async function getLearnerGoals(): Promise<LearnerGoal[]> {
-  try {
-    return await learnerService.getGoals(await cookieHeader())
-  } catch (e) {
-    if (isNotFound(e)) return []
-    throw e
-  }
-}
 
 export async function getLearnerProfile(): Promise<LearnerProfile> {
   try {

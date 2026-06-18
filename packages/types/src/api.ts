@@ -409,15 +409,6 @@ export interface LearnerNote {
   updatedAt: string
 }
 
-export interface LearnerGoal {
-  id: string
-  title: string
-  targetDate: string | null
-  status: string // active | done | archived
-  createdAt: string
-  updatedAt: string
-}
-
 export interface UpdateLearnerProfileRequest {
   goalType?: string
   interestedNiches?: string[]
@@ -428,7 +419,7 @@ export interface LearnerOverview {
   nextSession: LearnerBookingItem | null
   upcomingCount: number
   recentDigital: LearnerBookingItem[]
-  activeGoals: LearnerGoal[]
+  digitalCount: number
   savedCount: number
 }
 

@@ -3,7 +3,7 @@ import { LearnerRepository } from './learner.repository'
 import { LearnerProfileRepository } from '../users/learner-profile.repository'
 import { BookingsService } from '../bookings/bookings.service'
 import type {
-  CreateSavedDto, CreateNoteDto, UpdateNoteDto, CreateGoalDto, UpdateGoalDto,
+  CreateSavedDto, CreateNoteDto, UpdateNoteDto,
 } from './learner.dto'
 import type { LearnerOverview } from '@creonex/types'
 
@@ -58,32 +58,11 @@ export class LearnerService {
     return { success: true }
   }
 
-  // ── Goals ──
-  async listGoals(userId: string) {
-    return this.learnerRepo.listGoals(await this.resolveProfileId(userId))
-  }
-  async createGoal(userId: string, dto: CreateGoalDto) {
-    const profileId = await this.resolveProfileId(userId)
-    await this.learnerRepo.createGoal(profileId, dto)
-    return this.learnerRepo.listGoals(profileId)
-  }
-  async updateGoal(userId: string, id: string, dto: UpdateGoalDto) {
-    const profileId = await this.resolveProfileId(userId)
-    await this.learnerRepo.updateGoal(id, profileId, dto)
-    return this.learnerRepo.listGoals(profileId)
-  }
-  async deleteGoal(userId: string, id: string) {
-    const profileId = await this.resolveProfileId(userId)
-    await this.learnerRepo.deleteGoal(id, profileId)
-    return { success: true }
-  }
-
   // ── Overview (home/hub aggregate) ──
   async getOverview(userId: string): Promise<LearnerOverview> {
     const profileId = await this.resolveProfileId(userId)
-    const [bookings, activeGoals, savedCount] = await Promise.all([
+    const [bookings, savedCount] = await Promise.all([
       this.bookingsService.getMyBookings(userId),
-      this.learnerRepo.listActiveGoals(profileId),
       this.learnerRepo.countSaved(profileId),
     ])
 
@@ -98,15 +77,15 @@ export class LearnerService {
       )
       .sort((a, b) => new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime())
 
-    const recentDigital = bookings
-      .filter((b) => b.offeringType === 'digital' && b.status === 'confirmed')
-      .slice(0, 4)
+    const digital = bookings.filter(
+      (b) => b.offeringType === 'digital' && (b.status === 'confirmed' || b.status === 'completed'),
+    )
 
     return {
       nextSession: (upcoming[0] as unknown as LearnerOverview['nextSession']) ?? null,
       upcomingCount: upcoming.length,
-      recentDigital: recentDigital as unknown as LearnerOverview['recentDigital'],
-      activeGoals: activeGoals as unknown as LearnerOverview['activeGoals'],
+      recentDigital: digital.slice(0, 4) as unknown as LearnerOverview['recentDigital'],
+      digitalCount: digital.length,
       savedCount,
     }
   }

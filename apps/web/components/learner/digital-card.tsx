@@ -38,8 +38,8 @@ export function DigitalCard({ booking }: { booking: LearnerBookingItem }): React
         <FontAwesomeIcon icon={faFileArrowDown} className="size-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{booking.offeringTitle}</p>
-        <p className="truncate text-xs text-muted-foreground">{booking.creatorName ?? 'Digital product'}</p>
+        <p className="truncate text-[15px] font-semibold text-foreground">{booking.offeringTitle}</p>
+        <p className="truncate text-[13px] text-muted-foreground">{booking.creatorName ?? 'Digital product'}</p>
       </div>
       <Button size="sm" className="h-9 rounded-lg" disabled={!paid || loading} onClick={download}>
         {loading ? <Spinner /> : <><FontAwesomeIcon icon={faFileArrowDown} className="size-3.5 mr-1.5" /> Download</>}

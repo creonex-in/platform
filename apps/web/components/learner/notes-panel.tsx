@@ -9,6 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from '@/components/ui/sheet'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useNotes, useNoteMutations } from '@/hooks/use-learner'
 import { isApiError } from '@/lib/api'
 import { toast } from '@/lib/toast'
@@ -19,6 +23,7 @@ export function NotesPanel({ initial }: { initial: LearnerNote[] }): React.React
   const { data = initial } = useNotes()
   const { create, update, remove } = useNoteMutations()
   const [editing, setEditing] = useState<LearnerNote | 'new' | null>(null)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
 
@@ -65,7 +70,7 @@ export function NotesPanel({ initial }: { initial: LearnerNote[] }): React.React
                   <button onClick={() => open(note)} className="text-muted-foreground hover:text-foreground" aria-label="Edit">
                     <FontAwesomeIcon icon={faPen} className="size-3.5" />
                   </button>
-                  <button onClick={() => del(note.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete">
+                  <button onClick={() => setConfirmId(note.id)} className="text-muted-foreground hover:text-destructive" aria-label="Delete">
                     <FontAwesomeIcon icon={faTrash} className="size-3.5" />
                   </button>
                 </div>
@@ -91,6 +96,24 @@ export function NotesPanel({ initial }: { initial: LearnerNote[] }): React.React
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={confirmId !== null} onOpenChange={(o) => !o && setConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+            <AlertDialogDescription>This permanently removes the note. It can&apos;t be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => { if (confirmId) del(confirmId); setConfirmId(null) }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

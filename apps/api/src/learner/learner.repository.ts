@@ -4,7 +4,6 @@ import { DATABASE_CONNECTION, type Database } from '../database/database-connect
 import {
   learnerSaved,
   learnerNotes,
-  learnerGoals,
   creatorProfiles,
   offerings,
 } from '../database/schema'
@@ -163,60 +162,5 @@ export class LearnerRepository {
     await this.db
       .delete(learnerNotes)
       .where(and(eq(learnerNotes.id, id), eq(learnerNotes.learnerProfileId, learnerProfileId)))
-  }
-
-  // ── Goals ──────────────────────────────────────────────────────────────────
-
-  listGoals(learnerProfileId: string) {
-    return this.db
-      .select()
-      .from(learnerGoals)
-      .where(eq(learnerGoals.learnerProfileId, learnerProfileId))
-      .orderBy(desc(learnerGoals.createdAt))
-  }
-
-  listActiveGoals(learnerProfileId: string) {
-    return this.db
-      .select()
-      .from(learnerGoals)
-      .where(and(eq(learnerGoals.learnerProfileId, learnerProfileId), eq(learnerGoals.status, 'active')))
-      .orderBy(desc(learnerGoals.createdAt))
-  }
-
-  async createGoal(
-    learnerProfileId: string,
-    data: { title: string; targetDate?: string },
-  ) {
-    const id = generateId()
-    await this.db.insert(learnerGoals).values({
-      id,
-      learnerProfileId,
-      title: data.title,
-      targetDate: data.targetDate ?? null,
-    })
-    return id
-  }
-
-  async updateGoal(
-    id: string,
-    learnerProfileId: string,
-    data: { title?: string; targetDate?: string | null; status?: string },
-  ) {
-    await this.db
-      .update(learnerGoals)
-      .set({
-        ...(data.title !== undefined && { title: data.title }),
-        ...(data.targetDate !== undefined && { targetDate: data.targetDate }),
-        ...(data.status !== undefined && {
-          status: data.status as typeof learnerGoals.$inferInsert['status'],
-        }),
-      })
-      .where(and(eq(learnerGoals.id, id), eq(learnerGoals.learnerProfileId, learnerProfileId)))
-  }
-
-  async deleteGoal(id: string, learnerProfileId: string) {
-    await this.db
-      .delete(learnerGoals)
-      .where(and(eq(learnerGoals.id, id), eq(learnerGoals.learnerProfileId, learnerProfileId)))
   }
 }

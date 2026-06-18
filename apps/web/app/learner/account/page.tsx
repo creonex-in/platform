@@ -9,8 +9,13 @@ export default async function LearnerAccountPage(): Promise<React.ReactElement> 
   const [user, profile] = await Promise.all([requireLearner(), getLearnerProfile()])
   return (
     <PageShell>
-      <SectionHeading title="Account" subtitle="Your goal and the topics you care about." />
-      <AccountForm profile={profile} displayName={user.name ?? user.email} email={user.email} />
+      <SectionHeading title="Settings" subtitle="Manage your profile and learning preferences." />
+      <AccountForm
+        profile={profile}
+        name={user.name ?? ''}
+        email={user.email}
+        image={user.image ?? null}
+      />
     </PageShell>
   )
 }

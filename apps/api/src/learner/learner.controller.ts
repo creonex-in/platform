@@ -8,7 +8,7 @@ import { RolesGuard } from '../auth/roles.guard'
 import type { AppUserSession } from '../auth/types'
 import { LearnerService } from './learner.service'
 import {
-  CreateSavedDto, CreateNoteDto, UpdateNoteDto, CreateGoalDto, UpdateGoalDto,
+  CreateSavedDto, CreateNoteDto, UpdateNoteDto,
 } from './learner.dto'
 
 @ApiTags('Learner')
@@ -59,23 +59,5 @@ export class LearnerController {
   @Delete('notes/:id')
   deleteNote(@Session() s: AppUserSession, @Param('id') id: string) {
     return this.learner.deleteNote(s.user.id, id)
-  }
-
-  // ── Goals ──
-  @Get('goals')
-  listGoals(@Session() s: AppUserSession) {
-    return this.learner.listGoals(s.user.id)
-  }
-  @Post('goals')
-  createGoal(@Session() s: AppUserSession, @Body() dto: CreateGoalDto) {
-    return this.learner.createGoal(s.user.id, dto)
-  }
-  @Patch('goals/:id')
-  updateGoal(@Session() s: AppUserSession, @Param('id') id: string, @Body() dto: UpdateGoalDto) {
-    return this.learner.updateGoal(s.user.id, id, dto)
-  }
-  @Delete('goals/:id')
-  deleteGoal(@Session() s: AppUserSession, @Param('id') id: string) {
-    return this.learner.deleteGoal(s.user.id, id)
   }
 }

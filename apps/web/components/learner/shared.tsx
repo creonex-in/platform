@@ -31,7 +31,7 @@ export const STATUS_META: Record<string, { label: string; className: string }> =
 export function StatusBadge({ status }: { status: string }): React.ReactElement {
   const m = STATUS_META[status] ?? { label: status, className: 'bg-muted text-muted-foreground' }
   return (
-    <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', m.className)}>{m.label}</span>
+    <span className={cn('rounded-full px-2.5 py-1 text-xs font-semibold', m.className)}>{m.label}</span>
   )
 }
 
@@ -57,10 +57,10 @@ export function SectionHeading({
   action?: React.ReactNode
 }): React.ReactElement {
   return (
-    <div className="mb-4 flex items-end justify-between gap-3">
-      <div className="space-y-0.5">
-        <h2 className="font-display text-lg font-bold tracking-tight text-foreground">{title}</h2>
-        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+    <div className="mb-5 flex items-end justify-between gap-3">
+      <div className="space-y-1">
+        <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">{title}</h2>
+        {subtitle && <p className="text-[15px] text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -76,13 +76,13 @@ export function EmptyState({
   action?: React.ReactNode
 }): React.ReactElement {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card/40 px-6 py-12 text-center">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-        <FontAwesomeIcon icon={icon} className="size-5" />
+    <div className="flex flex-col items-center justify-center gap-3.5 rounded-2xl border border-dashed border-border bg-card/40 px-6 py-14 text-center">
+      <div className="flex size-14 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+        <FontAwesomeIcon icon={icon} className="size-6" />
       </div>
-      <div className="space-y-1">
-        <p className="font-semibold text-foreground">{title}</p>
-        {description && <p className="mx-auto max-w-sm text-sm text-muted-foreground">{description}</p>}
+      <div className="space-y-1.5">
+        <p className="text-lg font-semibold text-foreground">{title}</p>
+        {description && <p className="mx-auto max-w-sm text-[15px] text-muted-foreground">{description}</p>}
       </div>
       {action}
     </div>
@@ -90,7 +90,7 @@ export function EmptyState({
 }
 
 export function PageShell({ children }: { children: React.ReactNode }): React.ReactElement {
-  return <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
+  return <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">{children}</div>
 }
 
 export function Spinner(): React.ReactElement {

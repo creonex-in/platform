@@ -1,10 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBell, faChevronDown } from '@fortawesome/free-solid-svg-icons'
-import { getInitials } from '@/lib/utils'
 import { ThemeToggleInline } from '@/components/layout/theme-toggle-inline'
-import { CommandTrigger } from '@/components/learner/command-trigger'
+import { MarketplaceSearch } from '@/components/layout/marketplace-search'
+import { LearnerProfileMenu } from '@/components/layout/learner-profile-menu'
+import { NotificationBell } from '@/components/layout/notification-bell'
 
 interface LearnerHeaderProps {
   displayName: string
@@ -13,16 +12,11 @@ interface LearnerHeaderProps {
 }
 
 const NAV_LINKS = [
-  { label: 'Home', href: '/learner' },
-  { label: 'Schedule', href: '/learner/schedule' },
-  { label: 'Library', href: '/learner/library' },
-  { label: 'Growth', href: '/learner/growth' },
+  { label: 'My Schedule', href: '/learner/schedule' },
+  { label: 'My Library', href: '/learner/library' },
 ] as const
 
 export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
-  const firstName = displayName.split(' ')[0]
-  const initials = getInitials(displayName)
-
   return (
     <header className="sticky top-0 z-50 w-full overflow-hidden border-b border-border/60 bg-background/95 backdrop-blur-md">
       {/* Holographic glow bleeding from behind the center of the bar */}
@@ -58,9 +52,9 @@ export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
           </div>
         </Link>
 
-        {/* Center — command palette trigger */}
-        <div className="relative flex flex-1 items-center justify-center max-w-md mx-auto">
-          <CommandTrigger />
+        {/* Center — explore search */}
+        <div className="relative flex flex-1 items-center justify-center">
+          <MarketplaceSearch className="hidden w-full max-w-[480px] md:block" />
         </div>
 
         {/* Right — nav + profile */}
@@ -75,44 +69,12 @@ export function LearnerHeader({ displayName, avatarUrl }: LearnerHeaderProps) {
             </Link>
           ))}
 
-          {/* Profile */}
-          <button
-            type="button"
-            className="group flex items-center gap-2.5 transition-opacity hover:opacity-80"
-          >
-            <span className="size-8 shrink-0 overflow-hidden rounded-full bg-primary/10 ring-1 ring-border">
-              {avatarUrl ? (
-                <Image
-                  src={avatarUrl}
-                  alt={displayName}
-                  width={32}
-                  height={32}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-[11px] font-bold text-primary">
-                  {initials}
-                </span>
-              )}
-            </span>
-            <span className="hidden whitespace-nowrap text-[13px] font-medium text-foreground sm:block">
-              {firstName}
-            </span>
-            <FontAwesomeIcon
-              icon={faChevronDown}
-              className="hidden size-[10px] text-muted-foreground transition-colors group-hover:text-foreground sm:block"
-            />
-          </button>
+          {/* Profile dropdown */}
+          <LearnerProfileMenu displayName={displayName} avatarUrl={avatarUrl} />
 
           {/* Bell + theme toggle */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="flex size-9 items-center justify-center rounded-full border border-border bg-muted/50 text-foreground transition-colors hover:bg-muted"
-            >
-              <FontAwesomeIcon icon={faBell} className="size-[15px]" />
-            </button>
+            <NotificationBell />
             <ThemeToggleInline />
           </div>
         </div>

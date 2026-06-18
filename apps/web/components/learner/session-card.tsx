@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faVideo, faXmark, faClock } from '@fortawesome/free-solid-svg-icons'
+import { faVideo, faXmark, faClock, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -15,7 +15,15 @@ import { cn } from '@/lib/utils'
 import { offerTypeMeta, StatusBadge, formatWhen, isUpcoming } from './shared'
 import type { LearnerBookingItem } from '@creonex/types'
 
-export function SessionCard({ booking, onChanged }: { booking: LearnerBookingItem; onChanged?: () => void }): React.ReactElement {
+export function SessionCard({
+  booking,
+  onChanged,
+  onDetails,
+}: {
+  booking: LearnerBookingItem
+  onChanged?: () => void
+  onDetails?: () => void
+}): React.ReactElement {
   const meta = offerTypeMeta(booking.offeringType)
   const cancel = useCancelBooking()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -42,10 +50,10 @@ export function SessionCard({ booking, onChanged }: { booking: LearnerBookingIte
 
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-semibold text-foreground">{booking.offeringTitle}</p>
+          <p className="truncate text-[15px] font-semibold text-foreground">{booking.offeringTitle}</p>
           <StatusBadge status={booking.status} />
         </div>
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-muted-foreground">
           <span>{meta.label}</span>
           {booking.creatorName && (<><span>·</span><span>{booking.creatorName}</span></>)}
           {booking.offeringType !== 'digital' && (
@@ -68,7 +76,17 @@ export function SessionCard({ booking, onChanged }: { booking: LearnerBookingIte
             <FontAwesomeIcon icon={faVideo} className="size-3.5 mr-1.5" /> Join
           </Button>
         )}
-        {canCancel && (
+        {onDetails && (
+          <Button
+            variant="outline" size="sm"
+            className="h-9 rounded-lg text-muted-foreground hover:text-foreground"
+            onClick={onDetails}
+            aria-label="Session details"
+          >
+            <FontAwesomeIcon icon={faChevronRight} className="size-3.5" />
+          </Button>
+        )}
+        {canCancel && !onDetails && (
           <Button
             variant="outline" size="sm"
             className="h-9 rounded-lg text-muted-foreground hover:text-destructive"

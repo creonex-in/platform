@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faHouse, faCalendarDays, faBookOpen, faSeedling,
+  faHouse, faCalendarDays, faBookOpen, faBookmark,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { cn } from '@/lib/utils'
@@ -13,7 +13,7 @@ const TABS: { label: string; href: string; icon: IconDefinition }[] = [
   { label: 'Home', href: '/learner', icon: faHouse },
   { label: 'Schedule', href: '/learner/schedule', icon: faCalendarDays },
   { label: 'Library', href: '/learner/library', icon: faBookOpen },
-  { label: 'Growth', href: '/learner/growth', icon: faSeedling },
+  { label: 'Saved', href: '/learner/saved', icon: faBookmark },
 ]
 
 export function LearnerTabBar(): React.ReactElement {

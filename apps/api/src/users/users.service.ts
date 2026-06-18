@@ -19,6 +19,13 @@ export class UsersService {
     return u
   }
 
+  /** Update the current user's name / avatar image. */
+  async updateMe(userId: string, dto: { name?: string; image?: string }) {
+    await this.usersRepo.updateMe(userId, dto)
+    const u = await this.getById(userId)
+    return { id: u.id, email: u.email, name: u.name, role: u.role, image: u.image }
+  }
+
   async getByEmail(email: string) {
     return this.usersRepo.findByEmail(email)
   }

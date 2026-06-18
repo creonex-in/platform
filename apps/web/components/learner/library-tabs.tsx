@@ -5,24 +5,21 @@ import Link from 'next/link'
 import { faBoxOpen } from '@fortawesome/free-solid-svg-icons'
 import { buttonVariants } from '@/components/ui/button'
 import { DigitalCard } from './digital-card'
-import { SavedList } from './saved-list'
 import { NotesPanel } from './notes-panel'
 import { EmptyState } from './shared'
 import { cn } from '@/lib/utils'
-import type { LearnerBookingItem, LearnerNote, LearnerSavedItem } from '@creonex/types'
+import type { LearnerBookingItem, LearnerNote } from '@creonex/types'
 
 const TABS = [
   { value: 'purchases', label: 'Purchases' },
-  { value: 'saved', label: 'Saved' },
   { value: 'notes', label: 'Notes' },
 ] as const
 type Tab = (typeof TABS)[number]['value']
 
 export function LibraryTabs({
-  digital, saved, notes,
+  digital, notes,
 }: {
   digital: LearnerBookingItem[]
-  saved: LearnerSavedItem[]
   notes: LearnerNote[]
 }): React.ReactElement {
   const [tab, setTab] = useState<Tab>('purchases')
@@ -59,7 +56,6 @@ export function LibraryTabs({
           </div>
         ))}
 
-      {tab === 'saved' && <SavedList initial={saved} />}
       {tab === 'notes' && <NotesPanel initial={notes} />}
     </div>
   )

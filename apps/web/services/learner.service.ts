@@ -3,7 +3,6 @@ import { endpoints } from '@/lib/endpoints'
 import type {
   DigitalAccessResponse,
   LearnerBookingItem,
-  LearnerGoal,
   LearnerNote,
   LearnerOverview,
   LearnerProfile,
@@ -16,10 +15,6 @@ export interface CreateNoteBody {
   content?: string
   bookingId?: string
   offeringId?: string
-}
-export interface CreateGoalBody {
-  title: string
-  targetDate?: string
 }
 export interface SavedTargetBody {
   targetType: 'creator' | 'offering'
@@ -36,8 +31,6 @@ export const learnerService = {
     api.get<LearnerSavedItem[]>(endpoints.learner.saved, { cookieHeader }),
   getNotes: (cookieHeader?: string) =>
     api.get<LearnerNote[]>(endpoints.learner.notes, { cookieHeader }),
-  getGoals: (cookieHeader?: string) =>
-    api.get<LearnerGoal[]>(endpoints.learner.goals, { cookieHeader }),
   getProfile: (cookieHeader?: string) =>
     api.get<LearnerProfile>(endpoints.users.learnerProfile, { cookieHeader }),
   getDigitalAccess: (bookingId: string) =>
@@ -55,12 +48,6 @@ export const learnerService = {
   updateNote: (id: string, body: Partial<CreateNoteBody>) =>
     api.patch<LearnerNote>(endpoints.learner.noteById(id), body),
   deleteNote: (id: string) => api.delete(endpoints.learner.noteById(id)),
-
-  // goals
-  createGoal: (body: CreateGoalBody) => api.post<LearnerGoal[]>(endpoints.learner.goals, body),
-  updateGoal: (id: string, body: { title?: string; targetDate?: string; status?: string }) =>
-    api.patch<LearnerGoal[]>(endpoints.learner.goalById(id), body),
-  deleteGoal: (id: string) => api.delete(endpoints.learner.goalById(id)),
 
   // profile + booking cancel
   updateProfile: (body: UpdateLearnerProfileRequest) =>
