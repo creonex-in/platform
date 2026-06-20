@@ -7,10 +7,12 @@ dist
 .next
 build
 
-# env
+# env (only .env.example is committed)
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
 
 # turbo
 .turbo
