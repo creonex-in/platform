@@ -75,21 +75,21 @@ export function LearnerProfileMenu({
           </DropdownMenuItem>
           <DropdownMenuItem
             className="gap-3 rounded-none px-4 py-2.5 text-sm"
-            onClick={() => router.push('/learner/schedule')}
+            onClick={() => router.push('/schedule')}
           >
             <FontAwesomeIcon icon={faCalendarDays} className="size-3.5 text-muted-foreground" />
             Schedule
           </DropdownMenuItem>
           <DropdownMenuItem
             className="gap-3 rounded-none px-4 py-2.5 text-sm"
-            onClick={() => router.push('/learner/library')}
+            onClick={() => router.push('/my-learning')}
           >
             <FontAwesomeIcon icon={faBookOpen} className="size-3.5 text-muted-foreground" />
             Library
           </DropdownMenuItem>
           <DropdownMenuItem
             className="gap-3 rounded-none px-4 py-2.5 text-sm"
-            onClick={() => router.push('/learner/saved')}
+            onClick={() => router.push('/saved')}
           >
             <FontAwesomeIcon icon={faBookmark} className="size-3.5 text-muted-foreground" />
             Saved
@@ -101,14 +101,14 @@ export function LearnerProfileMenu({
         <div className="py-1.5">
           <DropdownMenuItem
             className="gap-3 rounded-none px-4 py-2.5 text-sm"
-            onClick={() => router.push('/learner/account')}
+            onClick={() => router.push('/settings')}
           >
             <FontAwesomeIcon icon={faGear} className="size-3.5 text-muted-foreground" />
             Account settings
           </DropdownMenuItem>
           <DropdownMenuItem
             className="gap-3 rounded-none px-4 py-2.5 text-sm"
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/creator')}
           >
             <FontAwesomeIcon icon={faChalkboardUser} className="size-3.5 text-muted-foreground" />
             Switch to Creator

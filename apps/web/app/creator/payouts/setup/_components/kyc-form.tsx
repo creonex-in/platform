@@ -66,7 +66,7 @@ export function KycForm({ initial }: { initial: KycStatusResponse }): React.Reac
         bankIfsc: data.bankIfsc.toUpperCase(),
       })
       toast.success('KYC submitted', 'We’ll verify your details and enable payouts.')
-      router.push('/payouts')
+      router.push('/creator/payouts')
       router.refresh()
     } catch (e) {
       toast.error(isApiError(e) ? e.message : 'Could not submit KYC. Try again.')
@@ -128,7 +128,7 @@ export function KycForm({ initial }: { initial: KycStatusResponse }): React.Reac
       </Field>
 
       <div className="flex items-center justify-end gap-3 border-t border-border pt-5">
-        <Button type="button" variant="outline" disabled={submitting} onClick={() => router.push('/payouts')}>
+        <Button type="button" variant="outline" disabled={submitting} onClick={() => router.push('/creator/payouts')}>
           Cancel
         </Button>
         <Button type="submit" disabled={submitting}>

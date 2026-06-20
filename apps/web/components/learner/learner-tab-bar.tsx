@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils'
 
 const TABS: { label: string; href: string; icon: IconDefinition }[] = [
   { label: 'Home', href: '/learner', icon: faHouse },
-  { label: 'Schedule', href: '/learner/schedule', icon: faCalendarDays },
-  { label: 'Library', href: '/learner/library', icon: faBookOpen },
-  { label: 'Saved', href: '/learner/saved', icon: faBookmark },
+  { label: 'Schedule', href: '/schedule', icon: faCalendarDays },
+  { label: 'Library', href: '/my-learning', icon: faBookOpen },
+  { label: 'Saved', href: '/saved', icon: faBookmark },
 ]
 
 export function LearnerTabBar(): React.ReactElement {

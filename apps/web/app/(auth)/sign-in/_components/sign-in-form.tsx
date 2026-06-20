@@ -101,7 +101,7 @@ export function SignInForm(): React.ReactElement {
       const { data: session } = await authClient.getSession()
       const roles = (session?.user?.role as string | undefined)?.split(',') ?? []
 
-      router.push(roles.includes('creator') ? '/dashboard' : '/learner/dashboard')
+      router.push(roles.includes('creator') ? '/creator' : '/')
     } catch {
       setServerError('Unable to connect. Check your internet and try again.')
     }

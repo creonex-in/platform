@@ -59,25 +59,25 @@ const creatorNav: NavGroup[] = [
   {
     section: 'Manage',
     items: [
-      { title: 'Dashboard', href: '/dashboard', icon: faTableColumns },
-      { title: 'Bookings', href: '/bookings', icon: faCalendar },
-      { title: 'My Offers', href: '/offers', icon: faBox },
-      { title: 'Calendar', href: '/calendar', icon: faCalendarDays },
-      { title: 'Payouts', href: '/payouts', icon: faWallet },
+      { title: 'Dashboard', href: '/creator', icon: faTableColumns },
+      { title: 'Bookings', href: '/creator/bookings', icon: faCalendar },
+      { title: 'My Offers', href: '/creator/offers', icon: faBox },
+      { title: 'Calendar', href: '/creator/calendar', icon: faCalendarDays },
+      { title: 'Payouts', href: '/creator/payouts', icon: faWallet },
     ],
   },
   {
     section: 'Grow',
     items: [
-      { title: 'Analytics', href: '/analytics', icon: faChartColumn },
-      { title: 'Collaborate', href: '/collaborate', icon: faUsers },
-      { title: 'Testimonials', href: '/testimonials', icon: faComments },
+      { title: 'Analytics', href: '/creator/analytics', icon: faChartColumn },
+      { title: 'Collaborate', href: '/creator/collaborate', icon: faUsers },
+      { title: 'Testimonials', href: '/creator/testimonials', icon: faComments },
     ],
   },
   {
     section: 'Account',
     items: [
-      { title: 'Edit Profile', href: '/edit-profile', icon: faUserPen },
+      { title: 'Edit Profile', href: '/creator/edit-profile', icon: faUserPen },
     ],
   },
 ]
@@ -165,7 +165,7 @@ export function AppSidebar({
               <SidebarMenuButton
                 tooltip="Explore as Learner"
                 className="h-9 gap-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                render={<Link href="/learner/dashboard" />}
+                render={<Link href="/" />}
               >
                 <FontAwesomeIcon icon={faGraduationCap} className="size-4" />
                 <span>Want to learn? Explore</span>

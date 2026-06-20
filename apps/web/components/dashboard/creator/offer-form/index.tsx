@@ -300,7 +300,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
           toast.success('Draft saved.', `"${data.title}" saved as a draft.`)
         }
       }
-      router.push('/offers')
+      router.push('/creator/offers')
       router.refresh()
     } catch (e) {
       toast.error(isApiError(e) ? e.message : 'Could not save offer. Try again.')
@@ -869,7 +869,7 @@ export function OfferForm({ offering, eligibility }: OfferFormProps = {}): React
             type="button"
             variant="outline"
             disabled={submitting}
-            onClick={() => router.push('/offers')}
+            onClick={() => router.push('/creator/offers')}
             className="sm:w-auto rounded-lg text-sm md:text-base h-10.5 px-4 sm:mr-auto"
           >
             Cancel

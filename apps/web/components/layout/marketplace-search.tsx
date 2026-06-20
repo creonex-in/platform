@@ -70,8 +70,8 @@ function MarketplaceSearchInner({
         <FontAwesomeIcon
           icon={faMagnifyingGlass}
           className={cn(
-            'pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200',
-            open ? 'text-primary' : 'text-muted-foreground/60',
+            'pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 transition-colors duration-200',
+            open ? 'text-foreground' : 'text-muted-foreground',
           )}
         />
         <CommandPrimitive.Input
@@ -85,10 +85,10 @@ function MarketplaceSearchInner({
           placeholder={placeholder}
           aria-label="Search creators, courses or topics"
           className={cn(
-            'h-11 w-full rounded-full border border-border bg-muted/40 pl-11 pr-10 text-sm text-foreground',
-            'shadow-sm transition-all duration-200 placeholder:text-muted-foreground/60',
-            'hover:bg-muted/70 hover:border-border',
-            'focus:border-primary/50 focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10',
+            'h-11 w-full rounded-xl border border-border bg-background pl-11 pr-10 text-[15px] text-foreground shadow-sm',
+            'transition-all duration-200 placeholder:text-muted-foreground/60',
+            'hover:border-border/80 hover:bg-muted/30 hover:shadow',
+            'focus:border-primary focus:bg-background focus:outline-none focus:ring-1 focus:ring-primary',
           )}
         />
         {query && (
@@ -145,7 +145,7 @@ export function MarketplaceSearch({
             disabled
             placeholder={placeholder}
             aria-label="Search creators, courses or topics"
-            className="h-11 w-full rounded-full border border-border bg-muted/40 pl-11 pr-10 text-sm text-foreground shadow-sm placeholder:text-muted-foreground/60"
+            className="h-11 w-full rounded-xl border border-border bg-background pl-11 pr-10 text-[15px] text-foreground shadow-sm placeholder:text-muted-foreground/60"
           />
         </div>
       }

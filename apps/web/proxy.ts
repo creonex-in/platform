@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 const isPublicPath = (pathname: string) =>
-  pathname === '/' ||
   pathname === '/become-a-creator' ||
   pathname.startsWith('/top-creators') ||
   pathname.startsWith('/sign-in') ||
@@ -9,16 +8,15 @@ const isPublicPath = (pathname: string) =>
   pathname.startsWith('/api/')
 
 const isCreatorPath = (pathname: string) =>
-  ['/dashboard', '/analytics', '/bookings', '/calendar', '/collaborate',
-    '/cqs', '/offers', '/payouts', '/edit-profile',
-    '/testimonials'].some((p) => pathname.startsWith(p))
+  ['/creator', '/creator/analytics', '/creator/bookings', '/creator/calendar', '/creator/collaborate',
+    '/cqs', '/creator/offers', '/creator/payouts', '/creator/edit-profile',
+    '/creator/testimonials'].some((p) => pathname.startsWith(p))
 
-const isLearnerPath = (pathname: string) => pathname.startsWith('/learner')
 
 const isOnboardingPath = (pathname: string) => pathname.startsWith('/onboarding')
 
 const isProtectedPath = (pathname: string) =>
-  isCreatorPath(pathname) || isLearnerPath(pathname) || isOnboardingPath(pathname)
+  isCreatorPath(pathname) || false || isOnboardingPath(pathname)
 
 // Better Auth session cookie. Prefixed `__Secure-` when served over HTTPS.
 const hasSessionCookie = (request: NextRequest) =>

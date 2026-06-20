@@ -80,12 +80,12 @@ export function LearnerFooter(): React.ReactElement {
               </Link>
             </li>
             <li>
-              <Link href="/learner/schedule" className="hover:text-primary hover:underline transition-colors">
+              <Link href="/schedule" className="hover:text-primary hover:underline transition-colors">
                 Upcoming Schedule
               </Link>
             </li>
             <li>
-              <Link href="/learner/library" className="hover:text-primary hover:underline transition-colors">
+              <Link href="/my-learning" className="hover:text-primary hover:underline transition-colors">
                 Digital Vault
               </Link>
             </li>
@@ -119,13 +119,13 @@ export function LearnerFooter(): React.ReactElement {
           <h5 className="font-bold text-foreground text-xs uppercase tracking-wider">Settings</h5>
           <ul className="space-y-2 text-muted-foreground text-xs">
             <li>
-              <Link href="/dashboard" className="flex items-center gap-1.5 hover:text-primary hover:underline transition-colors font-semibold">
+              <Link href="/creator" className="flex items-center gap-1.5 hover:text-primary hover:underline transition-colors font-semibold">
                 <FontAwesomeIcon icon={faArrowRightArrowLeft} className="size-3" />
                 Switch to Creator
               </Link>
             </li>
             <li>
-              <Link href="/learner/account" className="flex items-center gap-1.5 hover:text-primary hover:underline transition-colors">
+              <Link href="/settings" className="flex items-center gap-1.5 hover:text-primary hover:underline transition-colors">
                 <FontAwesomeIcon icon={faGear} className="size-3" />
                 Account Settings
               </Link>

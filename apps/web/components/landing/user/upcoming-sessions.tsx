@@ -209,9 +209,7 @@ export default function UpcomingSessions(): React.ReactElement {
         }
       `}</style>
 
-      {/* Ambient Glow Effects */}
-      <div className="pointer-events-none absolute -left-40 top-1/4 h-[400px] w-[400px] rounded-full bg-foreground/2 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-40 bottom-1/4 h-[400px] w-[400px] rounded-full bg-foreground/2 blur-[120px]" />
+      {/* Ambient backgrounds removed */}
 
       <div className="page-container relative z-10">
 

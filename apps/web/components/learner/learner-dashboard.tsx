@@ -14,25 +14,25 @@ import { Button } from '@/components/ui/button'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faNoteSticky, faUsers, faUserCheck, faShieldHalved,
-  faCalendarDay, faStar, faArrowRight
+  faCalendarDay,
 } from '@fortawesome/free-solid-svg-icons'
 import type { LearnerBookingItem } from '@creonex/types'
 
-export const metadata = { title: 'My Learning — Creonex' }
 
 function greeting(): string {
   const h = new Date().getHours()
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
 }
 
-export default async function LearnerHomePage(): Promise<React.ReactElement> {
+export async function LearnerDashboard(): Promise<React.ReactElement> {
   // 1. Fetch user auth, bookings, overview, and profile in parallel
-  const [user, bookings, overview, profile] = await Promise.all([
+  const [user, bookings, overview, _profile] = await Promise.all([
     requireLearner(),
     getLearnerBookings(),
     getLearnerOverview(),
     getLearnerProfile(),
-  ])
+  ]);
+
   const firstName = (user.name ?? user.email).split(' ')[0]
 
   // 2. Filter bookings for upcoming, digital, and past
@@ -81,7 +81,7 @@ export default async function LearnerHomePage(): Promise<React.ReactElement> {
         {/* Compact Trust Ribbon (Udemy credibility style) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 rounded-2xl border border-border bg-card/65 backdrop-blur-md p-5 text-xs font-semibold text-muted-foreground shadow-sm">
           <div className="flex items-center gap-3 justify-center lg:justify-start">
-            <div className="flex size-9 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/15">
+            <div className="flex size-9 items-center justify-center rounded-2xl bg-foreground text-background border border-foreground/10">
               <FontAwesomeIcon icon={faUsers} className="size-4.5" />
             </div>
             <div>
@@ -89,9 +89,9 @@ export default async function LearnerHomePage(): Promise<React.ReactElement> {
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Trusted Learners</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 justify-center lg:justify-start">
-            <div className="flex size-9 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/15">
+            <div className="flex size-9 items-center justify-center rounded-2xl bg-foreground text-background border border-foreground/10">
               <FontAwesomeIcon icon={faUserCheck} className="size-4.5" />
             </div>
             <div>
@@ -101,7 +101,7 @@ export default async function LearnerHomePage(): Promise<React.ReactElement> {
           </div>
 
           <div className="flex items-center gap-3 justify-center lg:justify-start">
-            <div className="flex size-9 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/15">
+            <div className="flex size-9 items-center justify-center rounded-2xl bg-foreground text-background border border-foreground/10">
               <FontAwesomeIcon icon={faCalendarDay} className="size-4.5" />
             </div>
             <div>
@@ -207,3 +207,4 @@ export default async function LearnerHomePage(): Promise<React.ReactElement> {
     </div>
   )
 }
+

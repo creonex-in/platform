@@ -6,7 +6,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   const user = await getMe()
   if (user) {
     const roles = parseRoles(user.role as string)
-    redirect(roles.includes('creator') ? '/dashboard' : '/learner/dashboard')
+    redirect(roles.includes('creator') ? '/creator' : '/')
   }
   return <>{children}</>
 }

@@ -22,10 +22,10 @@ import { getMe } from '@/dal/users.dal'
 /** Where to send authenticated users who lack a required role. */
 const ROLE_FALLBACK: Record<UserRole, string> = {
   // Has a session but not a creator → their learner home.
-  creator: '/learner/dashboard',
+  creator: '/',
   // Every account has `learner` by default, so this only fires for
   // creator/admin-only accounts → route them to their creator home.
-  learner: '/dashboard',
+  learner: '/creator',
   admin: '/',
 }
 

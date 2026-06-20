@@ -2,57 +2,44 @@
 
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
+import Image from "next/image";
 import HeroSearch from "@/components/landing/shared/hero-search";
-
-gsap.registerPlugin(useGSAP);
 
 export default function UserHero(): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  useGSAP(
-    () => {
-      gsap.fromTo(
-        ".u-hero-item",
-        { y: 24, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.09, ease: "power3.out", delay: 0.1, clearProps: "all" },
-      );
-    },
-    { scope: containerRef },
-  );
-
   return (
-    <section className="relative z-20 pt-14 pb-6 md:pt-20 md:pb-10">
+    <section className="relative z-20 pt-10 pb-6 md:pt-16 md:pb-10 overflow-hidden bg-background">
+      <div className="page-container relative z-10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-12 bg-white dark:bg-zinc-900 rounded-3xl p-8 md:p-12 shadow-sm border border-border">
+          
+          <div className="flex-1 text-left">
+            <h1 className="text-display text-balance text-foreground font-bold leading-tight">
+              Jump into learning <br className="hidden md:block" />
+              with India&apos;s best creators
+            </h1>
+            
+            <p className="text-body mt-4 max-w-xl text-balance text-muted-foreground">
+              Browse premium courses, book 1-on-1 mentorship sessions, and join communities 
+              built by verified industry experts - all in one place.
+            </p>
 
-      {/* Background container with overflow-hidden to prevent dot grid/glow bleed */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* Cool Attraction: Highlighted Dotted Canvas Grid */}
-        <div className="absolute inset-0 bg-[radial-gradient(#9ca3af_1px,transparent_1px)] [background-size:24px_24px] opacity-65 [mask-image:radial-gradient(ellipse_60%_60%_at_50%_40%,#000_40%,transparent_100%)] dark:bg-[radial-gradient(#4b5563_1px,transparent_1px)]" />
+            <div className="relative z-10 mt-8 w-full max-w-md">
+              <HeroSearch
+                onSearch={(q) => router.push(`/explore?q=` + encodeURIComponent(q))}
+              />
+            </div>
+          </div>
 
-        {/* Cool Attraction: Ambient Accent Glows */}
-        <div className="absolute left-1/2 top-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-accent/5 blur-[120px]" />
-      </div>
-
-      <div ref={containerRef} className="page-container relative z-10">
-        <div className="mx-auto max-w-3xl text-center">
-
-          <h1 className="u-hero-item text-display text-balance text-foreground font-medium">
-            India&apos;s{" "}
-            <span className="text-primary">best creators,</span>
-            <br />
-            teaching what you actually need.
-          </h1>
-
-          <p className="u-hero-item text-body mx-auto mt-4 max-w-xl text-balance text-muted-foreground">
-            Browse courses, book 1-on-1 mentorship sessions, and join communities
-            built by verified experts — all in one place.
-          </p>
-
-          <div className="u-hero-item relative z-10 mt-8 w-full px-1 text-left">
-            <HeroSearch
-              onSearch={(q) => router.push(`/explore?q=${encodeURIComponent(q)}`)}
+          <div className="flex-1 relative w-full h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-lg border border-border">
+            {/* Using a placeholder premium learning image from Unsplash */}
+            <Image 
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop"
+              alt="Students learning and collaborating"
+              fill
+              className="object-cover"
+              priority
             />
           </div>
 

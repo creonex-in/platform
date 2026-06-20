@@ -41,7 +41,7 @@ export async function EarningsSummaryCard() {
           </div>
         </div>
         <Link
-          href="/payouts"
+          href="/creator/payouts"
           className={buttonVariants({ variant: 'outline', size: 'sm', className: 'w-full' })}
         >
           Request payout

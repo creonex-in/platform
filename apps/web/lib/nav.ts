@@ -17,18 +17,18 @@ export interface NavItem {
 export const LEARNER_PRIMARY_NAV: NavItem[] = [
   { label: 'Home', href: '/learner', icon: faHouse },
   { label: 'Explore', href: '/explore', icon: faCompass },
-  { label: 'Schedule', href: '/learner/schedule', icon: faCalendarDay },
-  { label: 'Library', href: '/learner/library', icon: faBookOpen },
+  { label: 'Schedule', href: '/schedule', icon: faCalendarDay },
+  { label: 'Library', href: '/my-learning', icon: faBookOpen },
 ]
 
 /** Account-level actions for the avatar menu (NOT primary nav). Sign out is added by UserMenu. */
 export const LEARNER_ACCOUNT_NAV: NavItem[] = [
-  { label: 'Account', href: '/learner/account', icon: faUser },
+  { label: 'Account', href: '/settings', icon: faUser },
 ]
 
 /** Discovery header has no other nav surface, so its avatar menu carries the destinations. */
 export const discoveryMenuNav = (dashboardHref: string): NavItem[] => [
   { label: 'Dashboard', href: dashboardHref, icon: faGaugeHigh },
-  { label: 'My Library', href: '/learner/library', icon: faBookOpen },
-  { label: 'Account', href: '/learner/account', icon: faUser },
+  { label: 'My Library', href: '/my-learning', icon: faBookOpen },
+  { label: 'Account', href: '/settings', icon: faUser },
 ]

@@ -14,7 +14,7 @@ export function CreatorDashboardButton(): React.ReactElement | null {
   if (!roles.includes('creator')) return null
 
   return (
-    <Link href="/dashboard" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+    <Link href="/creator" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
       Creator Dashboard
     </Link>
   )

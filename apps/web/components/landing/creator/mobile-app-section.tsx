@@ -17,10 +17,6 @@ export default function MobileAppSection(): React.ReactElement {
   return (
     <section className="bg-background py-24 relative overflow-hidden border-t border-border/10">
       
-      {/* Decorative background glow blobs in soft pastel */}
-      <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 translate-x-1/3 w-[400px] h-[400px] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
-
       <div className="page-container relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-evenly gap-8 lg:gap-10">
           

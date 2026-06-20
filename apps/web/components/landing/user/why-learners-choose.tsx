@@ -21,7 +21,7 @@ export default function WhyLearnersChoose(): React.ReactElement {
           <div className="grid grid-cols-2 gap-4 w-full">
             <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-border/20">
                <Image 
-                 src="https://images.unsplash.com/photo-1616469829581-73993eb86b02?auto=format&fit=crop&w=800&q=80" 
+                 src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80" 
                  alt="1-on-1 virtual call learning" 
                  fill 
                  className="object-cover hover:scale-105 transition-transform duration-500" 
@@ -113,7 +113,7 @@ export default function WhyLearnersChoose(): React.ReactElement {
           <div className="grid grid-cols-2 gap-4 w-full h-[400px] md:h-[500px]">
              <div className="row-span-2 relative rounded-xl overflow-hidden shadow-sm border border-border/20">
                 <Image 
-                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" 
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80" 
                   alt="Outcome tracking panel and analytics chart" 
                   fill 
                   className="object-cover hover:scale-105 transition-transform duration-500" 
@@ -145,7 +145,7 @@ export default function WhyLearnersChoose(): React.ReactElement {
     <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
       <p className="text-label text-primary mb-4">Why Learners Choose Creonex</p>
       <h2 className="text-h1 text-balance text-foreground mb-6 leading-tight">
-        Designed to help you<br className="hidden md:block" /> actually grow.
+        Designed to help you<br className="hidden md:block" /> actually grow
       </h2>
       <p className="text-body mx-auto max-w-2xl leading-relaxed text-muted-foreground">
         Skip the generic video repositories. Creonex connects you directly with top-tier practitioners to gain real-world outcomes.

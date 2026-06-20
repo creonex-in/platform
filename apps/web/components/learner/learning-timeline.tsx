@@ -258,7 +258,7 @@ export function LearningTimeline({ items }: { items: LearnerBookingItem[] }): Re
             {active} Active Offers
             <span className="text-muted-foreground font-normal"> | {items.length ? Math.round((active / items.length) * 100) : 0}% Complete</span>
           </p>
-          <Link href="/learner/schedule" className="flex items-center gap-1 text-xs font-bold text-primary hover:underline uppercase tracking-wide">
+          <Link href="/schedule" className="flex items-center gap-1 text-xs font-bold text-primary hover:underline uppercase tracking-wide">
             View all &rarr;
           </Link>
         </div>

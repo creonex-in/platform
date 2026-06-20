@@ -79,14 +79,14 @@ export default function CreatorCompletePage(): React.ReactElement {
 
       {/* Action cards */}
       <div className="space-y-2">
-        <Link href="/edit-profile" className="action-card flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 transition-colors hover:bg-accent">
+        <Link href="/creator/edit-profile" className="action-card flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 transition-colors hover:bg-accent">
           <FontAwesomeIcon icon={faImage} className="size-4 shrink-0 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium">Add a profile photo</p>
             <p className="text-xs text-muted-foreground">Profiles with photos get 3× more bookings</p>
           </div>
         </Link>
-        <Link href="/dashboard" className="action-card flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 transition-colors hover:bg-accent">
+        <Link href="/creator" className="action-card flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 transition-colors hover:bg-accent">
           <FontAwesomeIcon icon={faStar} className="size-4 shrink-0 text-muted-foreground" />
           <div>
             <p className="text-sm font-medium">Complete your first session</p>
@@ -103,7 +103,7 @@ export default function CreatorCompletePage(): React.ReactElement {
       </div>
 
       <div>
-        <Button className="w-full gap-2" onClick={() => router.push('/dashboard')}>
+        <Button className="w-full gap-2" onClick={() => router.push('/creator')}>
           <FontAwesomeIcon icon={faRocket} className="size-4" />
           Go to my creator dashboard
           <FontAwesomeIcon icon={faArrowRight} className="size-4" />

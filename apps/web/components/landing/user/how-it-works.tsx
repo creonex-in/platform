@@ -268,19 +268,18 @@ export default function HowItWorks(): React.ReactElement {
         </div>
       </div>
 
-      {/* CTA — after 6-step guide */}
       <div className="page-container pb-16 pt-10 text-center md:pb-24">
         <Button
           size="lg"
           nativeButton={false}
           render={<Link href="/signup" />}
-          className="rounded-full px-10 bg-primary text-white"
+          className="rounded-full px-10"
         >
           Start Learning Today
-          <FontAwesomeIcon icon={faArrowRight} className="ml-1 h-3.5 w-3.5" />
+          <FontAwesomeIcon icon={faArrowRight} className="ml-2 h-3.5 w-3.5" />
         </Button>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Free to join · No credit card needed
+        <p className="mt-4 text-xs text-muted-foreground">
+          Sign up for free · Connect instantly
         </p>
       </div>
 

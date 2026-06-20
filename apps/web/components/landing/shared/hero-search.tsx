@@ -106,7 +106,7 @@ export default function HeroSearch({
         <div
           className={cn(
             "relative border bg-card transition-[border-color,box-shadow] duration-150",
-            open  ? "rounded-t-[28px] shadow-lg border-b-transparent" : "rounded-full shadow-sm",
+            open  ? "rounded-t-2xl shadow-lg border-b-transparent" : "rounded-2xl shadow-sm",
             isActive
               ? "border-primary shadow-md"
               : "border-border hover:border-border/80 hover:shadow-md",
@@ -127,7 +127,7 @@ export default function HeroSearch({
                 icon={faMagnifyingGlass}
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors duration-150",
-                  isActive ? "text-primary" : "text-muted-foreground/60",
+                  isActive ? "text-foreground" : "text-muted-foreground/60",
                 )}
               />
 
@@ -162,7 +162,7 @@ export default function HeroSearch({
                 type="button"
                 onClick={handleSearch}
                 aria-label="Search"
-                className="hidden shrink-0 items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 active:scale-95 sm:flex"
+                className="hidden shrink-0 items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 active:scale-95 sm:flex"
               >
                 Search
                 <FontAwesomeIcon icon={faArrowRight} className="h-3 w-3" />
@@ -173,7 +173,7 @@ export default function HeroSearch({
                 type="button"
                 onClick={handleSearch}
                 aria-label="Search"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 active:scale-95 sm:hidden"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-opacity hover:opacity-90 active:scale-95 sm:hidden"
               >
                 <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
               </button>

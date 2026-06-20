@@ -1,35 +1,34 @@
-"use client";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faVideo, faGraduationCap, faUsers, faAward } from "@fortawesome/free-solid-svg-icons";
 
+const stats = [
+  {
+    icon: faVideo,
+    value: "45,000+",
+    label: "1:1 Minutes",
+    desc: "Personalized mentorship and guidance",
+  },
+  {
+    icon: faGraduationCap,
+    value: "180+",
+    label: "Live Courses",
+    desc: "Hands-on creative and technical skill building",
+  },
+  {
+    icon: faUsers,
+    value: "12,000+",
+    label: "Active Learners",
+    desc: "Upskilling and transitioning roles",
+  },
+  {
+    icon: faAward,
+    value: "99.2%",
+    label: "Satisfaction Rate",
+    desc: "Rated 5 stars by student reviews",
+  },
+];
+
 export default function StatsSection(): React.ReactElement {
-  const stats = [
-    {
-      icon: faVideo,
-      value: "45,000+",
-      label: "1:1 Minutes",
-      desc: "Personalized mentorship and guidance",
-    },
-    {
-      icon: faGraduationCap,
-      value: "180+",
-      label: "Live Courses",
-      desc: "Hands-on creative and technical skill building",
-    },
-    {
-      icon: faUsers,
-      value: "12,000+",
-      label: "Active Learners",
-      desc: "Upskilling and transitioning roles",
-    },
-    {
-      icon: faAward,
-      value: "99.2%",
-      label: "Satisfaction Rate",
-      desc: "Rated 5 stars by student reviews",
-    },
-  ];
 
   return (
     <section className="bg-background py-8 border-y border-border/40 relative z-10">
@@ -38,7 +37,7 @@ export default function StatsSection(): React.ReactElement {
           {stats.map((stat, i) => (
             <div
               key={i}
-              className="flex flex-col gap-1.5 p-4.5 rounded-2xl bg-muted/20 border border-border/30 hover:border-foreground/20 hover:bg-muted/30 transition-all duration-300"
+              className="flex flex-col gap-1.5 p-4 rounded-lg bg-muted/20 border border-border/30 hover:border-foreground/20 hover:bg-muted/30 transition-all duration-300"
             >
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground/5 text-foreground">

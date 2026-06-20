@@ -50,10 +50,6 @@ export default function HowItWorks(): React.ReactElement {
   return (
     <section id="how-it-works" className="bg-gradient-to-b from-white to-slate-50 py-24 md:py-32 relative overflow-hidden border-t border-b border-slate-200">
 
-      {/* Decorative soft pastel glow blobs */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-blue-200/30 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[350px] h-[350px] rounded-full bg-violet-200/30 blur-[120px] pointer-events-none" />
-
       <div className="page-container relative z-10">
 
         {/* Header */}

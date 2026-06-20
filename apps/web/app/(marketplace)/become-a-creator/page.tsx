@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import MarketingShell from "@/components/layout/marketing-shell";
 import HeroSection from "@/components/landing/creator/hero-section";
 import CreonexIdeology from "@/components/landing/creator/creonex-ideology";
 import FeaturedCreators from "@/components/landing/creator/featured-creators";
@@ -20,8 +19,7 @@ export const metadata: Metadata = {
 
 export default function CreatorLandingPage(): React.ReactElement {
   return (
-    <MarketingShell>
-      <main className="theme-creator">
+          <main className="theme-creator">
         <HeroSection />
         <CreonexIdeology />
         <FeaturedCreators />
@@ -34,6 +32,6 @@ export default function CreatorLandingPage(): React.ReactElement {
         <Testimonials />
         <Faqs />
       </main>
-    </MarketingShell>
-  );
+      );
 }
+

@@ -45,7 +45,7 @@ const PILLARS: readonly Pillar[] = [
 
 function SecureCheckoutVisual(): React.ReactElement {
   return (
-    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-pink-500/10 via-purple-600/15 to-violet-500/10 border border-border/45">
+    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-muted/30 border border-border/40">
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-[10px] font-bold text-foreground shadow-sm border border-border/60">
         <span>✦</span>
         <span>PCI DSS compliant</span>
@@ -74,13 +74,13 @@ function SecureCheckoutVisual(): React.ReactElement {
 
 function RefundVisual(): React.ReactElement {
   return (
-    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-amber-500/10 via-orange-600/15 to-pink-500/10 border border-border/45">
+    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-muted/30 border border-border/40">
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-[10px] font-bold text-foreground shadow-sm border border-border/60">
         <span>✦</span>
         <span>7-day refund window</span>
       </div>
 
-      <div className="w-[180px] rounded-xl bg-card p-3.5 border border-border/50 shadow-xl backdrop-blur-md">
+      <div className="w-[180px] rounded-lg bg-card p-3.5 border border-border/50 shadow-sm">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-1.5">
             <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
@@ -109,13 +109,13 @@ function RefundVisual(): React.ReactElement {
 
 function PayoutsVisual(): React.ReactElement {
   return (
-    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-tr from-violet-600/15 via-indigo-600/15 to-purple-500/10 border border-border/45">
+    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-muted/30 border border-border/40">
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-[10px] font-bold text-foreground shadow-sm border border-border/60">
         <span>✦</span>
         <span>Direct bank transfer</span>
       </div>
 
-      <div className="w-[180px] rounded-xl bg-card p-3.5 border border-border/50 shadow-xl backdrop-blur-md">
+      <div className="w-[180px] rounded-lg bg-card p-3.5 border border-border/50 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <div className="relative h-7 w-7 rounded-full bg-muted border border-border/50 flex items-center justify-center text-[9px] font-bold text-foreground">
             SJ
@@ -217,7 +217,7 @@ export default function PaymentsTrust(): React.ReactElement {
         <div className="mx-auto mb-14 max-w-xl text-center">
           <p className="text-label mb-3 text-primary">Payments &amp; Trust</p>
           <h2 className="text-h1 text-balance text-foreground">
-            Your money is <span className="text-muted-foreground">always protected.</span>
+            Your money is <span className="text-muted-foreground">always protected</span>
           </h2>
           <p className="text-body mx-auto mt-4 max-w-sm">
             Secure checkout for learners. Reliable settlements for creators.
@@ -227,7 +227,7 @@ export default function PaymentsTrust(): React.ReactElement {
         {/* Pillars Grid */}
         <div className="grid gap-6 sm:grid-cols-3">
           {/* Card 1 */}
-          <div className="flex flex-col gap-5 rounded-2xl bg-card/45 p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-foreground/20">
+          <div className="flex flex-col gap-5 rounded-lg bg-card/45 p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-foreground/20">
             <SecureCheckoutVisual />
             <div className="flex flex-col gap-2 mt-2">
               <h3 className="text-h4 text-foreground font-bold">{PILLARS[0].title}</h3>
@@ -236,7 +236,7 @@ export default function PaymentsTrust(): React.ReactElement {
           </div>
 
           {/* Card 2 */}
-          <div className="flex flex-col gap-5 rounded-2xl bg-card/45 p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-foreground/20">
+          <div className="flex flex-col gap-5 rounded-lg bg-card/45 p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-foreground/20">
             <RefundVisual />
             <div className="flex flex-col gap-2 mt-2">
               <h3 className="text-h4 text-foreground font-bold">{PILLARS[1].title}</h3>
@@ -245,7 +245,7 @@ export default function PaymentsTrust(): React.ReactElement {
           </div>
 
           {/* Card 3 */}
-          <div className="flex flex-col gap-5 rounded-2xl bg-card/45 p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-foreground/20">
+          <div className="flex flex-col gap-5 rounded-lg bg-card/45 p-5 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-foreground/20">
             <PayoutsVisual />
             <div className="flex flex-col gap-2 mt-2">
               <h3 className="text-h4 text-foreground font-bold">{PILLARS[2].title}</h3>
@@ -255,7 +255,7 @@ export default function PaymentsTrust(): React.ReactElement {
         </div>
 
         {/* Payment methods strip */}
-        <div className="mt-8 rounded-2xl bg-card/45 p-5 border border-border/50">
+        <div className="mt-8 rounded-lg bg-card/45 p-5 border border-border/50">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5 text-muted-foreground/60">
               <FontAwesomeIcon icon={faLock} className="h-3 w-3" />

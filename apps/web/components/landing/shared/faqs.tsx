@@ -18,37 +18,32 @@ const FAQS: Faq[] = [
   {
     question: "What is Creonex?",
     answer:
-      "Creonex is an Indian creator-education platform where micro-creators can sell courses, host 1-on-1 sessions, and build paid communities — all from one place, with no tech setup required.",
+      "Creonex is an educational platform where you can learn directly from top Indian creators, industry experts, and professionals through recorded courses and live 1-on-1 mentorship.",
   },
   {
-    question: "Who is Creonex for?",
+    question: "How do 1-on-1 sessions work?",
     answer:
-      "Creonex is built for knowledge creators — designers, educators, coaches, artists, and professionals — who want to monetise their expertise without relying on follower count or big budgets.",
+      "You can book direct video calls with creators to get personalized career advice, portfolio reviews, or specific technical help. You choose the time, submit your questions in advance, and connect via our built-in video platform.",
   },
   {
-    question: "What can I build on Creonex?",
+    question: "How are creators verified?",
     answer:
-      "You can create recorded courses with structured chapters, open live 1-on-1 booking sessions, and run private communities for your audience — all under your own branded profile.",
+      "Every creator on Creonex is vetted based on their real-world experience, portfolio, and industry expertise to ensure you are learning from active practitioners, not just influencers.",
   },
   {
-    question: "What makes Creonex different from other platforms?",
+    question: "Do I get lifetime access to courses?",
     answer:
-      "Unlike other platforms, Creonex ranks creators by quality of teaching — not follower count. Our discovery engine surfaces the best educators first, giving every serious creator a fair shot.",
+      "Yes. Once you enroll in a self-paced course on Creonex, you get permanent, lifetime access to all its chapters, resources, and any future updates the creator publishes.",
   },
   {
-    question: "How does Creonex help creators grow their business?",
+    question: "What if I'm not satisfied with a session?",
     answer:
-      "We handle payments, scheduling, student management, and discovery so you can focus entirely on teaching. Automated reminders, UPI payouts, and a monthly earnings dashboard come built-in.",
+      "All bookings are protected by our satisfaction guarantee. If a session doesn't happen or severely misses expectations, you are eligible for a 100% refund within our 7-day window—no questions asked.",
   },
   {
-    question: "Is Creonex good for beginners with no audience?",
+    question: "What payment methods do you accept?",
     answer:
-      "Absolutely. Most of our creators start with zero audience. The platform is designed to help you build from scratch — your first free session can become your first paying cohort within weeks.",
-  },
-  {
-    question: "How do payouts work?",
-    answer:
-      "Earnings are processed via UPI and direct bank transfer. Payouts are instant after each transaction and visible in your earnings dashboard with a full breakdown.",
+      "We support all major Indian payment methods including UPI, NetBanking, RuPay, Wallets, and all major credit/debit cards via our highly secure, encrypted Razorpay checkout.",
   },
 ];
 

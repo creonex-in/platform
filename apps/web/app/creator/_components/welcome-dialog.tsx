@@ -20,7 +20,7 @@ export function WelcomeDialog({ offerId, username }: Props) {
   const close = () => {
     setOpen(false)
     // Drop the query so it doesn't reopen on refresh / back.
-    router.replace('/dashboard', { scroll: false })
+    router.replace('/creator', { scroll: false })
   }
 
   return (

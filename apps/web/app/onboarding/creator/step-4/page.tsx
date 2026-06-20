@@ -83,7 +83,7 @@ export default function CreatorStep4Page() {
       }
     } catch { /* corrupt — start fresh */ }
     setHydrated(true)
-    router.prefetch('/dashboard')
+    router.prefetch('/creator')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -117,7 +117,7 @@ export default function CreatorStep4Page() {
       })
       try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* non-fatal */ }
       setLive(true)
-      setTimeout(() => router.push(res.redirectTo ?? '/dashboard'), 1600)
+      setTimeout(() => router.push(res.redirectTo ?? '/creator'), 1600)
     } catch (e) {
       setApiError(isApiError(e) ? e.message : 'Network error — please try again')
     }

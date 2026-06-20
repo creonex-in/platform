@@ -14,7 +14,7 @@ export function LearnerDashboardButton(): React.ReactElement | null {
   if (roles.includes('creator')) return null
 
   return (
-    <Link href="/learner/dashboard" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+    <Link href="/" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
       My Learning
     </Link>
   )

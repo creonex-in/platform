@@ -21,7 +21,7 @@ async function routeExistingCreator(cookieHeader: string, request: NextRequest):
   } catch {
     return NextResponse.redirect(new URL('/onboarding/creator/step-1', request.url))
   }
-  return NextResponse.redirect(new URL('/dashboard', request.url))
+  return NextResponse.redirect(new URL('/creator', request.url))
 }
 
 export async function GET(request: NextRequest) {
@@ -65,5 +65,5 @@ export async function GET(request: NextRequest) {
     return routeExistingCreator(cookieHeader, request)
   }
 
-  return NextResponse.redirect(new URL('/learner/dashboard', request.url))
+  return NextResponse.redirect(new URL('/', request.url))
 }

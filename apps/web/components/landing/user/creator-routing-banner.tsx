@@ -15,7 +15,7 @@ export default function CreatorRoutingBanner(): React.ReactElement {
             <FontAwesomeIcon icon={faChalkboardUser} className="size-3.5 text-foreground" />
           </div>
           <p className="truncate text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Want to share your expertise and grow your audience.</span>
+            <span className="font-semibold text-foreground">Are you an expert?</span> Share your knowledge and build your audience.
           </p>
         </div>
 

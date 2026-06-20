@@ -35,7 +35,7 @@ export async function NewBookingAlert() {
         </p>
       </div>
       <Link
-        href="/bookings"
+        href="/creator/bookings"
         className={cn(buttonVariants({ size: 'sm' }), 'shrink-0')}
       >
         View

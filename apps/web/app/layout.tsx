@@ -1,15 +1,14 @@
 import type { Metadata } from "next"
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google"
+import { Plus_Jakarta_Sans, Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { QueryProvider } from "@/providers/QueryProvider"
 import { Toaster } from "@/components/ui/toaster"
 
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
 })
 
 const geist = Geist({
@@ -37,8 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${geist.variable} ${geistMono.variable}`}
-      suppressHydrationWarning
+      className={`${jakarta.variable} ${geist.variable} ${geistMono.variable}`}
     >
       <body className="overflow-x-hidden antialiased">
         <ThemeProvider

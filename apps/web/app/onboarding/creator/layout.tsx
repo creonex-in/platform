@@ -15,7 +15,7 @@ export default async function CreatorOnboardingLayout({
 
   // Single signal: isLive. Avoids loop if isLive/onboardingStatus are ever out of sync.
   if (profile?.isLive) {
-    redirect('/dashboard')
+    redirect('/creator')
   }
 
   return <>{children}</>

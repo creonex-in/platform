@@ -5,8 +5,11 @@ import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 export default function FinalCta(): React.ReactElement {
   return (
-    <section className="relative overflow-hidden border-t border-border/40 bg-gradient-to-r from-[#e3dbff]/75 via-background to-[#fff4db]/85 dark:from-[#1b1933]/50 dark:via-background dark:to-[#2b271b]/50 py-24 md:py-32">
-
+    <section className="relative overflow-hidden border-t border-border/40 bg-background py-24 md:py-32">
+      {/* Subtle, highly engineered dotted grid */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(#9ca3af_1px,transparent_1px)] [background-size:24px_24px] opacity-30 [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_40%,transparent_100%)] dark:bg-[radial-gradient(#4b5563_1px,transparent_1px)] dark:opacity-20" />
+      </div>
       <div className="page-container flex flex-col items-center text-center relative z-10">
         
         <h2 className="text-4xl md:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-foreground mb-6 text-balance leading-[1.15]">
