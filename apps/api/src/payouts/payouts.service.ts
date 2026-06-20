@@ -41,16 +41,10 @@ export class PayoutsService {
     // Phone is identity data — single source of truth on the user record.
     await this.usersRepo.updatePhone(userId, dto.phone)
 
-    await this.payoutsRepo.upsertAccount(profileId, {
-      legalName: dto.legalName,
-      entityType: dto.entityType,
-      pan: dto.pan,
-      bankAccountNumber: dto.bankAccountNumber,
-      bankIfsc: dto.bankIfsc,
-      accountHolderName: dto.accountHolderName,
-    })
-
+    // ── Razorpay Route onboarding (3 steps; each failure is non-fatal) ───────────
     let razorpayAccountId: string | undefined
+    let razorpayProductId: string | undefined
+
     try {
       razorpayAccountId = await this.paymentService.createLinkedAccount({
         email,
@@ -63,9 +57,41 @@ export class PayoutsService {
         accountHolderName: dto.accountHolderName,
       })
     } catch (err) {
-      // Don't fail the request — KYC is saved as pending and can be retried.
       this.logger.warn(`Linked-account creation deferred for ${profileId}: ${String(err)}`)
     }
+
+    if (razorpayAccountId) {
+      try {
+        await this.paymentService.createStakeholder(razorpayAccountId, {
+          email,
+          phone: dto.phone,
+          legalName: dto.legalName,
+          entityType: dto.entityType,
+          pan: dto.pan,
+          bankAccountNumber: dto.bankAccountNumber,
+          bankIfsc: dto.bankIfsc,
+          accountHolderName: dto.accountHolderName,
+        })
+        razorpayProductId = await this.paymentService.requestSettlementsProduct(razorpayAccountId, {
+          bankAccountNumber: dto.bankAccountNumber,
+          bankIfsc: dto.bankIfsc,
+          accountHolderName: dto.accountHolderName,
+        })
+      } catch (err) {
+        this.logger.warn(`Stakeholder/product config deferred for ${profileId}: ${String(err)}`)
+      }
+    }
+
+    // Persist KYC data + Razorpay product ID (always, even if Razorpay partially failed)
+    await this.payoutsRepo.upsertAccount(profileId, {
+      legalName: dto.legalName,
+      entityType: dto.entityType,
+      pan: dto.pan,
+      bankAccountNumber: dto.bankAccountNumber,
+      bankIfsc: dto.bankIfsc,
+      accountHolderName: dto.accountHolderName,
+      razorpayProductId,
+    })
 
     await this.creatorProfileRepo.updatePayoutFields(profileId, {
       ...(razorpayAccountId ? { razorpayAccountId } : {}),

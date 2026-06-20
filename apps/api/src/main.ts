@@ -6,8 +6,13 @@ import { toNodeHandler } from 'better-auth/node'
 import { AuthService } from '@mguay/nestjs-better-auth'
 import cookieParser from 'cookie-parser'
 import compression from 'compression'
+import helmet from 'helmet'
 import { AppModule } from './app.module'
 import { AllExceptionsFilter } from './utils/all-exceptions.filter'
+import { apiRateLimit, authRateLimit } from './utils/rate-limiter'
+import type { Request, Response, NextFunction } from 'express'
+
+const BODY_LIMIT = '512kb'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false })
@@ -21,17 +26,29 @@ async function bootstrap() {
 
   const express = require('express') // eslint-disable-line @typescript-eslint/no-require-imports
   // Razorpay webhook needs raw body for HMAC signature verification
-  expressApp.use('/api/v1/payments/webhook', express.raw({ type: 'application/json' }))
-  expressApp.use(express.json())
+  expressApp.use('/api/v1/payments/webhook', express.raw({ type: 'application/json', limit: BODY_LIMIT }))
+  expressApp.use(express.json({ limit: BODY_LIMIT }))
+
+  // Auth: strict brute-force limiter before better-auth handler
+  expressApp.use('/api/auth', authRateLimit)
   expressApp.all(/^\/api\/auth\/.*/, toNodeHandler(authService.instance.handler))
 
+  // General API limiter on all NestJS routes — skip the Razorpay webhook
+  // (server-to-server; must never be blocked)
+  expressApp.use('/api/v1', (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/payments/webhook')) return next()
+    return apiRateLimit(req, res, next)
+  })
+
+  // Security headers — CSP disabled: pure JSON API + Swagger UI in dev
+  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }))
   app.use(cookieParser())
   app.use(compression()) // gzip responses — large slot payloads compress ~85%
 
   app.setGlobalPrefix('api')
 
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, transform: true }),
+    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   )
 
   app.useGlobalFilters(new AllExceptionsFilter())

@@ -1,26 +1,25 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type {
   ConfirmUploadResponse,
   DeleteUploadResponse,
   DigitalAccessResponse,
+  DigitalAssetLink,
+  DigitalDeliveryFile,
   PresignUploadResponse,
   UploadScope,
 } from '@creonex/types'
+import { BookingsService } from '../bookings/bookings.service'
+import { OfferingsService } from '../offerings/offerings.service'
 import { generateId } from '../utils/id'
 import type { PresignUploadDto } from './uploads.dto'
-
-/*
- * ⚠️ STUB SERVICE — no AWS yet.
- *
- * These methods return correctly-shaped placeholder responses so the frontend can
- * integrate the full upload + digital-delivery flow now. When S3 + CloudFront are
- * provisioned (see docs/s3-cloudfront-setup.md), swap the bodies for the AWS SDK:
- *   - presign  → S3 `createPresignedPost` / multipart presigned part URLs
- *   - confirm  → verify the object exists, persist the key on the profile/offering
- *   - delete   → `DeleteObject`
- *   - digital  → verify a confirmed booking, then sign GET URLs for the files
- * The HTTP contract (routes + request/response shapes) will NOT change.
- */
 
 const REGION = process.env.AWS_REGION ?? 'ap-south-1'
 const PUBLIC_BUCKET = process.env.S3_PUBLIC_BUCKET ?? 'creonex-public-stub'
@@ -32,14 +31,30 @@ const PUBLIC_SCOPES: ReadonlySet<UploadScope> = new Set<UploadScope>(['profile',
 
 @Injectable()
 export class UploadsService {
-  /** Object key prefix per scope. Digital files land in a `pending/` prefix so an
-   *  S3 lifecycle rule can sweep them if the offering is never saved. */
+  private _s3: S3Client | null = null
+  private get s3(): S3Client {
+    return (this._s3 ??= new S3Client({
+      region: REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
+      },
+    }))
+  }
+
+  constructor(
+    private readonly bookingsService: BookingsService,
+    private readonly offeringsService: OfferingsService,
+  ) {}
+
+  /** Object key prefix per scope. Digital files land in `pending/` so an S3 lifecycle
+   *  rule can sweep them if the offering is never saved. */
   private keyFor(scope: UploadScope, userId: string, fileName: string): string {
     const safe = fileName.replace(/[^a-zA-Z0-9._-]/g, '_')
     const id = generateId()
     switch (scope) {
-      case 'profile': return `profiles/${userId}/${id}-${safe}`
-      case 'banner': return `banners/${userId}/${id}-${safe}`
+      case 'profile':       return `profiles/${userId}/${id}-${safe}`
+      case 'banner':        return `banners/${userId}/${id}-${safe}`
       case 'digital_asset': return `uploads/pending/${userId}/${id}-${safe}`
     }
   }
@@ -48,8 +63,14 @@ export class UploadsService {
     return `https://${CDN_HOST}/${key}`
   }
 
-  /** STUB: returns a fake presigned PUT URL in the real shape. */
-  presign(userId: string, dto: PresignUploadDto): PresignUploadResponse {
+  /** Infer which bucket owns a key from its prefix. */
+  private bucketForKey(key: string): string {
+    return key.startsWith('profiles/') || key.startsWith('banners/')
+      ? PUBLIC_BUCKET
+      : PRIVATE_BUCKET
+  }
+
+  async presign(userId: string, dto: PresignUploadDto): Promise<PresignUploadResponse> {
     if (dto.scope === 'digital_asset' && !dto.offeringId) {
       throw new BadRequestException('offeringId is required for digital_asset uploads')
     }
@@ -57,9 +78,19 @@ export class UploadsService {
     const bucket = isPublic ? PUBLIC_BUCKET : PRIVATE_BUCKET
     const key = this.keyFor(dto.scope, userId, dto.fileName)
 
+    const uploadUrl = await getSignedUrl(
+      this.s3,
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        ContentType: dto.contentType,
+        ContentLength: dto.sizeBytes,
+      }),
+      { expiresIn: PRESIGN_EXPIRY },
+    )
+
     return {
-      // STUB upload URL — a real presigned S3 PUT will replace this.
-      uploadUrl: `https://${bucket}.s3.${REGION}.amazonaws.com/${key}?X-Amz-Stub=1`,
+      uploadUrl,
       key,
       publicUrl: isPublic ? this.cdnUrl(key) : null,
       method: 'PUT',
@@ -68,25 +99,51 @@ export class UploadsService {
     }
   }
 
-  /** STUB: echoes the key as confirmed. Real impl verifies the object + persists it. */
-  confirm(key: string): ConfirmUploadResponse {
-    const isPublic = key.startsWith('profiles/') || key.startsWith('banners/')
+  async confirm(key: string): Promise<ConfirmUploadResponse> {
+    const bucket = this.bucketForKey(key)
+    try {
+      await this.s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
+    } catch {
+      throw new BadRequestException('Upload not found — object does not exist in S3')
+    }
+    const isPublic = bucket === PUBLIC_BUCKET
     return { key, url: isPublic ? this.cdnUrl(key) : key }
   }
 
-  /** STUB: pretends the object was deleted. */
-  delete(key: string): DeleteUploadResponse {
+  async delete(key: string): Promise<DeleteUploadResponse> {
+    const bucket = this.bucketForKey(key)
+    await this.s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
     return { key, deleted: true }
   }
 
-  /** STUB: buyer-gated digital delivery. Real impl checks a confirmed booking and
-   *  signs short-lived GET URLs for the offering's files. */
-  digitalAccess(bookingId: string): DigitalAccessResponse {
+  async digitalAccess(bookingId: string, learnerId: string): Promise<DigitalAccessResponse> {
+    const booking = await this.bookingsService.findByIdForLearner(bookingId, learnerId)
+    if (!booking) throw new NotFoundException('Booking not found')
+    if (!['confirmed', 'completed'].includes(booking.status)) {
+      throw new ForbiddenException('Purchase not confirmed')
+    }
+
+    const offering = await this.offeringsService.findById(booking.offeringId)
+    if (!offering) throw new NotFoundException('Offering not found')
+
+    const storedFiles = (offering.metadata?.files ?? []) as DigitalDeliveryFile[]
+    const files: DigitalAssetLink[] = await Promise.all(
+      storedFiles.map(async (f) => ({
+        name: f.name,
+        sizeBytes: f.sizeBytes,
+        url: await getSignedUrl(
+          this.s3,
+          new GetObjectCommand({ Bucket: PRIVATE_BUCKET, Key: f.key }),
+          { expiresIn: PRESIGN_EXPIRY },
+        ),
+      })),
+    )
+
     return {
-      offeringId: `stub-for-${bookingId}`,
-      files: [],
-      externalUrl: null,
-      instructions: null,
+      offeringId: offering.id,
+      files,
+      externalUrl: offering.metadata?.externalUrl ?? null,
+      instructions: offering.metadata?.instructions ?? null,
       expiresInSeconds: PRESIGN_EXPIRY,
     }
   }

@@ -8,6 +8,15 @@ import { generateId } from '../utils/id'
 export class LearnerProfileRepository {
   constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
 
+  async findById(id: string) {
+    const result = await this.db
+      .select()
+      .from(learnerProfiles)
+      .where(eq(learnerProfiles.id, id))
+      .limit(1)
+    return result[0] ?? null
+  }
+
   async findByUserId(userId: string) {
     const result = await this.db
       .select()

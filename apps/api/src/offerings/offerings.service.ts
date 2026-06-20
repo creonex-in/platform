@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common'
 import { OfferingsRepository } from '../users/offerings.repository'
 import { CreatorProfileRepository } from '../users/creator-profile.repository'
+import { BookingsService } from '../bookings/bookings.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import {
   GATED_OFFER_TYPES,
   SESSIONS_TO_UNLOCK_OFFERS,
@@ -48,6 +50,8 @@ export class OfferingsService {
   constructor(
     private readonly offeringsRepo: OfferingsRepository,
     private readonly creatorProfileRepo: CreatorProfileRepository,
+    private readonly bookingsService: BookingsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private async resolveCreatorProfileId(userId: string): Promise<string> {
@@ -215,6 +219,27 @@ export class OfferingsService {
     }
 
     await this.offeringsRepo.updateStatus(id, newStatus)
+
+    // When a live_event is paused or archived, bulk-cancel active bookings + notify learners.
+    if (offering.type === 'live_event' && (newStatus === 'paused' || newStatus === 'archived')) {
+      void (async () => {
+        try {
+          const cancelled = await this.bookingsService.cancelAllForOffering(id, userId)
+          if (cancelled.length > 0) {
+            void this.notificationsService.notifyClassCancelled(cancelled, {
+              id: offering.id,
+              title: offering.title,
+              creatorProfileId: offering.creatorProfileId,
+              type: offering.type,
+              metadata: (offering.metadata as { instructions?: string }) ?? null,
+            })
+          }
+        } catch {
+          // Never surface — status transition already succeeded
+        }
+      })()
+    }
+
     return { id, status: newStatus }
   }
 
@@ -224,6 +249,12 @@ export class OfferingsService {
    * instead (preserves payment + booking records). Guarded server-side; the
    * UI gate is convenience only.
    */
+  /** Raw lookup by ID — for internal cross-module use (e.g. UploadsService digital delivery). */
+  async findById(id: string) {
+    const row = await this.offeringsRepo.findById(id)
+    return this.formatOffering(row)
+  }
+
   async deleteOffering(id: string, userId: string) {
     const profileId = await this.resolveCreatorProfileId(userId)
     const offering = await this.offeringsRepo.findByIdForOwner(id, profileId)

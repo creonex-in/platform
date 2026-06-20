@@ -177,6 +177,30 @@ export class BookingsRepository {
       )
   }
 
+  /** Bulk-cancel all active bookings for an offering (class cancellation). Returns the rows that were cancelled. */
+  async cancelAllActiveByOffering(
+    offeringId: string,
+    cancelledBy: string,
+    cancellationReason?: string,
+  ): Promise<BookingRow[]> {
+    return this.db
+      .update(bookings)
+      .set({
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        cancelledBy,
+        cancellationReason: cancellationReason ?? null,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(bookings.offeringId, offeringId),
+          inArray(bookings.status, ['pending_payment', 'confirmed']),
+        ),
+      )
+      .returning()
+  }
+
   // ── Counters (called after confirm) ──────────────────────────────────────────
 
   async incrementOfferingCounters(offeringId: string, amountPaise: number): Promise<void> {

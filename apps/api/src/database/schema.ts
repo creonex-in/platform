@@ -440,6 +440,7 @@ export const creatorPayoutAccounts = pgTable(
     bankAccountNumber: text('bank_account_number').notNull(),
     bankIfsc: text('bank_ifsc').notNull(),
     accountHolderName: text('account_holder_name').notNull(),
+    razorpayProductId: text('razorpay_product_id'), // set after products.requestProductConfiguration
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull().$onUpdateFn(() => new Date()),
   },

@@ -118,11 +118,8 @@ export class PaymentService {
 
   /**
    * Create a Route linked (sub-merchant) account for a creator. Returns the linked
-   * account id to persist on the creator profile.
-   *
-   * NOTE: SDK v2.9.6 `accounts.create` (Partners onboarding) does not configure the
-   * settlement bank account — that's a follow-up via the product-configuration /
-   * stakeholder onboarding step. Bank details are persisted in our DB regardless.
+   * account id to persist on the creator profile. Must be followed by
+   * createStakeholder + requestSettlementsProduct to complete onboarding.
    */
   async createLinkedAccount(input: CreateLinkedAccountInput): Promise<string> {
     try {
@@ -140,6 +137,50 @@ export class PaymentService {
       return account.id
     } catch (err) {
       throw new InternalServerErrorException(`Razorpay linked-account creation failed: ${String(err)}`)
+    }
+  }
+
+  /** Create a Route stakeholder (the individual/contact) required for Razorpay KYC. */
+  async createStakeholder(accountId: string, input: CreateLinkedAccountInput): Promise<string> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const result = await (this.rzp.stakeholders as any).create(accountId, {
+        name: input.accountHolderName,
+        phone: { primary: (input.phone ?? '').replace(/^\+91/, '') },
+        kyc: { pan: input.pan },
+      })
+      return result.id as string
+    } catch (err) {
+      throw new InternalServerErrorException(`Razorpay stakeholder creation failed: ${String(err)}`)
+    }
+  }
+
+  /**
+   * Request the Route product configuration and attach settlement bank details.
+   * Must be called after createLinkedAccount. Returns the Razorpay product ID,
+   * which must be stored to allow future bank-account updates.
+   */
+  async requestSettlementsProduct(
+    accountId: string,
+    input: { bankAccountNumber: string; bankIfsc: string; accountHolderName: string },
+  ): Promise<string> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const product = await (this.rzp.products as any).requestProductConfiguration(accountId, {
+        product_name: 'route',
+        tnc_accepted: true,
+      })
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      await (this.rzp.products as any).edit(accountId, product.id, {
+        settlements: {
+          account_number: input.bankAccountNumber,
+          ifsc_code: input.bankIfsc,
+          beneficiary_name: input.accountHolderName,
+        },
+      })
+      return product.id as string
+    } catch (err) {
+      throw new InternalServerErrorException(`Razorpay Route product configuration failed: ${String(err)}`)
     }
   }
 

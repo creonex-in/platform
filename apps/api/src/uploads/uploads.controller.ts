@@ -16,7 +16,7 @@ export class UploadsController {
   @Post('presign')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('creator')
-  @ApiOperation({ summary: 'Get a presigned URL to upload a file directly to S3 (STUB)' })
+  @ApiOperation({ summary: 'Get a presigned URL to upload a file directly to S3' })
   presign(@Session() session: AppUserSession, @Body() dto: PresignUploadDto) {
     return this.uploadsService.presign(session.user.id, dto)
   }
@@ -24,7 +24,7 @@ export class UploadsController {
   @Post('confirm')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('creator')
-  @ApiOperation({ summary: 'Confirm a finished upload and persist its key (STUB)' })
+  @ApiOperation({ summary: 'Confirm a finished upload — verifies the object exists in S3' })
   confirm(@Body() dto: ConfirmUploadDto) {
     return this.uploadsService.confirm(dto.key)
   }
@@ -33,7 +33,7 @@ export class UploadsController {
   @Post('delete')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('creator')
-  @ApiOperation({ summary: 'Delete an uploaded object by key (STUB)' })
+  @ApiOperation({ summary: 'Delete an uploaded object by key' })
   delete(@Body() dto: DeleteUploadDto) {
     return this.uploadsService.delete(dto.key)
   }
@@ -41,8 +41,8 @@ export class UploadsController {
   @Get('digital/:bookingId')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('learner')
-  @ApiOperation({ summary: 'Buyer-gated download links for a purchased digital product (STUB)' })
-  digitalAccess(@Param('bookingId') bookingId: string) {
-    return this.uploadsService.digitalAccess(bookingId)
+  @ApiOperation({ summary: 'Buyer-gated download links for a purchased digital product' })
+  digitalAccess(@Session() session: AppUserSession, @Param('bookingId') bookingId: string) {
+    return this.uploadsService.digitalAccess(bookingId, session.user.id)
   }
 }

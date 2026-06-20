@@ -16,6 +16,7 @@ import { PayoutsRepository } from '../payouts/payouts.repository'
 import { PaymentService } from '../payment/payment.service'
 import { MeetingService } from '../meeting/meeting.service'
 import { SlotGenerationService } from '../availability/slot-generation.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { DEFAULT_PLATFORM_FEE_BPS } from '@creonex/types'
 import type { CreateBookingDto, CreateGuestBookingDto, ConfirmBookingDto, CancelBookingDto } from './bookings.dto'
 
@@ -34,6 +35,7 @@ export class BookingsService {
     private readonly paymentService: PaymentService,
     private readonly meetingService: MeetingService,
     private readonly slotService: SlotGenerationService,
+    private readonly notificationsService: NotificationsService,
     private readonly config: ConfigService,
   ) {
     this.platformFeeBps = Number(
@@ -354,6 +356,13 @@ export class BookingsService {
       offering.creatorProfileId,
     )
 
+    const bookingForNotify = { ...booking, meetingUrl: meeting?.meetingUrl ?? null, razorpayPaymentId: dto.razorpayPaymentId }
+    if (offering.type === 'digital') {
+      void this.notificationsService.notifyDigitalDelivery(bookingForNotify, offering)
+    } else {
+      void this.notificationsService.notifyBookingConfirmed(bookingForNotify, offering)
+    }
+
     return this.bookingsRepo.findById(bookingId)
   }
 
@@ -415,6 +424,13 @@ export class BookingsService {
       offering.creatorProfileId,
     )
 
+    const bookingForNotify = { ...booking, meetingUrl: meeting?.meetingUrl ?? null, razorpayPaymentId: dto.razorpayPaymentId }
+    if (offering.type === 'digital') {
+      void this.notificationsService.notifyDigitalDelivery(bookingForNotify, offering)
+    } else {
+      void this.notificationsService.notifyBookingConfirmed(bookingForNotify, offering)
+    }
+
     return this.bookingsRepo.findById(bookingId)
   }
 
@@ -457,6 +473,13 @@ export class BookingsService {
       { id: booking.id, amountPaise: booking.amountPaise, razorpayPaymentId },
       offering.creatorProfileId,
     )
+
+    const bookingForNotify = { ...booking, meetingUrl: meeting?.meetingUrl ?? null, razorpayPaymentId }
+    if (offering.type === 'digital') {
+      void this.notificationsService.notifyDigitalDelivery(bookingForNotify, offering)
+    } else {
+      void this.notificationsService.notifyBookingConfirmed(bookingForNotify, offering)
+    }
   }
 
   // ── Cancel booking ────────────────────────────────────────────────────────────
@@ -519,6 +542,10 @@ export class BookingsService {
         .catch(() => {})
     }
 
+    if (offering) {
+      void this.notificationsService.notifyBookingCancelled(booking, offering, cancelledBy)
+    }
+
     return { success: true, bookingId }
   }
 
@@ -550,5 +577,51 @@ export class BookingsService {
    *  "verified booking" flag on testimonials. */
   hasConfirmedBookingByUser(userId: string, creatorProfileId: string): Promise<boolean> {
     return this.bookingsRepo.hasConfirmedBookingByUser(userId, creatorProfileId)
+  }
+
+  /** Resolve userId → learnerProfileId, then scope the lookup to that learner.
+   *  Used by UploadsService to gate digital delivery. */
+  async findByIdForLearner(bookingId: string, userId: string) {
+    const learnerProfile = await this.learnerProfileRepo.findByUserId(userId)
+    if (!learnerProfile) return null
+    return this.bookingsRepo.findByIdForLearner(bookingId, learnerProfile.id)
+  }
+
+  /**
+   * Bulk-cancel all active bookings for a live_event offering (class cancellation).
+   * Called from OfferingsService when a creator pauses or archives a live_event.
+   * Handles per-booking refunds, earnings reversals, and calendar cleanup — same
+   * logic as single cancelBooking. Returns the cancelled rows for notification.
+   */
+  async cancelAllForOffering(
+    offeringId: string,
+    creatorUserId: string,
+    reason = 'Class cancelled by creator',
+  ) {
+    const creatorProfile = await this.creatorProfileRepo.findByUserId(creatorUserId)
+    if (!creatorProfile) throw new UnauthorizedException()
+    const offering = await this.offeringsRepo.findById(offeringId)
+    if (!offering || offering.creatorProfileId !== creatorProfile.id) {
+      throw new ForbiddenException('Not your offering')
+    }
+
+    const cancelled = await this.bookingsRepo.cancelAllActiveByOffering(offeringId, 'creator', reason)
+
+    for (const booking of cancelled) {
+      if (booking.status === 'confirmed' || booking.razorpayPaymentId) {
+        void this.reverseCreatorEarning(booking.id)
+      }
+      if (booking.razorpayPaymentId) {
+        void this.paymentService.refund(booking.razorpayPaymentId, booking.amountPaise)
+          .catch(() => {})
+      }
+      if (booking.calendarEventId && booking.meetingProvider) {
+        void this.meetingService
+          .deleteMeeting(booking.meetingProvider, creatorProfile.id, booking.calendarEventId)
+          .catch(() => {})
+      }
+    }
+
+    return cancelled
   }
 }

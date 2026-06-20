@@ -29,6 +29,7 @@ export class PayoutsRepository {
       bankAccountNumber: string
       bankIfsc: string
       accountHolderName: string
+      razorpayProductId?: string
     },
   ) {
     const existing = await this.getAccount(creatorProfileId)
