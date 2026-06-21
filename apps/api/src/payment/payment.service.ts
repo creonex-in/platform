@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import Razorpay from 'razorpay'
 import { createHmac } from 'node:crypto'
+import { withBreaker } from '../utils/circuit-breaker'
 
 export interface RazorpayOrder {
   id: string
@@ -58,11 +59,9 @@ export class PaymentService {
 
   async createOrder(amountPaise: number, receipt: string): Promise<RazorpayOrder> {
     try {
-      const order = await this.rzp.orders.create({
-        amount: amountPaise,
-        currency: 'INR',
-        receipt,
-      })
+      const order = await withBreaker('razorpay', () =>
+        this.rzp.orders.create({ amount: amountPaise, currency: 'INR', receipt }),
+      )
       return {
         id: order.id,
         amount: order.amount as number,
@@ -95,10 +94,9 @@ export class PaymentService {
 
   async refund(paymentId: string, amountPaise: number): Promise<RazorpayRefund> {
     try {
-      const refund = await this.rzp.payments.refund(paymentId, {
-        amount: amountPaise,
-        speed: 'normal',
-      })
+      const refund = await withBreaker('razorpay', () =>
+        this.rzp.payments.refund(paymentId, { amount: amountPaise, speed: 'normal' }),
+      )
       return {
         id: refund.id,
         amount: refund.amount as number,
@@ -195,17 +193,19 @@ export class PaymentService {
     opts: { onHold: boolean; onHoldUntil?: number } = { onHold: false },
   ): Promise<RazorpayTransfer> {
     try {
-      const result = await this.rzp.payments.transfer(paymentId, {
-        transfers: [
-          {
-            account: linkedAccountId,
-            amount: amountPaise,
-            currency: 'INR',
-            on_hold: opts.onHold ? 1 : 0,
-            ...(opts.onHoldUntil ? { on_hold_until: opts.onHoldUntil } : {}),
-          },
-        ],
-      })
+      const result = await withBreaker('razorpay', () =>
+        this.rzp.payments.transfer(paymentId, {
+          transfers: [
+            {
+              account: linkedAccountId,
+              amount: amountPaise,
+              currency: 'INR',
+              on_hold: opts.onHold ? 1 : 0,
+              ...(opts.onHoldUntil ? { on_hold_until: opts.onHoldUntil } : {}),
+            },
+          ],
+        }),
+      )
       const created = result.items[0]
       if (!created) throw new Error('Razorpay returned no transfer')
       return {
@@ -221,7 +221,9 @@ export class PaymentService {
   /** Reverse a transfer (claw back the creator's share) — used on refund/cancel. */
   async reverseTransfer(transferId: string, amountPaise: number): Promise<void> {
     try {
-      await this.rzp.transfers.reverse(transferId, { amount: amountPaise })
+      await withBreaker('razorpay', () =>
+        this.rzp.transfers.reverse(transferId, { amount: amountPaise }),
+      )
     } catch (err) {
       throw new InternalServerErrorException(`Razorpay transfer reversal failed: ${String(err)}`)
     }

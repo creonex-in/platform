@@ -11,6 +11,7 @@ import type { AppUserSession } from '../auth/types'
 import { BookingsService } from './bookings.service'
 import { PaymentService } from '../payment/payment.service'
 import { PayoutsService } from '../payouts/payouts.service'
+import { WebhookEventsRepository } from '../payment/webhook-events.repository'
 import { CancelBookingDto, ConfirmBookingDto, CreateBookingDto, CreateGuestBookingDto } from './bookings.dto'
 
 // ── Learner booking actions ───────────────────────────────────────────────────
@@ -109,6 +110,7 @@ export class PaymentWebhookController {
     private readonly bookingsService: BookingsService,
     private readonly paymentService: PaymentService,
     private readonly payoutsService: PayoutsService,
+    private readonly webhookEventsRepo: WebhookEventsRepository,
   ) {}
 
   @Post('webhook')
@@ -125,6 +127,13 @@ export class PaymentWebhookController {
 
     const event = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody
     const name: string | undefined = event?.event
+
+    // Razorpay guarantees at-least-once delivery — deduplicate by event ID
+    const eventId: string | undefined = event?.id
+    if (eventId) {
+      const seen = await this.webhookEventsRepo.findEvent(eventId)
+      if (seen) return { received: true }
+    }
 
     // Payment captured → confirm the booking (backup to client-side confirm).
     if (name === 'payment.captured') {
@@ -146,6 +155,11 @@ export class PaymentWebhookController {
           await this.payoutsService.deactivateAccount(accountId, 'pending')
         }
       }
+    }
+
+    // Record event as processed (idempotency guard for future retries)
+    if (eventId && name) {
+      await this.webhookEventsRepo.insertEvent({ eventId, eventType: name })
     }
 
     return { received: true }

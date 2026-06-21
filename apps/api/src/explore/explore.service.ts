@@ -6,9 +6,12 @@ import {
 } from '@creonex/types'
 import { LearnerProfileRepository } from '../users/learner-profile.repository'
 import { ExploreRepository, type ExploreRow } from './explore.repository'
+import { cache } from '../utils/cache'
 import type { BrowseOfferingsQueryDto } from './explore.query.dto'
 
 const RECOMMENDED_LIMIT = 12
+const BROWSE_TTL = 60    // seconds — explore page refreshes in 1 min
+const REC_TTL   = 120   // seconds — personalized rail refreshes in 2 min
 
 @Injectable()
 export class ExploreService {
@@ -18,31 +21,40 @@ export class ExploreService {
   ) {}
 
   async browse(query: BrowseOfferingsQueryDto): Promise<BrowseOfferingsResponse> {
-    const type = query.type ?? 'all'
-    const niche = query.niche ?? 'all'
-    const sort = query.sort ?? 'relevance'
-    const limit = query.limit ?? 24
+    const type   = query.type   ?? 'all'
+    const niche  = query.niche  ?? 'all'
+    const sort   = query.sort   ?? 'relevance'
+    const limit  = query.limit  ?? 24
     const offset = query.offset ?? 0
-    const q = query.q?.trim()
+    const q      = query.q?.trim()
+
+    const cacheKey = `explore:browse:${JSON.stringify({ type, niche, sort, limit, offset, q })}`
+    const cached = await cache.get<BrowseOfferingsResponse>(cacheKey)
+    if (cached) return cached
 
     const { rows, total } = await this.repo.browse({
-      type,
-      niche,
-      sort,
-      limit,
-      offset,
+      type, niche, sort, limit, offset,
       q: q && q.length >= 2 ? q : undefined,
     })
 
-    return { items: rows.map(toExploreItem), total, limit, offset }
+    const result: BrowseOfferingsResponse = { items: rows.map(toExploreItem), total, limit, offset }
+    await cache.set(cacheKey, result, BROWSE_TTL)
+    return result
   }
 
   /** Personalized rail — offerings in the learner's interested niches. Empty if no interests. */
   async recommended(userId: string): Promise<BrowseOfferingsResponse> {
+    const cacheKey = `explore:rec:${userId}`
+    const cached = await cache.get<BrowseOfferingsResponse>(cacheKey)
+    if (cached) return cached
+
     const profile = await this.learnerRepo.findByUserId(userId)
-    const niches = (profile?.interestedNiches ?? []).filter(isNiche)
-    const rows = await this.repo.browseByNiches(niches, RECOMMENDED_LIMIT)
-    return { items: rows.map(toExploreItem), total: rows.length, limit: RECOMMENDED_LIMIT, offset: 0 }
+    const niches  = (profile?.interestedNiches ?? []).filter(isNiche)
+    const rows    = await this.repo.browseByNiches(niches, RECOMMENDED_LIMIT)
+
+    const result: BrowseOfferingsResponse = { items: rows.map(toExploreItem), total: rows.length, limit: RECOMMENDED_LIMIT, offset: 0 }
+    await cache.set(cacheKey, result, REC_TTL)
+    return result
   }
 }
 

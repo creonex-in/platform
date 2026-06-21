@@ -538,3 +538,18 @@ export const learnerNotes = pgTable(
     learnerIdx: index('idx_learner_notes_learner').on(t.learnerProfileId),
   }),
 )
+
+// ============================================================
+// INFRASTRUCTURE — idempotency, audit
+// ============================================================
+
+// Prevents duplicate processing when Razorpay retries a webhook event.
+export const webhookEvents = pgTable(
+  'webhook_events',
+  {
+    id: text('id').primaryKey(),
+    eventId: text('event_id').notNull().unique(),
+    eventType: text('event_type').notNull(),
+    processedAt: timestamp('processed_at').defaultNow().notNull(),
+  },
+)

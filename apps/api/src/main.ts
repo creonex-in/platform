@@ -10,11 +10,14 @@ import helmet from 'helmet'
 import { AppModule } from './app.module'
 import { AllExceptionsFilter } from './utils/all-exceptions.filter'
 import { apiRateLimit, authRateLimit } from './utils/rate-limiter'
+import { validateConfig } from './utils/config-guard'
 import type { Request, Response, NextFunction } from 'express'
 
 const BODY_LIMIT = '512kb'
 
 async function bootstrap() {
+  validateConfig()
+
   const app = await NestFactory.create(AppModule, { bodyParser: false })
 
   const expressApp = app.getHttpAdapter().getInstance()
@@ -54,6 +57,11 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter())
 
   app.enableShutdownHooks()
+
+  // Give the load balancer 5s to drain traffic before NestJS closes connections
+  process.on('SIGTERM', () => {
+    setTimeout(() => void app.close(), 5000)
+  })
 
   app.enableCors({
     origin: process.env['ALLOWED_ORIGINS']?.split(',') ?? 'http://localhost:3001',

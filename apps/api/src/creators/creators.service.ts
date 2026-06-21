@@ -3,6 +3,9 @@ import { CreatorProfileRepository } from '../users/creator-profile.repository'
 import { OfferingsRepository } from '../users/offerings.repository'
 import { TestimonialsRepository } from '../users/testimonials.repository'
 import { UsersRepository } from '../users/users.repository'
+import { cache } from '../utils/cache'
+
+const PROFILE_TTL = 120 // seconds
 
 @Injectable()
 export class CreatorsService {
@@ -14,6 +17,10 @@ export class CreatorsService {
   ) {}
 
   async getPublicProfile(username: string) {
+    const cacheKey = `creator:profile:${username}`
+    const cached = await cache.get<object>(cacheKey)
+    if (cached) return cached
+
     const profile = await this.creatorProfileRepo.findPublicByUsername(username)
 
     if (!profile || !profile.isLive) {
@@ -26,7 +33,7 @@ export class CreatorsService {
       this.usersRepo.findById(profile.userId),
     ])
 
-    return {
+    const result = {
       id: profile.id,
       username: profile.username!,
       displayName: profile.displayName,
@@ -58,7 +65,6 @@ export class CreatorsService {
         description: o.description ?? null,
         thumbnailUrl: o.thumbnailUrl ?? null,
         scheduledAt: o.scheduledAt ? o.scheduledAt.toISOString() : null,
-        // Only `format` is public; never expose the digital delivery payload.
         format: (o.metadata as { format?: 'group' | 'webinar' } | null)?.format ?? null,
       })),
       testimonials: testimonials.map((t) => ({
@@ -70,5 +76,13 @@ export class CreatorsService {
         isVerified: t.isVerified,
       })),
     }
+
+    await cache.set(cacheKey, result, PROFILE_TTL)
+    return result
+  }
+
+  /** Evict the cached public profile — call after any creator profile update. */
+  async invalidateProfileCache(username: string): Promise<void> {
+    await cache.del(`creator:profile:${username}`)
   }
 }

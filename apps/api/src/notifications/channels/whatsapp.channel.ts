@@ -7,6 +7,16 @@ function normalizePhone(phone: string): string {
   return phone.replace(/[^0-9]/g, '')
 }
 
+async function withRetry<T>(fn: () => Promise<T>, attempts = 2, delayMs = 2000): Promise<T> {
+  try {
+    return await fn()
+  } catch (err) {
+    if (attempts <= 1) throw err
+    await new Promise((r) => setTimeout(r, delayMs))
+    return withRetry(fn, attempts - 1, delayMs)
+  }
+}
+
 /**
  * Send a pre-approved WATI template message.
  * Silently no-ops when WATI_ACCOUNT_SID / WATI_API_KEY are absent (dev / email-only mode).
@@ -21,25 +31,27 @@ export async function sendWhatsApp(
   const normalized = normalizePhone(phone)
   if (!normalized) return
 
-  const res = await fetch(
-    `${WATI_BASE}/sendTemplateMessage?whatsappNumber=${normalized}`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.WATI_API_KEY}`,
-        'Content-Type': 'application/json',
+  await withRetry(async () => {
+    const res = await fetch(
+      `${WATI_BASE}/sendTemplateMessage?whatsappNumber=${normalized}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.WATI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          template_name: templateName,
+          broadcast_name: templateName,
+          parameters: params,
+        }),
       },
-      body: JSON.stringify({
-        template_name: templateName,
-        broadcast_name: templateName,
-        parameters: params,
-      }),
-    },
-  )
+    )
 
-  if (!res.ok) {
-    throw new Error(`WATI ${templateName} → ${res.status} ${await res.text()}`)
-  }
+    if (!res.ok) {
+      throw new Error(`WATI ${templateName} → ${res.status} ${await res.text()}`)
+    }
+  })
 }
 
 // ── Template helpers ──────────────────────────────────────────────────────────

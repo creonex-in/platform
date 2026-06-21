@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule, OnApplicationShutdown, Logger } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { AuthModule } from '@mguay/nestjs-better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
@@ -21,6 +21,8 @@ import { PayoutsModule } from './payouts/payouts.module'
 import { DashboardModule } from './dashboard/dashboard.module'
 import { SearchModule } from './search/search.module'
 import { ExploreModule } from './explore/explore.module'
+import { RequestIdMiddleware } from './utils/request-id.middleware'
+import { RequestLoggerMiddleware } from './utils/request-logger.middleware'
 import { DATABASE_CONNECTION, type Database } from './database/database-connection'
 
 @Module({
@@ -92,4 +94,16 @@ import { DATABASE_CONNECTION, type Database } from './database/database-connecti
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule implements NestModule, OnApplicationShutdown {
+  private readonly logger = new Logger(AppModule.name)
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequestIdMiddleware, RequestLoggerMiddleware)
+      .forRoutes('*')
+  }
+
+  onApplicationShutdown(signal?: string) {
+    this.logger.log(`Shutdown signal received: ${signal ?? 'unknown'} — draining connections`)
+  }
+}

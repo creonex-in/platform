@@ -14,6 +14,7 @@ interface ErrorBody {
   error: string
   path: string
   timestamp: string
+  requestId?: string
 }
 
 /** Better Auth APIError: { status: 'UNAUTHORIZED', statusCode: 401, body: { message } }. */
@@ -76,9 +77,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error = 'InternalServerError'
     }
 
+    const reqId = req.headers['x-request-id'] as string | undefined
+
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
-        `${req.method} ${req.url} → ${status}`,
+        `[${reqId ?? '-'}] ${req.method} ${req.url} → ${status}`,
         exception instanceof Error ? exception.stack : String(exception),
       )
     }
@@ -89,6 +92,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error,
       path: req.url,
       timestamp: new Date().toISOString(),
+      ...(reqId ? { requestId: reqId } : {}),
     }
 
     res.status(status).json(body)

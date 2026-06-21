@@ -255,6 +255,13 @@ export class OfferingsService {
     return this.formatOffering(row)
   }
 
+  /** Verify that an offering belongs to the calling user's creator profile. Throws ForbiddenException if not. */
+  async verifyOwnership(offeringId: string, userId: string): Promise<void> {
+    const profileId = await this.resolveCreatorProfileId(userId)
+    const offering = await this.offeringsRepo.findByIdForOwner(offeringId, profileId)
+    if (!offering) throw new ForbiddenException('Offering not found or does not belong to this creator')
+  }
+
   async deleteOffering(id: string, userId: string) {
     const profileId = await this.resolveCreatorProfileId(userId)
     const offering = await this.offeringsRepo.findByIdForOwner(id, profileId)
